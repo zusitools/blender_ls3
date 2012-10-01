@@ -3,7 +3,7 @@
   <head>
 <title>Dokumentation für den Blender-LS3-Import/Export</title>
 <meta http-equiv="content-type" content="text/html; charset=utf8">
-<style type="text/css">dt { font-weight: bold }</style>
+<style type="text/css">dt { font-weight: bold } .klein { font-size: 80% }</style>
   </head>
   <body>
 
@@ -19,15 +19,22 @@ siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.co
 <img src="exporteinstellungen.png" />
 
 <dl>
-	<dt>Variants</dt><dd>Wird weiter unten erklärt</dd>
-	<dt>Export</dt><dd>Legt fest, welche Objekte exportiert werden sollen. Dabei ist zu beachten, dass die Auswahl nach Varianten Priorität hat, d.h. ein ausgewähltes Objekt, das in der zu exportierenden Variante nicht sichtbar ist, wird auch in der Einstellung „Selected objects“ nicht exportiert.
+	<dt>Variants</dt><dd>Wird <a href="#varianten-export">weiter unten</a> erklärt</dd>
+	<dt>Export</dt><dd>Legt fest, welche Objekte exportiert werden sollen.
 		<dl>
 			<dt>All objects</dt><dd>Alle in der Szene befindlichen Objekte werden exportiert</dd>
 			<dt>Selected objects</dt><dd>Nur die ausgewählten Objekte werden exportiert.</dd>
 			<dt>Subsets containing selected objects</dt><dd>Alle Subsets, die mindestens ein ausgewähltes Objekt enthalten, werden exportiert. Für den Export eines Subsets genügt es also, ein Objekt aus diesem Subset auszuwählen und als Exportmodus „Subsets containing selected objects“ einzustellen.</dd>
 		</dl>
+		Dabei ist zu beachten, dass die Auswahl nach Varianten Priorität hat, d.h. ein ausgewähltes Objekt, das in der zu exportierenden Variante nicht sichtbar ist, wird auch in der Einstellung „Selected objects“ nicht exportiert.
 	</dd>
-	<dt>Optimize mesh</dt><dd>Legt fest, dass die Knoten eines Subsets vor dem Export einer Optimierung unterzogen werden, die gleichartige Knoten zusammenführt. Diese Option ist dringen zu empfehlen, da sonst jeder Knoten, der an einer Kante zwischen zwei Flächen liegt, als zwei Knoten exportiert wird. <br />Die drei Optionen darunter entsprechen den Mesh-Optimierungs-Optionen im Zusi-3-Objektbetrachter</dd>
+	<dt>Optimize mesh</dt><dd>Aktiviert eine Optimierung zur Reduzierung der Knotenanzahl eines Subsets. Das Aktivieren dieser Option ist dringend zu empfehlen, da die exportierte Datei sonst sehr viele Knoten enthält.
+	 
+	 <p class="klein">Technische Erklärung: In Blender kann ein Knoten mehrere UV-Koordinaten haben (eine pro Fläche, zu der er gehört). Im Bild sieht man, dass der markierte Knoten im UV-Editor drei Mal auftaucht: zweimal zwischen „01“ und „02“ (beide UV-Knoten liegen dabei übereinander) und einmal bei „14“.</p>
+	
+	<p class="klein"><img src="optimierung.png" /></p>
+	
+	<p class="klein">In Zusi kann ein Knoten dagegen nur eine UV-Koordinate haben. Daher wird der markierte Knoten für jede Fläche, zu der er gehört, als separater Knoten exportiert. Die Optimierung erkent nun, dass zwei der exportierten Vektoren (der markierte Knoten als Teil der Fläche 01 und der markierte Knoten als Teil der Fläche 02) die gleiche Position, den gleichen Normalenvektor und die gleiche UV-Koordinate haben, und führt sie zusammen. Dies geschieht mit einer gewissen Toleranz, da man die UV-Koordinaten im Allgemeinen nicht exakt einstellt. Diese Toleranz lässt sich mit den drei Schiebereglern unterhalb von „Optimize mesh“ einstellen.</p></dd>
 </dl>
 
 <h2>Subset-Export</h2>
@@ -40,7 +47,7 @@ siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.co
 
 <p>Beim Export werden die Subsets aufsteigend nach Namen geordnet.</p>
 
-<h2>Varianten-Export</h2>
+<h2><a name="varianten-export" />Varianten-Export</h2>
 
 <p>Mehrere Varianten eines Objekts unterscheiden sich oft nur in Details. Ein Beispiel sind unterschiedliche Lackierungen, bei denen im Idealfall nur die Textur ausgetauscht werden muss. Um solche Varianten effizient bauen zu können, wird die Bauweise unterstützt, alle Varianten in einer Datei zu bauen. Gerade nicht benötigte Objekte kann man in Blender mit der Taste „H“ unsichtbar machen, mit „Alt+H“ werden sie wieder sichtbar.</p>
 
