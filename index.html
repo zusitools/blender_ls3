@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/transitional.dtd">
+<html>
+  <head>
+<title>Dokumentation für den Blender-LS3-Import/Export</title>
+<meta http-equiv="content-type" content="text/html; charset=utf8">
+<style type="text/css">dt { font-weight: bold }</style>
+  </head>
+  <body>
+
+<h1>Installation</h1>
+siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.com/zusi/zusitools</a>
+
+<h1>LS3-Export</h1>
+
+<p>Der LS3-Export kann unter „File → Export → Zusi Landscape (.ls3)“ oder unter „<em>Leertaste</em> → Export LS3“ aufgerufen werden.</p>
+
+<h2>Export-Einstellungen</h2>
+
+<img src="exporteinstellungen.png" />
+
+<dl>
+	<dt>Variants</dt><dd>Wird weiter unten erklärt</dd>
+	<dt>Export</dt><dd>Legt fest, welche Objekte exportiert werden sollen. Dabei ist zu beachten, dass die Auswahl nach Varianten Priorität hat, d.h. ein ausgewähltes Objekt, das in der zu exportierenden Variante nicht sichtbar ist, wird auch in der Einstellung „Selected objects“ nicht exportiert.
+		<dl>
+			<dt>All objects</dt><dd>Alle in der Szene befindlichen Objekte werden exportiert</dd>
+			<dt>Selected objects</dt><dd>Nur die ausgewählten Objekte werden exportiert.</dd>
+			<dt>Subsets containing selected objects</dt><dd>Alle Subsets, die mindestens ein ausgewähltes Objekt enthalten, werden exportiert. Für den Export eines Subsets genügt es also, ein Objekt aus diesem Subset auszuwählen und als Exportmodus „Subsets containing selected objects“ einzustellen.</dd>
+		</dl>
+	</dd>
+	<dt>Optimize mesh</dt><dd>Legt fest, dass die Knoten eines Subsets vor dem Export einer Optimierung unterzogen werden, die gleichartige Knoten zusammenführt. Diese Option ist dringen zu empfehlen, da sonst jeder Knoten, der an einer Kante zwischen zwei Flächen liegt, als zwei Knoten exportiert wird. <br />Die drei Optionen darunter entsprechen den Mesh-Optimierungs-Optionen im Zusi-3-Objektbetrachter</dd>
+</dl>
+
+<h2>Subset-Export</h2>
+
+<img src="objekteinstellungen.png" />
+
+<p>Es kann manchmal nötig sein, ein Zusi-Subset als mehrere Objekte anzulegen. Beispielsweise kann ein Wagenkasten zum größten Teil symmetrisch sein, sodass man mit dem Mirror-Modifier arbeiten kann. Einige Teile wie Beschriftungen können jedoch auch nur einseitig vorkommen. In diesem Falle kann man die beiden Objekte getrennt anlegen und sie beim Export zu einem Subset verschmelzen.</p>
+
+<p>Standardmäßig werden alle Objekte, die ein gemeinsames Material besitzen, zu einem Subset zusammengefasst. Der Name des Subsets entspricht dem Materialnamen, für Objekte ohne Material lautet er „no_material“. Manchmal ist es jedoch nötig, ein oder mehrere Objekte in ein separates Subset zu packen, beispielsweise für Subset-Animationen. In diesem Falle trägt man in den Objekteigenschaften unter „Subset name“ den Namen des Subsets ein. Alle Objekte innerhalb eines Subsets müssen dasselbe Material besitzen.</p>
+
+<p>Beim Export werden die Subsets aufsteigend nach Namen geordnet.</p>
+
+<h2>Varianten-Export</h2>
+
+<p>Mehrere Varianten eines Objekts unterscheiden sich oft nur in Details. Ein Beispiel sind unterschiedliche Lackierungen, bei denen im Idealfall nur die Textur ausgetauscht werden muss. Um solche Varianten effizient bauen zu können, wird die Bauweise unterstützt, alle Varianten in einer Datei zu bauen. Gerade nicht benötigte Objekte kann man in Blender mit der Taste „H“ unsichtbar machen, mit „Alt+H“ werden sie wieder sichtbar.</p>
+
+<p>Varianten müssen zunächst global für die Szene definiert werden. Dies geschieht in den Szeneneinstellungen: Über die Knöpfe „+“ und „-“ können Varianten hinzugefügt und gelöscht werden.</p>
+
+<img src="varianteneinstellungen.png" />
+
+<p>Für jedes Objekt und jede Textur kann nun die Sichtbarkeit festgelegt werden. Dazu ist für jede Variante ein Ankreuzfeld vorgesehen (siehe Screenshot weiter oben). Standardmäßig sind Objekte und Texturen immer sichtbar. Es kann nun festgelegt werden, dass das Objekt/die Textur nur in den ausgewählten Varianten sichtbar sein soll („Visible only in selected variants“) oder nur in den ausgewählten Varianten unsichtbar sein soll („Visible in all but the selected variants“).</p>
+
+<p>Beim Export kann nun ausgewählt werden, welche Varianten in die exportierte Datei übernommen werden sollen. Die objekt- und texturspezifischen Varianteneinstellungen haben nur dann einen Effekt, wenn hier eine oder mehrere Varianten ausgewählt werden, ansonsten sind alle Objekte und Texturen sichtbar.</p>
+
+<h2>Zusi-spezifische Einstellungen</h2>
+
+<p>In der Blender-Datei können einige Zusi-spezifische Einstellungen hinterlegt werden. Auf den folgenden Bildern ist zu sehen, wo sich die Bedienelemente des Mesh-Subset-Editors in Blender wiederfinden.</p>
+
+<h3>Szeneneinstellungen</h3>
+
+<img src="dateiinfo.png" />
+
+<h3>Materialeinstellungen</h3>
+
+<img src="subseteditor.png" />
+
+<h1>LS3-Import</h1>
+
+<p>Der LS3-Import kann unter „File → Import → Zusi Landscape (.ls3)“ oder unter „<em>Leertaste</em> → Import LS3“ aufgerufen werden. Er dürfte selbsterklärend (und wahrscheinlich nicht ganz fehlerfrei) sein.</p>
+
+<p>Der Pfad zum Zusi-Datenverzeichnis muss momentan noch manuell eingestellt werden, um relative Pfadangaben korrekt auflösen zu können. Dazu muss die Zeile <code>basepath = "/mnt/zusi/Daten123"</code> in der Datei <tt>ls3_import.py</tt> entsprechend angepasst werden. Der Pfad muss ohne abschließenden Schrägstrich angegeben werden.</p>
+
+  </body>
+</html>
