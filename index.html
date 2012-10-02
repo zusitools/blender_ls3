@@ -49,7 +49,7 @@ siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.co
 
 <h2><a name="varianten-export" />Varianten-Export</h2>
 
-<p>Mehrere Varianten eines Objekts unterscheiden sich oft nur in Details. Ein Beispiel sind unterschiedliche Lackierungen, bei denen im Idealfall nur die Textur ausgetauscht werden muss. Um solche Varianten effizient bauen zu können, wird die Bauweise unterstützt, alle Varianten in einer Datei zu bauen. Gerade nicht benötigte Objekte kann man in Blender mit der Taste „H“ unsichtbar machen, mit „Alt+H“ werden sie wieder sichtbar.</p>
+<p>Mehrere Varianten eines Objekts unterscheiden sich oft nur in Details. Ein Beispiel sind unterschiedliche Lackierungen, bei denen im Idealfall nur die Textur ausgetauscht werden muss. Um solche Varianten effizient bauen zu können, wird die Bauweise unterstützt, alle Varianten in einer Datei zu bauen. Gerade nicht benötigte Objekte kann man in Blender mit der Taste „H“ unsichtbar machen, mit „Alt+H“ werden sie wieder sichtbar. Die Funktion <a href="#varianten-anzeigen">„Varianten anzeigen“</a> automatisiert dieses Verstecken und Zeigen von Objekten.</p>
 
 <p>Varianten müssen zunächst global für die Szene definiert werden. Dies geschieht in den Szeneneinstellungen: Über die Knöpfe „+“ und „-“ können Varianten hinzugefügt und gelöscht werden.</p>
 
@@ -58,6 +58,14 @@ siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.co
 <p>Für jedes Objekt und jede Textur kann nun die Sichtbarkeit festgelegt werden. Dazu ist für jede Variante ein Ankreuzfeld vorgesehen (siehe Screenshot weiter oben). Standardmäßig sind Objekte und Texturen immer sichtbar. Es kann nun festgelegt werden, dass das Objekt/die Textur nur in den ausgewählten Varianten sichtbar sein soll („Visible only in selected variants“) oder nur in den ausgewählten Varianten unsichtbar sein soll („Visible in all but the selected variants“).</p>
 
 <p>Beim Export kann nun ausgewählt werden, welche Varianten in die exportierte Datei übernommen werden sollen. Die objekt- und texturspezifischen Varianteneinstellungen haben nur dann einen Effekt, wenn hier eine oder mehrere Varianten ausgewählt werden, ansonsten sind alle Objekte und Texturen sichtbar.</p>
+
+<h2><a name="varianten-anzeigen"/>Varianten anzeigen</h2>
+
+<p>Diese Funktion erlaubt die Auswahl einer oder mehrerer Varianten (wie beim Export) und blendet die Objekte und Texturen aus, die in den ausgewählten Varianten nicht sichtbar sind. Aufzurufen ist sie im Menü des 3D-Fensters unter „View → Show Variants …“. Die Varianten-Auswahlliste wird dann im „Tool Shelf“-Bereich auf der linken Seite des 3D-Fensters (Taste T) gezeigt.</p>
+
+<img src="variantenanzeigen.png" />
+
+<p>Beim Auswählen einer Variante wird die Änderung im 3D-Fenster sofort sichtbar.</p>
 
 <h2>Zusi-spezifische Einstellungen</h2>
 
