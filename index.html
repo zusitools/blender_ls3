@@ -79,11 +79,27 @@ siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.co
 
 <img src="subseteditor.png" />
 
+<h2>Scharfe Kanten</h2>
+
+<p>Es besteht die Möglichkeit, Kanten explizit als scharf zu markieren. Dann werden die Knoten, aus denen diese Kanten bestehen, von der Mesh-Optimierung unabhängig vom Winkel zwischen den Normalen niemals zusammengefasst.</p>
+
+<p>In Blender kann eine Kante unter „Mesh → Edges → Mark sharp“ als scharf markiert werden. Sie wird dann im Editmode blau markiert:</p>
+
+<img src="sharpedges.png" />
+
+<p>Ein Beispiel soll den Unterschied verdeutlichen. Die Kanten des rechten Zylinders sind alle als scharf markiert, die des linken Zylinders nicht.</p>
+
+<img src="sharpedges2.png" />
+
+<p>Im Zusi-Modellbetrachter wird der Unterschied deutlich: Der linke Zylinder wirkt glatt und rund, beim rechten kann man die einzelnen Flächen erkennen:</p>
+
+<img src="sharpedges3.png" />
+
 <h1>LS3-Import</h1>
 
 <p>Der LS3-Import kann unter „File → Import → Zusi Landscape (.ls3)“ oder unter „<em>Leertaste</em> → Import LS3“ aufgerufen werden. Er dürfte selbsterklärend (und wahrscheinlich nicht ganz fehlerfrei) sein.</p>
 
-<p>Der Pfad zum Zusi-Datenverzeichnis muss momentan noch manuell eingestellt werden, um relative Pfadangaben korrekt auflösen zu können. Dazu muss die Zeile <code>basepath = "/mnt/zusi/Daten123"</code> in der Datei <tt>ls3_import.py</tt> entsprechend angepasst werden. Der Pfad muss ohne abschließenden Schrägstrich angegeben werden.</p>
+<p>Der Pfad zum Zusi-Datenverzeichnis muss momentan noch manuell eingestellt werden, um relative Pfadangaben korrekt auflösen zu können. Eine Anleitung dazu findet sich in der Datei <tt>zusiconfig.py.default</tt>.</p>
 
   </body>
 </html>
