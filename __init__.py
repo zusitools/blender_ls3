@@ -112,7 +112,7 @@ bpy.utils.register_class(ZusiLodImportSetting)
 class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
 	bl_idname = "io_import_scene.ls"
 	bl_description = 'Import from Zusi 2 Landscape file format (.ls)'
-	bl_label = "Import LS"
+	bl_label = "Import LS "
 	bl_space_type = "PROPERTIES"
 	bl_region_type = "WINDOW"
 
