@@ -21,7 +21,6 @@ import xml.dom.minidom as dom
 from . import zusicommon, zusiprops
 from math import pi
 from mathutils import *
-from collections import defaultdict
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
 # to a hex string "0AABBGGRR"
@@ -143,32 +142,32 @@ class Ls3Exporter:
         return None
 
     # Adds a new subset node to the specified <Landschaft> node.
-    # A list of objects to be incorporated into that subset is given.
-    def write_subset(self, objects, landschaftNode):
+    # A list of objects to be incorporated into that subset is given, as well as the material to be written.
+    # Only the faces of the supplied objects having that particular material will be written.
+    def write_subset(self, objects, material, landschaftNode):
         subsetNode = self.xmldoc.createElement("SubSet")
         try:
-            subset_material = objects[0].data.materials[0]
+            if material.zusi_landscape_type != bpy.types.Material.zusi_landscape_type[1]["default"]:
+                subsetNode.setAttribute("TypLs3", material.zusi_landscape_type)
+            if material.zusi_gf_type != bpy.types.Material.zusi_gf_type[1]["default"]:
+                subsetNode.setAttribute("TypGF", material.zusi_gf_type)
+            if material.zusi_force_brightness:
+                subsetNode.setAttribute("Zwangshelligkeit", material.zusi_force_brightness)
+            if material.zusi_signal_magnification:
+                subsetNode.setAttribute("zZoom", material.zusi_signal_magnification)
+            if material.offset_z:
+                subsetNode.setAttribute("zBias", str(self.z_bias_map[material.offset_z]))
 
-            if subset_material.zusi_landscape_type != bpy.types.Material.zusi_landscape_type[1]["default"]:
-                subsetNode.setAttribute("TypLs3", subset_material.zusi_landscape_type)
-            if subset_material.zusi_gf_type != bpy.types.Material.zusi_gf_type[1]["default"]:
-                subsetNode.setAttribute("TypGF", subset_material.zusi_gf_type)
-            if subset_material.zusi_force_brightness:
-                subsetNode.setAttribute("Zwangshelligkeit", subset_material.zusi_force_brightness)
-            if subset_material.zusi_signal_magnification:
-                subsetNode.setAttribute("zZoom", subset_material.zusi_signal_magnification)
-            if subset_material.offset_z:
-                subsetNode.setAttribute("zBias", str(self.z_bias_map[subset_material.offset_z]))
-
-            self.write_subset_material(subsetNode, subset_material)
-        except(IndexError, AttributeError):
+            self.write_subset_material(subsetNode, material)
+        except (IndexError, AttributeError):
             pass
 
-        self.write_subset_mesh(subsetNode, objects)
+        self.write_subset_mesh(subsetNode, objects, material)
         landschaftNode.appendChild(subsetNode)
 
-    # Writes the meshes of the specified objects to the specified subset node
-    def write_subset_mesh(self, subsetNode, objects):
+    # Writes the meshes of the specified objects to the specified subset node.
+    # Only the faces having the specified material will be written.
+    def write_subset_mesh(self, subsetNode, objects, material):
         vertexdata = []
         facedata = []
         
@@ -190,6 +189,10 @@ class Ls3Exporter:
             # will later re-merge vertices that have the same location, normal, and UV coordinates
             for face_index, face in enumerate(mesh.tessfaces):
                 vertexindex = len(vertexdata)
+
+                # Check if the face has the right material.
+                if material is not None and ob.data.materials[face.material_index] != material:
+                    continue
 
                 # Write the first triangle of the face
                 # Reverse order of faces to flip normals
@@ -290,11 +293,11 @@ class Ls3Exporter:
             subsetNode.appendChild(texture_node)
 
     # Build list of subsets from the scene's objects. Each entry in the list
-    # contains a list of objects to export into that subset.
+    # contains a tuple: the list objects to export into that subset and the material of the faces to export.
     # The subsets are ordered by name.
     def get_subsets(self):
-        # Dictionary that maps subset names to a list of objects in that subset
-        subset_dict = defaultdict(list)
+        # Dictionary that maps subset names to a tuple of a material and a list of objects in that subset
+        subset_dict = dict()
 
         # List of subsets that will be visible in the exported file
         # (only for exportSelected == "2")
@@ -304,20 +307,41 @@ class Ls3Exporter:
             # If export setting is "export only selected objects", filter out unselected objects
             # from the beginning.
             if ob.type == 'MESH' and (ob.name in self.config.selectedObjects or (self.config.exportSelected != "1")):
+
+                # If the object specifies a subset name, this name will be prepended to the material name
+                # and separated with a $ sign.
+                subset_basename = ""
                 if ob.zusi_subset_name != "":
-                    subset_name = ob.zusi_subset_name
-                elif (len(ob.data.materials) > 0) and ob.data.materials[0]:
-                    subset_name = ob.data.materials[0].name
+                    subset_basename = ob.zusi_subset_name + "$"
+
+                # Build list of materials used (i.e. assigned to any face) in this object
+                used_materials = []
+
+                if len(ob.data.materials) > 0:
+                    used_material_indices = set([poly.material_index for poly in ob.data.polygons])
+                    used_materials = [ob.data.materials[i] for i in used_material_indices]
                 else:
-                    subset_name = "no_material"
+                    used_materials = [None]
 
-                # A selected object that is not visible in the exported variant can still
-                # influcence the list of exported subsets when exportSelected is "2"
-                if ob.name in self.config.selectedObjects:
-                    visible_subsets.add(subset_name)
+                # Add this object to every subset this object will be a part of.
+                for mat in used_materials:
+                    if mat == None:
+                        subset_name = "no_material"
+                    else:
+                        subset_name = subset_basename + mat.name
 
-                if zusicommon.is_object_visible(ob, self.config.variantIDs):
-                    subset_dict[subset_name].append(ob)
+                    # Write material to first entry of tuple
+                    if subset_name not in subset_dict:
+                        subset_dict[subset_name] = (mat, [])
+
+                    # A selected object that is not visible in the exported variant can still
+                    # influcence the list of exported subsets when exportSelected is "2"
+                    if ob.name in self.config.selectedObjects:
+                        visible_subsets.add(subset_name)
+
+                    # Append visible object to second entry of tuple
+                    if zusicommon.is_object_visible(ob, self.config.variantIDs):
+                        subset_dict[subset_name][1].append(ob)
 
         # Sort subsets by name and filter out subsets that won't be visible due to variant export settings
         # (when exportSelected mode is "2")
@@ -367,8 +391,8 @@ class Ls3Exporter:
         # Write the landscape itself
         landschaftNode = self.xmldoc.createElement("Landschaft")
         self.xmldoc.documentElement.appendChild(landschaftNode)
-        for subset in subsets:
-            self.write_subset(subset, landschaftNode)
+        for idx, subset in enumerate(subsets):
+            self.write_subset(subset[1], subset[0], landschaftNode)
 
         # Get path names
         realpath = os.path.realpath(os.path.expanduser(self.config.filePath))
