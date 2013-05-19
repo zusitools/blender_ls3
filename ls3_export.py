@@ -178,6 +178,12 @@ class Ls3Exporter:
 			mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
 			mesh.transform(ob.matrix_world)
 
+			# If the object is mirrored/negatively scaled, the normals will come out the wrong way
+			# when applying the transformation. Workaround from:
+			# http://projects.blender.org/tracker/index.php?func=detail&aid=18834&group_id=9&atid=264
+			ma = ob.matrix_world.to_3x3() # gets the rotation part
+			must_flip_normals = Vector.dot(ma[2], Vector.cross(ma[0], ma[1])) >= 0.00001
+
 			# List vertex indices of edges that are marked as "sharp edges",
 			# which means we won't merge them later during mesh optimization.
 			no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp])
@@ -191,12 +197,18 @@ class Ls3Exporter:
 				vertexindex = len(vertexdata)
 
 				# Write the first triangle of the face
-				# Reverse order of faces to flip normals
-				facedata.append([vertexindex + 2, vertexindex + 1, vertexindex])
+				# Optionally reverse order of faces to flip normals
+				if must_flip_normals:
+					facedata.append([vertexindex + 2, vertexindex + 1, vertexindex])
+				else:
+					facedata.append([vertexindex, vertexindex + 1, vertexindex + 2])
 
 				# If the face is a quad, write the second triangle too.
 				if len(face.vertices) == 4:
-					facedata.append([vertexindex, vertexindex + 3, vertexindex + 2])
+					if must_flip_normals:
+						facedata.append([vertexindex, vertexindex + 3, vertexindex + 2])
+					else:
+						facedata.append([vertexindex + 2, vertexindex + 3, vertexindex])
 
 				# Compile a list of all vertices to mark as "don't merge".
 				# Those are the vertices that form a sharp edge in the current face.
@@ -217,9 +229,12 @@ class Ls3Exporter:
 					# Since the vertices are exported per-face, get the vertex normal from the face normal,
 					# except when the face is set to "smooth"
 					if face.use_smooth:
-						normal = [-v.normal[1], v.normal[0], v.normal[2]]
+						normal = [v.normal[1], -v.normal[0], -v.normal[2]]
 					else:
-						normal = [-face.normal[1], face.normal[0], face.normal[2]]
+						normal = [face.normal[1], -face.normal[0], -face.normal[2]]
+
+					if must_flip_normals:
+						normal = list(map(lambda x : -x, normal))
 
 					# The coordinates are transformed into the Zusi coordinate system.
 					# The vertex index is appended for reordering vertices
