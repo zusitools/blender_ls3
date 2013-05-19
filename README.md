@@ -1,7 +1,7 @@
 zusitools
 =========
 
-Ein Blender-Plugin für den Im- und Export von .ls3-Dateien. Dieses XML-basierte Dateiformat wird von [Zusi 3](www.zusi.de) verwendet.
+Ein Blender-Plugin für den Im- und Export von .ls3-Dateien. Dieses XML-basierte Dateiformat wird von [Zusi 3](http://www.zusi.de) verwendet.
 
 **Installation:** 
 
