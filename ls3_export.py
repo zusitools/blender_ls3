@@ -175,8 +175,7 @@ class Ls3Exporter:
 		for ob in objects:
 			# Apply modifiers and transform the mesh so that the vertex coordinates
 			# are global coordinates.
-			ob2 = ob.copy()
-			mesh = ob2.to_mesh(self.config.context.scene, True, "PREVIEW")
+			mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
 			mesh.transform(ob.matrix_world)
 
 			# List vertex indices of edges that are marked as "sharp edges",
@@ -232,6 +231,9 @@ class Ls3Exporter:
 						len(vertexdata),
 						vertex_index in face_no_merge_vertices
 					])
+
+			# Remove the generated preview mesh
+			bpy.data.meshes.remove(mesh)
 
 		# Optimize mesh
 		if self.config.optimizeMesh:
