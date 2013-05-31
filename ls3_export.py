@@ -185,7 +185,10 @@ class Ls3Exporter:
 
             # List vertex indices of edges that are marked as "sharp edges",
             # which means we won't merge them later during mesh optimization.
-            no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp])
+            # The order of the vertices in face.edge_keys does not seem to be consistent,
+            # so we include both (v0,v1) and (v1,v0) in the set.
+            no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp]).union(
+                set([(e.vertices[1], e.vertices[0]) for e in mesh.edges if e.use_edge_sharp]))
 
             # Write vertices, faces and UV coordinates.
             # Access faces via the tessfaces API which provides only triangles and quads.
