@@ -151,18 +151,20 @@ class LsImporter:
 				loc = read3floats(fp)
 				rot = read3floats(fp)
 				
-				settings = LsImporterSettings(
-					self.config.context,
-					path,
-					filename,
-					directory,
-					self.config.loadLinked,
-					[loc[x] + self.config.location[x] for x in [0,1,2]],
-					[rot[x] + self.config.rotation[x] for x in [0,1,2]],
-				)
-				
-				importer = LsImporter(settings)
-				importer.import_ls()
+				if self.config.loadLinked:
+					settings = LsImporterSettings(
+						self.config.context,
+						path,
+						filename,
+						directory,
+						self.config.loadLinked,
+						[loc[i] + self.config.location[i] for i in [0,1,2]],
+						[rot[i] + self.config.rotation[i] for i in [0,1,2]],
+					)
+					
+					importer = LsImporter(settings)
+					importer.import_ls()
+
 				line = fp.readline()
 
 			# Create new mesh
