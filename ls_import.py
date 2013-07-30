@@ -61,33 +61,20 @@ class LsImporter:
     def __init__(self, config):
         self.config = config
 
-        # Corresponding lsb file for current LS3 file
-        self.lsbfile = None
-
-        # No. of current subset
-        self.subsetno = 0
-
         # Currently edited object
         self.currentobject = None
 
         # Currently edited mesh
         self.currentmesh = None
 
-        # List of vertices for current mesh
-        # Vertex data is stored in tuples: (x, y, z, normal_x, normal_y, normal_z, u1, v1, u2, v2)
-        self.currentvertices = []
-
-        # List of faces (vertex indices) for current mesh
-        # Each item contains a tuple of three vertex indices.
-        self.currentfaces = []
-
         # Path to Zusi data dir
         # self.datapath = zusicommon.get_zusi_data_path()
         # TODO
         self.datapath = "/mnt/zusi/Zusi"
 
-    # Tries to locate a file by its path, interpreting the path as relative to the Zusi base path
     def resolveFilePath(self, filePath):
+        """Tries to locate a file by its path, interpreting the path as relative to the Zusi base path"""
+
         # Normalize path separator
         for ch in ['\\',  '/']:
             filePath = filePath.replace(ch, os.sep)
@@ -95,6 +82,7 @@ class LsImporter:
         return os.path.realpath(self.datapath) + os.sep + filePath
 
     def readElement(self, fp):
+        """Reads one element from the file and adds it to the current mesh."""
         elementType = int(fp.readline())
 
         if elementType == 0:
@@ -122,7 +110,8 @@ class LsImporter:
                 skipLine(fp, 1 + 3 * numVertices + 7)
 
     def get_material(self, diffuse_color, night_color):
-        # Assign material to object
+        """Gets a material with the given diffuse and night color, creating one if it does not exist yet, and adds it to the current mesh's materials"""
+
         diffuse_color_rgb = color_to_rgba(diffuse_color)
         matname = "R" + str(int(diffuse_color_rgb[0] * 255)) + " G" + str(int(diffuse_color_rgb[1] * 255)) + " B" + str(int(diffuse_color_rgb[2] * 255)) + " (" + str(diffuse_color) + ")"
 
