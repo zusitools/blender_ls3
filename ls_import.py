@@ -180,7 +180,7 @@ class LsImporter:
 			# Create new object
 			self.currentobject = bpy.data.objects.new(self.config.fileName, self.currentmesh)
 			self.currentobject.location = self.config.location
-			self.currentobject.rotation_euler = self.config.rotation
+			self.currentobject.rotation_euler = [self.config.rotation[0], -self.config.rotation[1], self.config.rotation[2]]
 			bpy.context.scene.objects.link(self.currentobject)
 
 			print("Done")
