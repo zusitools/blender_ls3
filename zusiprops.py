@@ -474,6 +474,7 @@ class ZUSI_VARIANTS_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_variants.add'
     bl_label = "Add variant"
     bl_description = "Add a variant to the scene"
+    bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
         max_id = -1
@@ -489,6 +490,7 @@ class ZUSI_VARIANTS_OT_del(bpy.types.Operator):
     bl_idname = 'zusi_variants.remove'
     bl_label = "Remove variant"
     bl_description = "Remove the selected variant from the scene"
+    bl_options = {'INTERNAL'}
     
     @classmethod
     def poll(self, context):
@@ -547,6 +549,7 @@ class ZUSI_AUTHORS_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_authors.add'
     bl_label = "Add author"
     bl_description = "Add a author to the scene"
+    bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
         context.scene.zusi_authors.add().name = "Author"
@@ -576,6 +579,7 @@ class ZUSI_AUTHORS_OT_add_default(bpy.types.Operator):
     bl_idname = 'zusi_authors.add_default'
     bl_label = "Add default author information"
     bl_description = "Add author information entered in Zusi-Dateiverwaltung (Windows) or the configuration file (Linux)"
+    bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
         default_author = zusicommon.get_default_author_info()
