@@ -280,7 +280,7 @@ bpy.utils.register_class(ZusiTexturePresetResultStageSettings)
 
 def on_zusi_texture_preset_update(self, context):
     # TODO call this when initializing the object
-    mat = context.object.data.materials[0]
+    mat = context.object.data.materials[context.object.active_material_index]
     newpreset = mat.zusi_texture_preset
     
     if newpreset == 0:
@@ -675,7 +675,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        mat = context.object.data.materials[0]
+        mat = context.object.data.materials[context.object.active_material_index]
 
         if mat:
             row = layout.row()
@@ -722,12 +722,12 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
             context.object is not None and
             context.object.data is not None and
             len(context.object.data.materials) > 0 and
-            context.object.data.materials[0].zusi_texture_preset == "0")
+            context.object.data.materials[context.object.active_material_index].zusi_texture_preset == "0")
     
     def draw(self, context):
         layout = self.layout
 
-        mat = context.object.data.materials[0] # TODO active material slot
+        mat = context.object.data.materials[context.object.active_material_index]
 
         if mat:
             for (texstage, description) in [
