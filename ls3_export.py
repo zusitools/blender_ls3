@@ -311,7 +311,7 @@ class Ls3Exporter:
 			# TODO
 			#if material.result_stage.D3DRS_ALPHATESTENABLE:
 			#	renderFlagsNode.setAttribute("ALPHATESTENABLE", "1")
-			renderFlagsNode.setAttribute("ALPHAREF", material.result_stage.alpha_ref)
+			renderFlagsNode.setAttribute("ALPHAREF", str(material.result_stage.alpha_ref))
 
 			for (texstage, node_name) in [(material.texture_stage_1, "SubSetTexFlags"), (material.texture_stage_2, "SubSetTexFlags2"), (material.texture_stage_3, "SubSetTexFlags3")]:
 				texflagsNode = self.xmldoc.createElement(node_name)
