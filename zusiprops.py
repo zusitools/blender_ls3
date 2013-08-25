@@ -20,6 +20,15 @@ from . import zusicommon
 
 # This file defines Zusi specific custom properties and the corresponding UI.
 
+# Defines a list with check boxes.
+class CheckBoxList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
+        layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
+        layout.label(self.get_item_text(item))
+
+bpy.utils.register_class(CheckBoxList)
+
 # Defines a variant in a scene with an ID (which should not be changed) and a variant name
 # (Name is defined in PropertyGroup)
 class ZusiFileVariant(bpy.types.PropertyGroup):
@@ -30,6 +39,10 @@ class ZusiFileVariant(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariant)
 
+class ZusiFileVariantList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.label(item.name)
+
 # Defines a visibility of an object/material/texture/whatever in a certain variant
 class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
     variant_id = bpy.props.IntProperty(
@@ -38,6 +51,16 @@ class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
     )
 
 bpy.utils.register_class(ZusiFileVariantVisibility)
+
+class ZusiFileVariantVisibilityList(CheckBoxList):
+    def get_property_name(self):
+        return "visible"
+    
+    def get_property_value(self, item):
+        return item.visible
+    
+    def get_item_text(self, item):
+        return str(item.name)
 
 # Contains information about a file's author
 class ZusiAuthor(bpy.types.PropertyGroup):
@@ -73,6 +96,10 @@ class ZusiAuthor(bpy.types.PropertyGroup):
     )
 
 bpy.utils.register_class(ZusiAuthor)
+
+class ZusiAuthorList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.label(item.name)
 
 # ---
 # Custom properties
@@ -528,7 +555,10 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         row = layout.row()
 
         # Show list of variants
-        row.template_list(sce, "zusi_variants", sce, "zusi_variants_index", rows = 3)
+        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+            row.template_list(sce, "zusi_variants", sce, "zusi_variants_index", rows = 3, prop_list = "template_list_controls")
+        else:
+            row.template_list("ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index", rows = 3)
 
         # Show add/remove operator
         col = row.column(align = True)
@@ -604,7 +634,10 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
 
         # Show list of authors
         row = layout.row()
-        row.template_list(sce, "zusi_authors", sce, "zusi_authors_index", rows = 3)
+        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+            row.template_list(sce, "zusi_authors", sce, "zusi_authors_index", rows = 3, prop_list = "template_list_controls")
+        else:
+            row.template_list("ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index", rows = 3)
 
         # Show add/remove operator
         col = row.column(align = True)
