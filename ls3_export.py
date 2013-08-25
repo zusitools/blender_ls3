@@ -302,6 +302,35 @@ class Ls3Exporter:
 
         renderFlagsNode = self.xmldoc.createElement("RenderFlags")
         renderFlagsNode.setAttribute("TexVoreinstellung", material.zusi_texture_preset)
+        
+        if material.zusi_texture_preset == "0":
+            # Custom texture preset
+            renderFlagsNode.setAttribute("SHADEMODE", material.result_stage.D3DRS_SHADEMODE)
+            renderFlagsNode.setAttribute("DESTBLEND", material.result_stage.D3DRS_DESTBLEND)
+            renderFlagsNode.setAttribute("SRCBLEND", material.result_stage.D3DRS_SRCBLEND)
+            
+            if material.result_stage.D3DRS_ALPHABLENDENABLE:
+                renderFlagsNode.setAttribute("ALPHABLENDENABLE", "1")
+            # TODO
+            #if material.result_stage.D3DRS_ALPHATESTENABLE:
+            #    renderFlagsNode.setAttribute("ALPHATESTENABLE", "1")
+            renderFlagsNode.setAttribute("ALPHAREF", material.result_stage.alpha_ref)
+
+            for (texstage, node_name) in [(material.texture_stage_1, "SubSetTexFlags"), (material.texture_stage_2, "SubSetTexFlags2"), (material.texture_stage_3, "SubSetTexFlags3")]:
+                texflagsNode = self.xmldoc.createElement(node_name)
+                texflagsNode.setAttribute("MINFILTER", texstage.D3DSAMP_MINFILTER)
+                texflagsNode.setAttribute("MAGFILTER", texstage.D3DSAMP_MAGFILTER)
+                texflagsNode.setAttribute("COLOROP", texstage.D3DTSS_COLOROP)
+                texflagsNode.setAttribute("COLORARG1", texstage.D3DTSS_COLORARG1)
+                texflagsNode.setAttribute("COLORARG2", texstage.D3DTSS_COLORARG2)
+                texflagsNode.setAttribute("COLORARG0", texstage.D3DTSS_COLORARG0)
+                texflagsNode.setAttribute("ALPHAOP", texstage.D3DSAMP_ALPHAOP)
+                texflagsNode.setAttribute("ALPHAARG1", texstage.D3DTSS_ALPHAARG1)
+                texflagsNode.setAttribute("ALPHAARG2", texstage.D3DTSS_ALPHAARG2)
+                texflagsNode.setAttribute("ALPHAARG0", texstage.D3DTSS_ALPHAARG0)
+                texflagsNode.setAttribute("RESULTARG", texstage.D3DTSS_RESULTARG)
+                renderFlagsNode.appendChild(texflagsNode)
+        
         subsetNode.appendChild(renderFlagsNode)
 
         # Write textures
