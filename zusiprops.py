@@ -769,6 +769,7 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
 class OBJECT_OT_zusi_toggle_variant_visibility(bpy.types.Operator):
 	bl_idname = "zusi.toggle_variant_visibility"
 	bl_label = "Toggle visibility"
+	bl_options = {'INTERNAL'}
 
 	variant_id = bpy.props.IntProperty()
 	object_type = bpy.props.EnumProperty(
