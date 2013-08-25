@@ -101,6 +101,267 @@ class ZusiAuthorList(bpy.types.UIList):
 	def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
 		layout.label(item.name)
 
+
+# Custom texture preset properties
+
+d3d_texture_filters = [
+	("0", "D3DTEXF_NONE", ""),
+	("1", "D3DTEXF_POINT", ""),
+	("2", "D3DTEXF_LINEAR", ""),
+	("3", "D3DTEXF_ANISOTROPHIC", ""),
+	("6", "D3DTEXF_PYRAMIDALQUAD", ""),
+	("7", "D3DTEXF_GAUSSIANQUAD", ""),
+]
+
+d3d_texture_ops = [
+	("1", "D3DTOP_DISABLE", ""),
+	("2", "D3DTOP_SELECTARG1", ""),
+	("3", "D3DTOP_SELECTARG2", ""),
+	("4", "D3DTOP_MODULATE", ""),
+	("5", "D3DTOP_MODULATE2X", ""),
+	("6", "D3DTOP_MODULATE4X", ""),
+	("7", "D3DTOP_ADD", ""),
+	("8", "D3DTOP_ADDSIGNED", ""),
+	("9", "D3DTOP_ADDSIGNED2X", ""),
+	("10", "D3DTOP_SUBTRACT", ""),
+	("11", "D3DTOP_ADDSMOOTH", ""),
+	("12", "D3DTOP_BLENDDIFFUSEALPHA", ""),
+	("13", "D3DTOP_BLENDTEXTUREALPHA", ""),
+	("14", "D3DTOP_BLENDFACTORALPHA", ""),
+	("15", "D3DTOP_BLENDTEXTUREALPHAPM", ""),
+	("16", "D3DTOP_BLENDCURRENTALPHA", ""),
+	("17", "D3DTOP_PREMODULATE", ""),
+	("18", "D3DTOP_MODULATEALPHA_ADDCOLOR", ""),
+	("19", "D3DTOP_MODULATECOLOR_ADDALPHA", ""),
+	("20", "D3DTOP_MODULATEINVALPHA_ADDCOLOR", ""),
+	("21", "D3DTOP_MODULATEINVCOLOR_ADDALPHA", ""),
+	("22", "D3DTOP_BUMPENVMAP", ""),
+	("23", "D3DTOP_BUMPENVMAPLUMINANCE", ""),
+	("24", "D3DTOP_DOTPRODUCT3", ""),
+	("25", "D3DTOP_MULTIPLYADD", ""),
+	("26", "D3DTOP_LERP", ""),
+]
+
+d3d_texture_args = [
+	("0", "D3DTA_DIFFUSE", ""),
+	("1", "D3DTA_CURRENT", ""),
+	("2", "D3DTA_TEXTURE", ""),
+	("3", "D3DTA_TFACTOR", ""),
+	("4", "D3DTA_SPECULAR", ""),
+	("5", "D3DTA_TEMP", ""),
+	("6", "D3DTA_CONSTANT", ""),
+]
+
+d3d_blend_params = [
+	("1", "D3DBLEND_ZERO", ""),
+	("2", "D3DBLEND_ONE", ""),
+	("3", "D3DBLEND_SRCCOLOR", ""),
+	("4", "D3DBLEND_INVSRCCOLOR", ""),
+	("5", "D3DBLEND_SRCALPHA", ""),
+	("6", "D3DBLEND_INVSRCALPHA", ""),
+	("7", "D3DBLEND_DESTALPHA", ""),
+	("8", "D3DBLEND_INVDESTALPHA", ""),
+	("9", "D3DBLEND_DESTCOLOR", ""),
+	("10", "D3DBLEND_INVDESTCOLOR", ""),
+	("11", "D3DBLEND_SRCALPHASAT", ""),
+	("12", "D3DBLEND_BOTHSRCALPHA", ""),
+	("13", "D3DBLEND_BOTHINVSRCALPHA", ""),
+	("14", "D3DBLEND_BLENDFACTOR", ""),
+	("15", "D3DBLEND_INVBLENDFACTOR", ""),
+]
+
+d3d_shademodes = [
+	("0", "D3DSHADE_FLAT", ""), # TODO
+	("2", "D3DSHADE_GOURAUD", ""),
+	("3", "D3DSHADE_PHONG", ""),
+]
+
+# Settings for one texture stage in a custom texture preset
+class ZusiTexturePresetTextureStageSettings(bpy.types.PropertyGroup):
+	D3DSAMP_MINFILTER = bpy.props.EnumProperty(
+		name = "D3DSAMP_MINFILTER",
+		description = "Value for D3DSAMP_MINFILTER",
+		items = d3d_texture_filters,
+	)
+	
+	D3DSAMP_MAGFILTER = bpy.props.EnumProperty(
+		name = "D3DSAMP_MAGFILTER",
+		description = "Value for D3DSAMP_MAGFILTER",
+		items = d3d_texture_filters,
+	)
+	
+	D3DTSS_COLOROP = bpy.props.EnumProperty(
+		name = "D3DSAMP_COLOROP",
+		description = "Value for D3DSAMP_COLOROP",
+		items = d3d_texture_ops,
+	)
+	
+	D3DTSS_COLORARG1 = bpy.props.EnumProperty(
+		name = "D3DTSS_COLORARG1",
+		description = "Value for D3DTSS_COLORARG1",
+		items = d3d_texture_args,
+	)
+	
+	D3DTSS_COLORARG2 = bpy.props.EnumProperty(
+		name = "D3DTSS_COLORARG2",
+		description = "Value for D3DTSS_COLORARG2",
+		items = d3d_texture_args,
+	)
+	
+	D3DTSS_COLORARG0 = bpy.props.EnumProperty(
+		name = "D3DTSS_COLORARG2",
+		description = "Value for D3DTSS_COLORARG0",
+		items = d3d_texture_args,
+	)
+	
+	D3DSAMP_ALPHAOP = bpy.props.EnumProperty(
+		name = "D3DSAMP_ALPHAOP",
+		description = "Value for D3DSAMP_ALPHAOP",
+		items = d3d_texture_ops,
+	)
+	
+	D3DTSS_ALPHAARG1 = bpy.props.EnumProperty(
+		name = "D3DTSS_ALPHAARG1",
+		description = "Value for D3DTSS_ALPHAARG1",
+		items = d3d_texture_args,
+	)
+	
+	D3DTSS_ALPHAARG2 = bpy.props.EnumProperty(
+		name = "D3DTSS_ALPHAARG2",
+		description = "Value for D3DTSS_ALPHAARG2",
+		items = d3d_texture_args,
+	)
+	
+	D3DTSS_ALPHAARG0 = bpy.props.EnumProperty(
+		name = "D3DTSS_ALPHAARG2",
+		description = "Value for D3DTSS_ALPHAARG0",
+		items = d3d_texture_args,
+	)
+	
+	D3DTSS_RESULTARG = bpy.props.EnumProperty(
+		name = "D3DTSS_RESULTARG",
+		description = "Value for D3DTSS_RESULTARG",
+		items = d3d_texture_args,
+	)
+
+bpy.utils.register_class(ZusiTexturePresetTextureStageSettings)
+
+class ZusiTexturePresetResultStageSettings(bpy.types.PropertyGroup):
+	D3DRS_DESTBLEND = bpy.props.EnumProperty(
+		name = "D3DRS_DESTBLEND",
+		description = "Value for D3DRS_DESTBLEND",
+		items = d3d_blend_params,
+	)
+
+	D3DRS_SRCBLEND = bpy.props.EnumProperty(
+		name = "D3DRS_SRCBLEND",
+		description = "Value for D3DRS_SRCBLEND",
+		items = d3d_blend_params,
+	)
+	
+	D3DRS_ALPHABLENDENABLE = bpy.props.BoolProperty(
+		name = "D3DRS_ALPHABLENDENABLE",
+		description = "Value for D3DRS_ALPHABLENDENABLE",
+	)
+	
+	alpha_ref = bpy.props.IntProperty(
+		name = "Alpha REF value",
+		min = 0,
+		max = 255,
+	)
+	
+	D3DRS_SHADEMODE = bpy.props.EnumProperty(
+		name = "D3DRS_SHADEMODE",
+		description = "D3DRS_SHADEMODE",
+		items = d3d_shademodes,
+	)
+
+bpy.utils.register_class(ZusiTexturePresetResultStageSettings)
+
+def on_zusi_texture_preset_update(self, context):
+	# TODO call this when initializing the object
+	mat = context.object.data.materials[0]
+	newpreset = mat.zusi_texture_preset
+	
+	if newpreset == 0:
+		return
+	
+	# Texture stage 3
+	mat.texture_stage_1.D3DSAMP_MINFILTER = "3" # D3DTEXF_ANISOTROPHIC
+	mat.texture_stage_1.D3DSAMP_MAGFILTER = "3" # D3DTEXF_ANISOTROPHIC
+	mat.texture_stage_1.D3DTSS_COLOROP = "4" # D3DTOP_MODULATE
+	mat.texture_stage_1.D3DTSS_COLORARG1 = "2" # D3DTA_TEXTURE
+	mat.texture_stage_1.D3DTSS_COLORARG2 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_1.D3DTSS_COLORARG0 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_1.D3DTSS_ALPHAOP = "2" # D3DTOP_SELECTARG1
+	mat.texture_stage_1.D3DTSS_ALPHAARG1 = "2" # D3DTA_TEXTURE
+	mat.texture_stage_1.D3DTSS_ALPHAARG2 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_1.D3DTSS_ALPHAARG0 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_1.D3DTSS_RESULTARG = "1" # D3DTA_CURRENT
+	
+	# Texture stage 2
+	mat.texture_stage_2.D3DSAMP_MINFILTER = "0" # D3DTEXF_NONE
+	mat.texture_stage_2.D3DSAMP_MAGFILTER = "0" # D3DTEXF_NONE
+	mat.texture_stage_2.D3DTSS_COLOROP = "1" # D3DTOP_DISABLE
+	mat.texture_stage_2.D3DTSS_COLORARG1 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_2.D3DTSS_COLORARG2 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_2.D3DTSS_COLORARG0 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_2.D3DTSS_ALPHAOP = "1" # D3DTOP_DISABLE
+	mat.texture_stage_2.D3DTSS_ALPHAARG1 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_2.D3DTSS_ALPHAARG2 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_2.D3DTSS_ALPHAARG0 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_2.D3DTSS_RESULTARG = "1" # D3DTA_CURRENT
+	
+	# Texture stage 3
+	mat.texture_stage_3.D3DTSS_COLOROP = "1" # D3DTOP_DISABLE
+	mat.texture_stage_3.D3DTSS_COLORARG1 = "0" # D3DTA_DIFFUSE
+	mat.texture_stage_3.D3DTSS_COLORARG2 = "0" # D3DTA_DIFFUSE
+	
+	# Result stage
+	mat.result_stage.D3DRS_SRCBLEND = "5" # D3DBLEND_SRCALPHA
+	mat.result_stage.D3DRS_DESTBLEND = "6" # D3DBLEND_INVSRCALPHA
+	mat.result_stage.D3DRS_ALPHABLENDENABLE = newpreset in [4, 6, 7, 8, 9]
+	mat.result_stage.alpha_ref = 1
+	mat.result_stage.D3DRS_SHADEMODE = "1" # D3DSHADE_GOURAUD
+	
+	if newpreset == 3:
+		mat.texture_stage_1.D3DTSS_RESULTARG = "5" # D3DTA_TEMP
+		mat.texture_stage_2.D3DTSS_COLOROP = "4" # D3DTOP_MODULATE
+		mat.texture_stage_2.D3DTSS_ALPHAOP = "2" # D3DTOP_SELECTARG1
+		mat.texture_stage_2.D3DTSS_ALPHAARG1 = "2" # D3DTA_TEXTURE
+		mat.texture_stage_3.D3DTSS_COLOROP = "16" # D3DTOP_BLENDCURRENTALPHA
+		mat.texture_stage_3.D3DTSS_COLORARG1 = "1" # D3DTA_CURRENT
+		mat.texture_stage_3.D3DTSS_COLORARG2 = "5" # D3DTA_TEMP
+	
+	if newpreset == 5:
+		mat.texture_stage_2.D3DTSS_COLOROP = "13" # D3DTOP_BLENDTEXTUREALPHA
+		mat.result_stage.D3DRS_SRCBLEND = "1" # D3DBLEND_ZERO
+		mat.result_stage.D3DRS_DESTBLEND = "1" # D3DBLEND_ZERO
+	
+	if newpreset == 6:
+		mat.texture_stage_1.D3DTSS_ALPHAOP = "14" # D3DTOP_BLENDFACTORALPHA
+		mat.result_stage.D3DRS_SRCBLEND = "6" # D3DBLEND_INVSRCALPHA
+		mat.result_stage.D3DRS_DESTBLEND = "3" # D3DBLEND_SRCCOLOR
+	
+	if newpreset == 8:
+		mat.texture_stage_1.D3DTSS_ALPHAOP = "4" # D3DTOP_MODULATE
+		mat.result_stage.alpha_ref = 100
+	
+	if newpreset in [3, 5]:
+		mat.texture_stage_2.D3DTSS_COLORARG1 = "2" # D3DTA_TEXTURE
+		mat.texture_stage_2.D3DSAMP_MINFILTER = "3" # D3DTEXF_ANISOTROPHIC
+		mat.texture_stage_2.D3DSAMP_MAGFILTER = "3" # D3DTEXF_ANISOTROPHIC
+	
+	if newpreset in [1, 3]:
+		mat.texture_stage_1.D3DTSS_ALPHAARG2 = "0" # D3DTA_DIFFUSE
+		mat.texture_stage_1.D3DTSS_ALPHAOP = "1" # D3DTOP_DISABLE
+		mat.result_stage.D3DRS_SRCBLEND = "1" # D3DBLEND_ZERO
+		mat.result_stage.D3DRS_DESTBLEND = "1" # D3DBLEND_ZERO
+		mat.result_stage.alpha_ref = 0
+	
+	if newpreset in [7, 9]:
+		mat.texture_stage_1.D3DTSS_ALPHAARG2 = "3" # D3DTA_TFACTOR
+
 # ---
 # Custom properties
 # ---
@@ -234,7 +495,8 @@ bpy.types.Material.zusi_texture_preset = bpy.props.EnumProperty(
 	name = "Texture preset",
 	description = "The texture preset to assign to this material",
 	items = texture_presets,
-	default = "1"
+	default = "1",
+	update = on_zusi_texture_preset_update,
 )
 
 bpy.types.Material.zusi_landscape_type = bpy.props.EnumProperty(
@@ -265,6 +527,30 @@ bpy.types.Material.zusi_signal_magnification = bpy.props.FloatProperty(
 	min = 0.0,
 	max = 10.0,
 	default = 0.0
+)
+
+bpy.types.Material.texture_stage_1 = bpy.props.PointerProperty(
+	name = "Texture stage 1",
+	description = "Settings for the first texture stage",
+	type = ZusiTexturePresetTextureStageSettings,
+)
+
+bpy.types.Material.texture_stage_2 = bpy.props.PointerProperty(
+	name = "Texture stage 2",
+	description = "Settings for the second texture stage",
+	type = ZusiTexturePresetTextureStageSettings,
+)
+
+bpy.types.Material.texture_stage_3 = bpy.props.PointerProperty(
+	name = "Texture stage 3",
+	description = "Settings for the third texture stage",
+	type = ZusiTexturePresetTextureStageSettings,
+)
+
+bpy.types.Material.result_stage = bpy.props.PointerProperty(
+	name = "Result stage",
+	description = "Settings for the result stage",
+	type = ZusiTexturePresetResultStageSettings,
 )
 
 #
@@ -400,6 +686,9 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 			
 			row = layout.row()
 			row.prop(mat, "zusi_texture_preset")
+			
+			row = layout.row()
+			row.operator("zusi_texture_preset.edit")
 
 			row = layout.row()
 			row.prop(mat, "zusi_force_brightness")
@@ -420,6 +709,62 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 			row.enabled = mat.zusi_use_emit
 			row.prop(mat, "zusi_emit_color", text="")
 			row.prop(mat, "zusi_emit_alpha", slider=True, text="Alpha")
+
+class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
+	bl_idname = 'zusi_texture_preset.edit'
+	bl_label = "Edit custom texture preset"
+	bl_description = "Edit the custom texture preset"
+	bl_options = {'INTERNAL', 'UNDO'}
+	
+	@classmethod
+	def poll(self, context):
+		return (
+			context.object is not None and
+			context.object.data is not None and
+			len(context.object.data.materials) > 0 and
+			context.object.data.materials[0].zusi_texture_preset == "0")
+	
+	def draw(self, context):
+		layout = self.layout
+
+		mat = context.object.data.materials[0] # TODO active material slot
+
+		if mat:
+			for (texstage, description) in [
+					(mat.texture_stage_1, "First texture stage"),
+					(mat.texture_stage_2, "Second texture stage")]:
+				col = layout.column()
+				col.label(description)
+				col.prop(texstage, "D3DSAMP_MINFILTER")
+				col.prop(texstage, "D3DSAMP_MAGFILTER")
+				col.prop(texstage, "D3DTSS_COLOROP")
+				col.prop(texstage, "D3DTSS_COLORARG1")
+				col.prop(texstage, "D3DTSS_COLORARG2")
+				col.prop(texstage, "D3DTSS_COLORARG0")
+				col.prop(texstage, "D3DSAMP_ALPHAOP")
+				col.prop(texstage, "D3DTSS_ALPHAARG1")
+				col.prop(texstage, "D3DTSS_ALPHAARG2")
+				col.prop(texstage, "D3DTSS_ALPHAARG0")
+				col.prop(texstage, "D3DTSS_RESULTARG")
+			
+			col = layout.column()
+			col.label("Third texture stage")
+			col.prop(mat.texture_stage_3, "D3DTSS_COLOROP")
+			col.prop(mat.texture_stage_3, "D3DTSS_COLORARG1")
+			col.prop(mat.texture_stage_3, "D3DTSS_COLORARG2")
+			
+			col.label("Result stage")
+			col.prop(mat.result_stage, "D3DRS_DESTBLEND")
+			col.prop(mat.result_stage, "D3DRS_SRCBLEND")
+			col.prop(mat.result_stage, "D3DRS_ALPHABLENDENABLE")
+			col.prop(mat.result_stage, "alpha_ref")
+			col.prop(mat.result_stage, "D3DRS_SHADEMODE")
+
+	def invoke(self, context, event):
+		return context.window_manager.invoke_props_dialog(self)
+
+	def execute(self, context):
+		return {'FINISHED'}
 
 class OBJECT_OT_zusi_toggle_variant_visibility(bpy.types.Operator):
 	bl_idname = "zusi.toggle_variant_visibility"
