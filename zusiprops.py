@@ -489,13 +489,17 @@ class ZUSI_VARIANTS_OT_del(bpy.types.Operator):
     bl_idname = 'zusi_variants.remove'
     bl_label = "Remove variant"
     bl_description = "Remove the selected variant from the scene"
+    
+    @classmethod
+    def poll(self, context):
+        return len(context.scene.zusi_variants) > 0
 
     def invoke(self, context, event):
         sce = context.scene
 
         zusi_variants = sce.zusi_variants
 
-        if sce.zusi_variants_index >= 0:
+        if sce.zusi_variants_index >= 0 and len(zusi_variants) > 0:
             variant_id = zusi_variants[sce.zusi_variants_index].id
 
             # Remove visibility setting for this variant from all objects
@@ -552,13 +556,17 @@ class ZUSI_AUTHORS_OT_del(bpy.types.Operator):
     bl_idname = 'zusi_authors.remove'
     bl_label = "Remove author"
     bl_description = "Remove the selected author from the scene"
+    
+    @classmethod
+    def poll(self, context):
+        return len(context.scene.zusi_authors) > 0
 
     def invoke(self, context, event):
         sce = context.scene
 
         zusi_authors = sce.zusi_authors
 
-        if sce.zusi_authors_index >= 0:
+        if sce.zusi_authors_index >= 0 and len(zusi_authors) > 0:
             zusi_authors.remove(sce.zusi_authors_index)
             sce.zusi_authors_index = max(sce.zusi_authors_index - 1, 0)
 
