@@ -191,8 +191,8 @@ class ZusiTexturePresetTextureStageSettings(bpy.types.PropertyGroup):
 	)
 	
 	D3DTSS_COLOROP = bpy.props.EnumProperty(
-		name = "D3DSAMP_COLOROP",
-		description = "Value for D3DSAMP_COLOROP",
+		name = "D3DTSS_COLOROP",
+		description = "Value for D3DTSS_COLOROP",
 		items = d3d_texture_ops,
 	)
 	
