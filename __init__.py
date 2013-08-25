@@ -71,6 +71,16 @@ class ZusiFileVariantExportSetting(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariantExportSetting)
 
+class ZusiFileVariantExportSettingList(zusiprops.CheckBoxList):
+	def get_property_name(self):
+		return "export"
+	
+	def get_property_value(self, item):
+		return item.export
+	
+	def get_item_text(self, item):
+		return str(item.name)
+
 # A setting to define whether to show a given variant.
 class ZusiFileVariantVisibilitySetting(bpy.types.PropertyGroup):
 	variant_id = bpy.props.IntProperty(
@@ -104,6 +114,16 @@ class ZusiLodImportSetting(bpy.types.PropertyGroup):
 	)
 
 bpy.utils.register_class(ZusiLodImportSetting)
+
+class ZusiLodImportSettingList(zusiprops.CheckBoxList):
+	def get_property_name(self):
+		return "imp"
+	
+	def get_property_value(self, item):
+		return item.imp
+	
+	def get_item_text(self, item):
+		return str(item.name)
 
 # ---
 # Import menu
@@ -200,7 +220,11 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
 		layout.label("Import LODs (only linked files)")
 		row = layout.row()
 		row.enabled = self.properties.loadLinked
-		row.template_list(self, "lod_import_setting", self, "lod_import_setting_index", prop_list = "template_list_controls")
+		
+		if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+			row.template_list(self, "lod_import_setting", self, "lod_import_setting_index", prop_list = "template_list_controls")
+		else:
+			row.template_list("ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
 
 	def execute(self, context):
 		from . import ls3_import
@@ -302,7 +326,12 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 		row.label("Variants (leave empty to export all)")
 
 		if len(context.scene.zusi_variants) > 0:
-			layout.template_list(self, "variant_export_setting", self, "variant_export_setting_index", prop_list = "template_list_controls")
+			num_rows = min(5, len(self.properties.variant_export_setting))
+
+			if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+				layout.template_list(self, "variant_export_setting", self, "variant_export_setting_index", prop_list = "template_list_controls", rows = num_rows)
+			else:
+				layout.template_list("ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
 		else:
 			box = layout.box()
 			box.label("Variants can be defined in the Scene settings.")
@@ -425,7 +454,10 @@ class VIEW_OT_show_variants(bpy.types.Operator):
 		row.label("Variants (leave empty to show all)")
 
 		if len(context.scene.zusi_variants) > 0:
-			layout.template_list(self, "variant_visibility_setting", self, "variant_visibility_setting_index", prop_list = "template_list_controls")
+			if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+				layout.template_list(self, "variant_visibility_setting", self, "variant_visibility_setting_index", prop_list = "template_list_controls")
+			else:
+				layout.template_list("ZusiFileVariantVisibilityList", "", self, "variant_visibility_setting", self, "variant_visibility_setting_index")
 		else:
 			box = layout.box()
 			box.label("Variants can be defined in the Scene settings.")
