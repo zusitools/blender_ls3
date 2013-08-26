@@ -5,6 +5,7 @@ Ein Blender-Plugin für den Im- und Export von .ls3-Dateien. Dieses XML-basierte
 
 **Installation:** 
 
+ * Es wird Blender-Version 2.63a oder höher vorausgesetzt.
  * [Release als ZIP herunterladen](https://github.com/zusitools/blender_ls3/blob/master/release/release.zip?raw=true) oder aktuellen Repository-Stand via Git herunterladen.
  * Unter Linux: Gemäß der Anleitung in `zusiconfig.py.default` den Pfad zum Zusi-Datenverzeichnis sowie optional die Autoreninfo eintragen
  * Den Ordner `io_scene_ls3` aus der ZIP-Datei mitsamt den enthaltenen Dateien in den Unterordner `<version>/scripts/addons` des Blender-Programmverzeichnisses kopieren. `<version>` ist die Versionsnummer von Blender, etwa *2.63*.
