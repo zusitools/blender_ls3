@@ -221,7 +221,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         row = layout.row()
         row.enabled = self.properties.loadLinked
         
-        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
             row.template_list(self, "lod_import_setting", self, "lod_import_setting_index", prop_list = "template_list_controls")
         else:
             row.template_list("ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
@@ -328,7 +328,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         if len(context.scene.zusi_variants) > 0:
             num_rows = min(5, len(self.properties.variant_export_setting))
 
-            if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+            if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
                 layout.template_list(self, "variant_export_setting", self, "variant_export_setting_index", prop_list = "template_list_controls", rows = num_rows)
             else:
                 layout.template_list("ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
@@ -454,7 +454,7 @@ class VIEW_OT_show_variants(bpy.types.Operator):
         row.label("Variants (leave empty to show all)")
 
         if len(context.scene.zusi_variants) > 0:
-            if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+            if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
                 layout.template_list(self, "variant_visibility_setting", self, "variant_visibility_setting_index", prop_list = "template_list_controls")
             else:
                 layout.template_list("ZusiFileVariantVisibilityList", "", self, "variant_visibility_setting", self, "variant_visibility_setting_index")

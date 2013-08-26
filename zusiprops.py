@@ -20,14 +20,19 @@ from . import zusicommon
 
 # This file defines Zusi specific custom properties and the corresponding UI.
 
-# Defines a list with check boxes.
-class CheckBoxList(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
-        layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
-        layout.label(self.get_item_text(item))
+# Defines a list with check boxes. In Blender <= 2.65 bpy.types.UIList does not exist
+# and we do not need CheckBoxList there anyway, so define it as empty
+if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+    class CheckBoxList():
+        pass
+else:
+    class CheckBoxList(bpy.types.UIList):
+        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+            icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
+            layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
+            layout.label(self.get_item_text(item))
 
-bpy.utils.register_class(CheckBoxList)
+    bpy.utils.register_class(CheckBoxList)
 
 # Defines a variant in a scene with an ID (which should not be changed) and a variant name
 # (Name is defined in PropertyGroup)
@@ -39,9 +44,10 @@ class ZusiFileVariant(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariant)
 
-class ZusiFileVariantList(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        layout.label(item.name)
+if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
+    class ZusiFileVariantList(bpy.types.UIList):
+        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+            layout.label(item.name)
 
 # Defines a visibility of an object/material/texture/whatever in a certain variant
 class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
@@ -97,9 +103,10 @@ class ZusiAuthor(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAuthor)
 
-class ZusiAuthorList(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        layout.label(item.name)
+if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
+    class ZusiAuthorList(bpy.types.UIList):
+        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+            layout.label(item.name)
 
 
 # Custom texture preset properties
@@ -901,7 +908,7 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         row = layout.row()
 
         # Show list of variants
-        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
             row.template_list(sce, "zusi_variants", sce, "zusi_variants_index", rows = 3, prop_list = "template_list_controls")
         else:
             row.template_list("ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index", rows = 3)
@@ -980,7 +987,7 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
 
         # Show list of authors
         row = layout.row()
-        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 66: # TODO which version?
+        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
             row.template_list(sce, "zusi_authors", sce, "zusi_authors_index", rows = 3, prop_list = "template_list_controls")
         else:
             row.template_list("ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index", rows = 3)
