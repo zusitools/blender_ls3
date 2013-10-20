@@ -271,6 +271,11 @@ class ZusiTexturePresetResultStageSettings(bpy.types.PropertyGroup):
         description = "Value for D3DRS_ALPHABLENDENABLE",
     )
     
+    D3DRS_ALPHATESTENABLE = bpy.props.BoolProperty(
+        name = "D3DRS_ALPHATESTENABLE",
+        description = "Value for D3DRS_ALPHATESTENABLE",
+    )
+    
     alpha_ref = bpy.props.IntProperty(
         name = "Alpha REF value",
         min = 0,
@@ -293,7 +298,7 @@ def on_zusi_texture_preset_update(self, context):
     if newpreset == 0:
         return
     
-    # Texture stage 3
+    # Texture stage 1
     mat.texture_stage_1.D3DSAMP_MINFILTER = "3" # D3DTEXF_ANISOTROPHIC
     mat.texture_stage_1.D3DSAMP_MAGFILTER = "3" # D3DTEXF_ANISOTROPHIC
     mat.texture_stage_1.D3DTSS_COLOROP = "4" # D3DTOP_MODULATE
@@ -323,13 +328,16 @@ def on_zusi_texture_preset_update(self, context):
     mat.texture_stage_3.D3DTSS_COLOROP = "1" # D3DTOP_DISABLE
     mat.texture_stage_3.D3DTSS_COLORARG1 = "0" # D3DTA_DIFFUSE
     mat.texture_stage_3.D3DTSS_COLORARG2 = "0" # D3DTA_DIFFUSE
+    mat.texture_stage_3.D3DTSS_ALPHAOP = "1" # D3DTOP_DISABLE
+    mat.texture_stage_3.D3DTSS_RESULTARG = "0" # D3DTA_CONSTANT
     
     # Result stage
     mat.result_stage.D3DRS_SRCBLEND = "5" # D3DBLEND_SRCALPHA
     mat.result_stage.D3DRS_DESTBLEND = "6" # D3DBLEND_INVSRCALPHA
     mat.result_stage.D3DRS_ALPHABLENDENABLE = newpreset in [4, 6, 7, 8, 9]
+    mat.result_stage.D3DRS_ALPHATESTENABLE = newpreset not in [1, 3]
     mat.result_stage.alpha_ref = 1
-    mat.result_stage.D3DRS_SHADEMODE = "1" # D3DSHADE_GOURAUD
+    mat.result_stage.D3DRS_SHADEMODE = "2" # D3DSHADE_GOURAUD
     
     if newpreset == 3:
         mat.texture_stage_1.D3DTSS_RESULTARG = "5" # D3DTA_TEMP
