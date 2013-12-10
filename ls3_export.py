@@ -269,8 +269,8 @@ class Ls3Exporter:
 	def add_subset_data(self, subsetNode, vertexdata, facedata):
 		for entry in vertexdata:
 			vertexNode = self.xmldoc.createElement("Vertex")
-			vertexNode.setAttribute("U1", str(entry[6]))
-			vertexNode.setAttribute("V1", str(entry[7]))
+			vertexNode.setAttribute("U", str(entry[6]))
+			vertexNode.setAttribute("V", str(entry[7]))
 			vertexNode.setAttribute("U2", str(entry[8]))
 			vertexNode.setAttribute("V2", str(entry[9]))
 
