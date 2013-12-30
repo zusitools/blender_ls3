@@ -173,9 +173,10 @@ class Ls3Exporter:
         
         for ob in objects:
             # Apply modifiers and transform the mesh so that the vertex coordinates
-            # are global coordinates.
+            # are global coordinates. Also recalculate the vertex normals.
             mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
             mesh.transform(ob.matrix_world)
+            mesh.calc_normals()
 
             # If the object is mirrored/negatively scaled, the normals will come out the wrong way
             # when applying the transformation. Workaround from:
