@@ -1,5 +1,6 @@
 import bpy
 import os
+import shutil
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -8,11 +9,15 @@ class TestLs3Export(unittest.TestCase):
   def setUp(self):
     bpy.ops.wm.read_homefile()
 
+    # Copy test blend files into temporary directory
     self.tempfiles = []
+    self.tempdir = tempfile.mkdtemp()
+    shutil.copytree("blends", os.path.join(self.tempdir, "blends"))
 
   def tearDown(self):
     for tempfile in self.tempfiles:
       tempfile.close()
+    shutil.rmtree(self.tempdir)
 
   def clear_scene(self):
     for ob in bpy.context.scene.objects:
@@ -78,7 +83,44 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
+  def test_multitexturing(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "multitexturing.blend"))
+    root = self.export_and_parse()
+
+    subset_nodes = root.findall("./Landschaft/SubSet")
+    self.assertEqual(1, len(subset_nodes))
+    subset_node = subset_nodes[0]
+
+    # Check that two textures are given.
+    textur_nodes = subset_node.findall("./Textur")
+    self.assertEqual(2, len(textur_nodes))
+
+    # First texture must be the intransparent one, second texture the transparent one.
+    datei1_node = textur_nodes[0].findall("./Datei")[0]
+    self.assertEqual("texture.dds", datei1_node.attrib["Dateiname"][-len("texture.dds"):])
+
+    datei2_node = textur_nodes[1].findall("./Datei")[0]
+    self.assertEqual("texture_alpha.dds", datei2_node.attrib["Dateiname"][-len("texture_alpha.dds"):])
+
+    # Check for correct UV coordinates.
+    vertex_nodes = [n for n in subset_node if n.tag == "Vertex"]
+    face_nodes = [n for n in subset_node if n.tag == "Face"]
+
+    self.assertEqual(24, len(vertex_nodes))
+    self.assertEqual(12, len(face_nodes))
+
+    for vertex_node in vertex_nodes:
+      u1 = float(vertex_node.attrib["U"])
+      u2 = float(vertex_node.attrib["U2"])
+      v1 = float(vertex_node.attrib["V"])
+      v2 = float(vertex_node.attrib["V2"])
+
+      self.assertIn(round(u1, 1), [0, 1])
+      self.assertIn(round(v1, 1), [0, 1])
+      self.assertIn(round(u2, 2), [.25, .75])
+      self.assertIn(round(v2, 2), [.25, .75])
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   unittest.TextTestRunner(verbosity=2).run(suite)
-  #bpy.ops.wm.quit_blender()
+  bpy.ops.wm.quit_blender()
