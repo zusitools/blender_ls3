@@ -223,15 +223,19 @@ class Ls3Exporter:
                 face_no_merge_vertices = [pair[0] for pair in face_no_merge_vertex_pairs] + [pair[1] for pair in face_no_merge_vertex_pairs]
 
                 # Write vertex coordinates (location, normal, and UV coordinates)
-                # TODO: Support multitexturing, at the moment only the first UV layer's coordinates will be exported.
                 for vertex_no, vertex_index in enumerate(face.vertices):
                     v = mesh.vertices[vertex_index]
                     uvdata1 = [0.0, 1.0]
                     uvdata2 = [0.0, 1.0]
 
-                    if mesh.tessface_uv_textures.active != None:
-                        uvdata = mesh.tessface_uv_textures.active.data[face_index].uv_raw
-                        uvdata1 = [uvdata[2 * vertex_no], uvdata[2 * vertex_no + 1]]
+                    if len(mesh.tessface_uv_textures):
+                        if mesh.tessface_uv_textures[0] != None:
+                            uvdata = mesh.tessface_uv_textures[0].data[face_index].uv_raw
+                            uvdata1 = [uvdata[2 * vertex_no], uvdata[2 * vertex_no + 1]]
+
+                        if mesh.tessface_uv_textures[1] != None:
+                            uvdata = mesh.tessface_uv_textures[1].data[face_index].uv_raw
+                            uvdata2 = [uvdata[2 * vertex_no], uvdata[2 * vertex_no + 1]]
 
                     # Since the vertices are exported per-face, get the vertex normal from the face normal,
                     # except when the face is set to "smooth"
