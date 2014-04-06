@@ -25,7 +25,7 @@ class TestLs3Export(unittest.TestCase):
       bpy.data.objects.remove(ob)
     bpy.context.scene.update()
 
-  def export(self):
+  def export(self, exportargs={}):
     context = bpy.context.copy()
     context['selected_objects'] = []
 
@@ -37,12 +37,12 @@ class TestLs3Export(unittest.TestCase):
 
     bpy.ops.io_export_scene.ls3(context,
       filepath=tempfile_path, filename=tempfile_path, directory=tempfile_dir,
-      exportSelected="0", optimizeMesh=False)
+      exportSelected="0", optimizeMesh=False, **exportargs)
 
     return tempfile_file
 
-  def export_and_parse(self):
-    exported_file = self.export()
+  def export_and_parse(self, exportargs={}):
+    exported_file = self.export(exportargs)
     print(exported_file.read())
     tree = ET.parse(exported_file.name)
     return tree.getroot()
@@ -85,7 +85,14 @@ class TestLs3Export(unittest.TestCase):
 
   def test_multitexturing(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "multitexturing.blend"))
-    root = self.export_and_parse()
+    self.assert_exported_cube_multitexturing()
+
+  def test_multitexturing_inactive_texture(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "multitexturing_activetextures.blend"))
+    self.assert_exported_cube_multitexturing()
+
+  def assert_exported_cube_multitexturing(self, exportargs={}):
+    root = self.export_and_parse(exportargs)
 
     subset_nodes = root.findall("./Landschaft/SubSet")
     self.assertEqual(1, len(subset_nodes))

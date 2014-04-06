@@ -128,18 +128,22 @@ class Ls3Exporter:
             else:
                 return path.replace(os.sep, "\\")
 
-    # Returns a list of the file paths of the active textures of the given material.
-    def get_texture_filenames(self, material):
+    # Returns a list of the active texture slots of the given material.
+    def get_active_texture_slots(self, material):
         if material:
+            # If no variants are defined, the visibility of the texture slot is taken into account.
+            variants_defined = len(self.config.context.scene.zusi_variants) > 0
+
             # Create a list of image textures
-            image_textures = [material.texture_slots[texture_slot].texture
+            image_texture_slots = [material.texture_slots[texture_slot]
                 for texture_slot in material.texture_slots.keys()
-                    if material.texture_slots[texture_slot].texture.type == "IMAGE"]
+                    if material.texture_slots[texture_slot].texture.type == "IMAGE"
+                    and (variants_defined or material.texture_slots[texture_slot].use)]
+
             # Refine the list, including only textures that have a file source and are active in the given variant
-            return [self.relpath(texture.image.filepath)
-                for texture in image_textures
-                    if getattr(texture.image, "source", "") == "FILE" and zusicommon.is_object_visible(texture, self.config.variantIDs)]
-        return None
+            return [texture_slot for texture_slot in image_texture_slots
+                    if getattr(texture_slot.texture.image, "source", "") == "FILE" and zusicommon.is_object_visible(texture_slot.texture, self.config.variantIDs)]
+        return []
 
     # Adds a new subset node to the specified <Landschaft> node.
     # A list of objects to be incorporated into that subset is given, as well as the material to be written.
@@ -170,6 +174,8 @@ class Ls3Exporter:
     def write_subset_mesh(self, subsetNode, objects, material):
         vertexdata = []
         facedata = []
+        active_texture_slots = self.get_active_texture_slots(material)
+        active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
         
         for ob in objects:
             # Apply modifiers and transform the mesh so that the vertex coordinates
@@ -193,9 +199,10 @@ class Ls3Exporter:
 
             # Write vertices, faces and UV coordinates.
             # Access faces via the tessfaces API which provides only triangles and quads.
-            # A vertex that appears in two faces with different UV coordinates will have to be exported as
-            # two Zusi vertices. Therefore, all vertices are exported once per face, and mesh optimization
-            # will later re-merge vertices that have the same location, normal, and UV coordinates
+            # A vertex that appears in two faces with different normals or different UV coordinates will
+            # have to be exported as two Zusi vertices. Therefore, all vertices are exported once per face,
+            # and mesh optimization will later re-merge vertices that have the same location, normal, and
+            # UV coordinates.
             for face_index, face in enumerate(mesh.tessfaces):
                 vertexindex = len(vertexdata)
 
@@ -228,14 +235,30 @@ class Ls3Exporter:
                     uvdata1 = [0.0, 1.0]
                     uvdata2 = [0.0, 1.0]
 
-                    if len(mesh.tessface_uv_textures):
-                        if mesh.tessface_uv_textures[0] != None:
-                            uvdata = mesh.tessface_uv_textures[0].data[face_index].uv_raw
-                            uvdata1 = [uvdata[2 * vertex_no], uvdata[2 * vertex_no + 1]]
+                    for texindex in range(0, 2):
+                        if texindex >= len(active_uvmaps):
+                            continue
 
-                        if mesh.tessface_uv_textures[1] != None:
-                            uvdata = mesh.tessface_uv_textures[1].data[face_index].uv_raw
-                            uvdata2 = [uvdata[2 * vertex_no], uvdata[2 * vertex_no + 1]]
+                        # Find UV layer with matching name (use active UV layer if no name
+                        # is given.
+                        uvlayer = None
+                        if active_uvmaps[texindex] == "":
+                            uvlayer = mesh.tessface_uv_textures.active
+                        else:
+                            uvlayers = [uvlayer for uvlayer in mesh.tessface_uv_textures
+                                if uvlayer.name == active_uvmaps[texindex]]
+                            if len(uvlayers):
+                                uvlayer = uvlayers[0]
+
+                        if uvlayer is None:
+                            continue
+
+                        uv_raw = uvlayer.data[face_index].uv_raw
+                        uvdata = [uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1]]
+                        if texindex == 0:
+                            uvdata1 = uvdata
+                        else:
+                            uvdata2 = uvdata
 
                     # Since the vertices are exported per-face, get the vertex normal from the face normal,
                     # except when the face is set to "smooth"
@@ -339,10 +362,10 @@ class Ls3Exporter:
         subsetNode.appendChild(renderFlagsNode)
 
         # Write textures
-        for filename in self.get_texture_filenames(material):
+        for texture_slot in self.get_active_texture_slots(material):
             texture_node = self.xmldoc.createElement("Textur")
             datei_node = self.xmldoc.createElement("Datei")
-            datei_node.setAttribute("Dateiname", filename)
+            datei_node.setAttribute("Dateiname", self.relpath(texture_slot.texture.image.filepath))
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
