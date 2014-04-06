@@ -1,0 +1,16 @@
+# Modify this file to enter batch export settings.
+# After making changes to this file, press F8 in Blender to reload the settings
+
+# The template is as follows:
+
+# batch_export_settings = {
+#	"<full .blend file name>" : [
+#		<list of export settings, each setting is a tuple of the following form>
+#		([<objects to select>], [<visible variant ids>], "<export file name>", <export mode: 0 = all objects, 1 = selected objects, 2 = subsets containing selected objects>),
+#		e.g. (["Wagenkasten"], [0, 3], "/mnt/zusi/Zusi3/…/GT8-100D-2S-M_A_Wagenkasten_Altlack.lod1.ls3", 2),
+#	]
+#}
+
+batch_export_settings = {
+	# add your settings here
+}

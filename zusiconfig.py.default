@@ -1,0 +1,29 @@
+# To change the default settings of the exporter, rename this file to zusiconfig.py
+# Then remove the "#" in front of the setting you wish to change and change the
+# value accordingly.
+
+default_export_settings = {
+	#	"exportSelected" : "0",
+	#	"optimizeMesh" : True,
+	#	"maxCoordDelta" : 0.001,
+	#	"maxUVDelta" : 0.02,
+	#	"maxNormalAngle" : 10,
+}
+
+# Linux users must enter the path to the Zusi data directory here, e.g.
+#
+#	datapath = "/mnt/zusi/Daten/"
+#
+# Then rename this file to zusiconfig.py
+
+datapath = ""
+
+# Linux users can optionally set author defaults here.
+# Uncomment the selected lines by removing the "#" at the beginning of the line,
+# then change the defaults and rename this file to zusiconfig.py
+
+#default_author = {
+#	'name' : "",
+#	'id' : 0,
+#	'email' : "",
+#}
