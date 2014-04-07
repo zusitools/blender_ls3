@@ -21,4 +21,4 @@ Der Import ist erreichbar über File → Import → Zusi Landscape (.ls3) oder �
 
 Der Import ist erreichbar über File → Export → Zusi Landscape (.ls3) oder über *Leertaste* → Export LS3.
 
-**Hinweis:** In der öffentlich verfügbaren Version wird das binäre Format von Zusi 3 (.lsb) nicht gelesen oder geschrieben und es werden keine Texturen importiert.
+**Hinweis:** In der öffentlich verfügbaren Version wird das binäre Format von Zusi 3 (.lsb) nicht gelesen oder geschrieben und es werden keine Texturkoordinaten importiert.
