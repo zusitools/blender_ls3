@@ -32,7 +32,7 @@ default_export_settings = {
     "optimizeMesh" : True,
     "maxCoordDelta" : 0.001,
     "maxUVDelta" : 0.02,
-    "maxNormalAngle" : 10,
+    "maxNormalAngle" : 10 / 360 * 2 * pi,
 }
 
 # Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py
@@ -60,7 +60,7 @@ class Ls3ExporterSettings:
                 optimizeMesh,
                 maxUVDelta,
                 maxCoordDelta,
-                maxNormalAngle,
+                maxNormalAngle,  # in radians
                 variantIDs = [],
                 selectedObjects = [],
                 ):
