@@ -49,11 +49,22 @@ def fill_node_xyz(node, x, y, z):
     node.setAttribute("Y", str(y))
     node.setAttribute("Z", str(z))
 
+# Returns a list of all descendants of the given object.
+def get_children_recursive(ob):
+    result = set(ob.children)
+    for child in ob.children:
+        result |= get_children_recursive(child)
+    return result
+
 # Stores all the things that later go into one LS3 file.
 #     file_name: The file name (without path) of this file.
 #     subsets: The subsets in this file.
 #     linked_files: The files linked to this file
 #     animation: The animation of this file in the parent file.
+#     boundingr: The bounding radius of this file in meters.
+#     objects: The objects that will be exported into this file.
+#     root_obj: The object that caused this file to be created (e.g.
+#         because it has an animation).
 class Ls3File:
     def __init__(self):
         self.is_main_file = False
@@ -61,6 +72,9 @@ class Ls3File:
         self.subsets = []
         self.linked_files = []
         self.animation = None
+        self.boundingr = 0
+        self.objects = set()
+        self.root_obj = None
 
 # Stores information about one subset of a LS3 file.
 #     material: The Blender material of this subset.
@@ -126,8 +140,6 @@ class Ls3Exporter:
         self.z_bias_map.update(dict((value, idx + 1) for idx, value in enumerate(zbiases_pos)))
         self.z_bias_map.update(dict((value, -(idx + 1)) for idx, value in enumerate(zbiases_neg)))
 
-        self.boundingr = 0
-
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
     #  - only the file name: if the file resides in the same directory as the .ls3 file
@@ -151,6 +163,20 @@ class Ls3Exporter:
             else:
                 return path.replace(os.sep, "\\")
 
+
+    # Returns whether the specified object and its children must be placed in their own file
+    # in order to be animated correctly.
+    def must_start_new_file(self, ob):
+        # Animated objects whose origin (relative to the parent) is not 0/0/0.
+        if ob.animation_data is not None and ob.matrix_local.to_translation != Vector((0.0, 0.0, 0.0)):
+            return True
+
+        # Objects with animated children.
+        if any(map(lambda child: child.animation_data is not None, ob.children)):
+            return True
+
+        return False
+
     # Returns a list of the active texture slots of the given material.
     def get_active_texture_slots(self, material):
         if material:
@@ -171,7 +197,7 @@ class Ls3Exporter:
     # Adds a new subset node to the specified <Landschaft> node. The subset is given by a Ls3Subset object
     # containing the objects and the material to export.
     # Only the faces of the supplied objects having that particular material will be written.
-    def write_subset(self, landschaftNode, subset):
+    def write_subset(self, landschaftNode, subset, ls3file):
         subsetNode = self.xmldoc.createElement("SubSet")
         material = subset.material
         try:
@@ -190,12 +216,12 @@ class Ls3Exporter:
         except (IndexError, AttributeError):
             pass
 
-        self.write_subset_mesh(subsetNode, subset)
+        self.write_subset_mesh(subsetNode, subset, ls3file)
         landschaftNode.appendChild(subsetNode)
 
     # Writes the meshes of the subset's objects to the specified subset node.
     # Only the faces having the specified material will be written.
-    def write_subset_mesh(self, subsetNode, subset):
+    def write_subset_mesh(self, subsetNode, subset, ls3file):
         vertexdata = []
         facedata = []
         material = subset.material
@@ -295,7 +321,7 @@ class Ls3Exporter:
                     if must_flip_normals:
                         normal = list(map(lambda x : -x, normal))
 
-                    self.boundingr = max(self.boundingr, sqrt(pow(v.co[0], 2) + pow(v.co[1], 2) + pow(v.co[2], 2)))
+                    ls3file.boundingr = max(ls3file.boundingr, sqrt(pow(v.co[0], 2) + pow(v.co[1], 2) + pow(v.co[2], 2)))
 
                     # The coordinates are transformed into the Zusi coordinate system.
                     # The vertex index is appended for reordering vertices
@@ -396,8 +422,48 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
-    # Build list of subsets from the scene's objects. The subsets are ordered by name.
-    def get_subsets(self):
+    # Build list of files from the scene's objects. The main file will always be the first item in the list.
+    def get_files(self):
+        (basename, ext) = os.path.splitext(self.config.fileName)
+        main_file = Ls3File()
+        main_file.filename = self.config.fileName
+        main_file.objects = set(self.config.context.scene.objects.values())
+        main_file.is_main_file = True
+        work_list = [main_file]
+        result = [main_file]
+
+        while len(work_list):
+            cur_file = work_list.pop()
+
+            # If there is an object which needs its own file, we "split" this object and its descendants
+            # into a separate file.
+            splitobj = None
+            for ob in cur_file.objects:
+                if ob != cur_file.root_obj and self.must_start_new_file(ob):
+                    splitobj = ob
+                    break
+
+            if splitobj is not None:
+                # Place this object and all its children into a new file.
+                new_file = Ls3File()
+                new_file.filename = basename + "_" + ob.name + ext
+                new_file.root_obj = ob
+                new_file.objects = set([ob])
+                new_file.objects |= get_children_recursive(ob)
+                new_file.is_main_file = False
+
+                cur_file.objects -= new_file.objects
+                cur_file.linked_files.append(new_file)
+                work_list.append(new_file)
+                result.append(new_file)
+                work_list.append(cur_file) # needs more work, splitobj might not have been the only splitting object!
+
+        for ls3file in result:
+            ls3file.subsets = self.get_subsets(ls3file)
+        return result
+
+    # Build list of subsets from a file's objects. The subsets are ordered by name.
+    def get_subsets(self, ls3file):
         # Dictionary that maps a subset name to a Ls3Subset object.
         subset_dict = dict()
 
@@ -405,7 +471,7 @@ class Ls3Exporter:
         # (only for exportSelected == "2")
         visible_subsets = set()
         
-        for ob in self.config.context.scene.objects:
+        for ob in ls3file.objects:
             # If export setting is "export only selected objects", filter out unselected objects
             # from the beginning.
             if ob.type == 'MESH' and (ob.name in self.config.selectedObjects or (self.config.exportSelected != "1")):
@@ -432,7 +498,7 @@ class Ls3Exporter:
                     else:
                         subset_name = subset_basename + mat.name
 
-                    # Write material to first entry of tuple
+                    # Create new subset object and write the material.
                     if subset_name not in subset_dict:
                         subset_dict[subset_name] = Ls3Subset()
                         subset_dict[subset_name].material = mat
@@ -490,11 +556,21 @@ class Ls3Exporter:
 
             infoNode.appendChild(autorEintragNode)
 
-        # Write the landscape itself
+        # Write the Landschaft node.
         landschaftNode = self.xmldoc.createElement("Landschaft")
         self.xmldoc.documentElement.appendChild(landschaftNode)
+
+        # Write linked files.
+        for linked_file in ls3file.linked_files:
+            verknuepfteNode = self.xmldoc.createElement("Verknuepfte")
+            dateiNode = self.xmldoc.createElement("Datei")
+            dateiNode.setAttribute("Dateiname", linked_file.filename)
+            verknuepfteNode.appendChild(dateiNode)
+            landschaftNode.appendChild(verknuepfteNode)
+
+        # Write subsets.
         for subset in ls3file.subsets:
-            self.write_subset(landschaftNode, subset)
+            self.write_subset(landschaftNode, subset, ls3file)
 
         # Get path names
         filepath = os.path.join(
@@ -518,11 +594,20 @@ class Ls3Exporter:
         print('Exporting %s' % filepath)
         fp.write(self.xmldoc.documentElement.toprettyxml())
 
-        print("Bounding radius: %d m" % int(ceil(self.boundingr)))
+        print("Bounding radius: %d m" % int(ceil(ls3file.boundingr)))
 
     def export_ls3(self):
-        ls3file = Ls3File()
-        ls3file.subsets = self.get_subsets()
-        ls3file.filename = self.config.fileName;
-        ls3file.is_main_file = True
-        self.write_ls3(ls3file)
+        ls3files = self.get_files()
+
+        # ls3files forms a tree, traverse it in postorder so that each file has all information (bounding radius)
+        # about its linked files.
+        work_list = [ls3files[0]]
+        write_list = []
+
+        while len(work_list):
+            cur_file = work_list.pop()
+            write_list.insert(0, cur_file)
+            work_list.extend(cur_file.linked_files)
+
+        for ls3file in write_list:
+            self.write_ls3(ls3file)

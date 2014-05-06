@@ -127,6 +127,16 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
+  def test_animation(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
+    mainfile = self.export({})
+    mainfile_tree = ET.parse(mainfile.name)
+    mainfile_root = mainfile_tree.getroot()
+
+    verkn_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verkn_nodes))
+    verkn_node = verkn_nodes[0]
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   unittest.TextTestRunner(verbosity=2).run(suite)
