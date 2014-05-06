@@ -582,6 +582,7 @@ class Ls3Exporter:
         # Write animation declarations.
         for animation in get_animations_recursive(ls3file):
             animationNode = self.xmldoc.createElement("Animation")
+            animationNode.setAttribute("AniBeschreibung", animation.action.name)
             landschaftNode.appendChild(animationNode)
 
         # Get path names

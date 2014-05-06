@@ -153,6 +153,7 @@ class TestLs3Export(unittest.TestCase):
     # Test for <Animation> node.
     animation_nodes = mainfile_root.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animation_nodes))
+    self.assertEqual("Rad-Rotation", animation_nodes[0].attrib["AniBeschreibung"])
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
