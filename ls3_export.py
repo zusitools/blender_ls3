@@ -585,6 +585,12 @@ class Ls3Exporter:
             animationNode.setAttribute("AniBeschreibung", animation.action.name)
             landschaftNode.appendChild(animationNode)
 
+        # Write mesh animations.
+        mesh_animations = [ob.animation_data.action for ob in ls3file.objects if ob.animation_data is not None]
+        for mesh_animation in mesh_animations:
+            meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
+            landschaftNode.appendChild(meshAnimationNode)
+
         # Get path names
         filepath = os.path.join(
             os.path.realpath(os.path.expanduser(self.config.fileDirectory)),

@@ -138,7 +138,8 @@ class TestLs3Export(unittest.TestCase):
     mainfile = self.export({})
     print(mainfile.read())
 
-    (basename, ext) = os.path.splitext(os.path.basename(mainfile.name))
+    (path, name) = os.path.split(mainfile.name)
+    (basename, ext) = os.path.splitext(name)
 
     mainfile_tree = ET.parse(mainfile.name)
     mainfile_root = mainfile_tree.getroot()
@@ -154,6 +155,14 @@ class TestLs3Export(unittest.TestCase):
     animation_nodes = mainfile_root.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animation_nodes))
     self.assertEqual("Rad-Rotation", animation_nodes[0].attrib["AniBeschreibung"])
+
+    # Test linked file.
+    linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
+    linkedfile_root = linkedfile_tree.getroot()
+
+    # Test for <MeshAnimation> node in linked file.
+    mesh_animation_nodes = linkedfile_root.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
