@@ -143,11 +143,16 @@ class TestLs3Export(unittest.TestCase):
     mainfile_tree = ET.parse(mainfile.name)
     mainfile_root = mainfile_tree.getroot()
 
+    # Test for correct linked file.
     verkn_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
 
     datei_node = verkn_nodes[0].findall("./Datei")[0]
     self.assertEqual(basename + "_RadRotation" + ext, datei_node.attrib["Dateiname"])
+
+    # Test for <Animation> node.
+    animation_nodes = mainfile_root.findall("./Landschaft/Animation")
+    self.assertEqual(1, len(animation_nodes))
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)

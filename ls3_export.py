@@ -56,6 +56,13 @@ def get_children_recursive(ob):
         result |= get_children_recursive(child)
     return result
 
+# Returns a list of all animations of objects in this file and linked files.
+def get_animations_recursive(ls3file):
+    result = set([ob.animation_data for ob in ls3file.objects if ob.animation_data is not None])
+    for linked_file in ls3file.linked_files:
+        result |= get_animations_recursive(linked_file)
+    return result
+
 # Stores all the things that later go into one LS3 file.
 #     file_name: The file name (without path) of this file.
 #     subsets: The subsets in this file.
@@ -571,6 +578,11 @@ class Ls3Exporter:
         # Write subsets.
         for subset in ls3file.subsets:
             self.write_subset(landschaftNode, subset, ls3file)
+
+        # Write animation declarations.
+        for animation in get_animations_recursive(ls3file):
+            animationNode = self.xmldoc.createElement("Animation")
+            landschaftNode.appendChild(animationNode)
 
         # Get path names
         filepath = os.path.join(
