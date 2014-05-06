@@ -35,9 +35,15 @@ class TestLs3Export(unittest.TestCase):
     tempfile_path = tempfile_file.name
     (tempfile_dir, tempfile_name) = os.path.split(tempfile_path)
 
+    if "exportSelected" not in exportargs:
+      exportargs["exportSelected"] = "0"
+
+    if "optimizeMesh" not in exportargs:
+      exportargs["optimizeMesh"] = False
+
     bpy.ops.io_export_scene.ls3(context,
-      filepath=tempfile_path, filename=tempfile_path, directory=tempfile_dir,
-      exportSelected="0", optimizeMesh=False, **exportargs)
+      filepath=tempfile_path, filename=tempfile_name, directory=tempfile_dir,
+      **exportargs)
 
     return tempfile_file
 
@@ -130,12 +136,18 @@ class TestLs3Export(unittest.TestCase):
   def test_animation(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
     mainfile = self.export({})
+    print(mainfile.read())
+
+    (basename, ext) = os.path.splitext(os.path.basename(mainfile.name))
+
     mainfile_tree = ET.parse(mainfile.name)
     mainfile_root = mainfile_tree.getroot()
 
     verkn_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
-    verkn_node = verkn_nodes[0]
+
+    datei_node = verkn_nodes[0].findall("./Datei")[0]
+    self.assertEqual(basename + "_RadRotation" + ext, datei_node.attrib["Dateiname"])
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
