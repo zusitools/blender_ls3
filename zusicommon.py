@@ -16,6 +16,7 @@
 #  ***** GPL LICENSE BLOCK *****
 
 from math import sqrt, acos
+import os
 
 # Forces a value into a range
 forcerange = lambda x, minval, maxval : min(max(x, minval), maxval)
@@ -201,3 +202,22 @@ def get_default_author_info():
         pass
 
     return default_author
+
+# Tries to locate a file by its path:
+# 1) interpreting the path as an absolute path
+# 2) interpreting the path as relative to the LS3 file's path
+# 3) interpreting the path as relative to the Zusi base path
+def resolve_file_path(file_path, current_dir, datapath):
+    # Normalize path separator
+    for ch in ['\\',  '/']:
+        file_path = file_path.replace(ch, os.sep)
+
+    if os.path.exists(file_path):
+        return file_path
+
+    relpath_ls3 = os.path.realpath(current_dir) + os.sep + file_path
+    if os.path.exists(relpath_ls3):
+        return relpath_ls3
+
+    relpath_base = os.path.realpath(datapath) + os.sep + file_path
+    return relpath_base

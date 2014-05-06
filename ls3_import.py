@@ -105,25 +105,6 @@ class Ls3Importer:
         # Path to Zusi data dir
         self.datapath = zusicommon.get_zusi_data_path()
 
-    # Tries to locate a file by its path:
-    # 1) interpreting the path as an absolute path
-    # 2) interpreting the path as relative to the LS3 file's path
-    # 3) interpreting the path as relative to the Zusi base path
-    def resolveFilePath(self, filePath):
-        # Normalize path separator
-        for ch in ['\\',  '/']:
-            filePath = filePath.replace(ch, os.sep)
-
-        relpath_ls3 = os.path.realpath(self.config.fileDirectory) + os.sep + filePath
-        relpath_base = os.path.realpath(self.datapath) + os.sep + filePath
-
-        if os.path.exists(filePath):
-            return filePath
-        elif os.path.exists(relpath_ls3):
-            return relpath_ls3
-        else:
-            return relpath_base
-
     def visitNode(self, node):
         name = "visit" + node.nodeName + "Node"
 
@@ -265,7 +246,8 @@ class Ls3Importer:
 
         try:
             dateinode = [x for x in node.childNodes if x.nodeName == "Datei"][0] #may raise IndexError
-            dateiname = self.resolveFilePath(dateinode.getAttribute("Dateiname"))
+            dateiname = zusicommon.resolve_file_path(dateinode.getAttribute("Dateiname"),
+                self.config.fileDirectory, self.datapath)
             loc = [0.0] * 3
             rot = [0.0] * 3
             scale = [1.0] * 3
@@ -312,7 +294,8 @@ class Ls3Importer:
         if self.lsbreader is not None:
             try:
                 lsbnode = [x for x in node.childNodes if x.nodeName == "lsb"][0] #may raise IndexError
-                lsbname = self.resolveFilePath(lsbnode.getAttribute("Dateiname"))
+                lsbname = zusicommon.resolve_file_path(lsbnode.getAttribute("Dateiname"),
+                    self.config.fileDirectory, self.datapath)
                 self.lsbreader.set_lsb_file(lsbname)
             except(IndexError):
                 pass
