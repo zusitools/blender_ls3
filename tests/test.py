@@ -156,6 +156,10 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(animation_nodes))
     self.assertEqual("Rad-Rotation", animation_nodes[0].attrib["AniBeschreibung"])
 
+    # Test for <VerknAnimation> node.
+    verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+
     # Test linked file.
     linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
     linkedfile_root = linkedfile_tree.getroot()

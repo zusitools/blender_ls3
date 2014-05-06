@@ -591,6 +591,12 @@ class Ls3Exporter:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             landschaftNode.appendChild(meshAnimationNode)
 
+        # Write linked animations.
+        for idx, linked_file in enumerate(ls3file.linked_files):
+            if linked_file.root_obj.animation_data is not None:
+                verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
+                landschaftNode.appendChild(verknAnimationNode)
+
         # Get path names
         filepath = os.path.join(
             os.path.realpath(os.path.expanduser(self.config.fileDirectory)),
