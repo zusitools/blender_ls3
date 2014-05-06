@@ -19,7 +19,7 @@ import bpy
 import os
 import xml.dom.minidom as dom
 from . import zusicommon, zusiprops
-from math import pi
+from math import ceil, sqrt, pi, pow
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
@@ -104,6 +104,8 @@ class Ls3Exporter:
         self.z_bias_map = { 0.0 : 0 }
         self.z_bias_map.update(dict((value, idx + 1) for idx, value in enumerate(zbiases_pos)))
         self.z_bias_map.update(dict((value, -(idx + 1)) for idx, value in enumerate(zbiases_neg)))
+
+        self.boundingr = 0
 
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
@@ -269,6 +271,8 @@ class Ls3Exporter:
 
                     if must_flip_normals:
                         normal = list(map(lambda x : -x, normal))
+
+                    self.boundingr = max(self.boundingr, sqrt(pow(v.co[0], 2) + pow(v.co[1], 2) + pow(v.co[2], 2)))
 
                     # The coordinates are transformed into the Zusi coordinate system.
                     # The vertex index is appended for reordering vertices
@@ -490,3 +494,5 @@ class Ls3Exporter:
         fp = open(realpath, 'w')
         print('Exporting %s' % realpath)
         fp.write(self.xmldoc.documentElement.toprettyxml())
+
+        print("Bounding radius: %d m" % int(ceil(self.boundingr)))
