@@ -49,6 +49,27 @@ def fill_node_xyz(node, x, y, z):
     node.setAttribute("Y", str(y))
     node.setAttribute("Z", str(z))
 
+# Stores all the things that later go into one LS3 file.
+#     file_name: The file name (without path) of this file.
+#     subsets: The subsets in this file.
+#     linked_files: The files linked to this file
+#     animation: The animation of this file in the parent file.
+class Ls3File:
+    def __init__(self):
+        self.is_main_file = False
+        self.filename = ""
+        self.subsets = []
+        self.linked_files = []
+        self.animation = None
+
+# Stores information about one subset of a LS3 file.
+#     material: The Blender material of this subset.
+#     objects: The objects to include in this subset.
+class Ls3Subset:
+    def __init__(self):
+        self.material = None
+        self.objects = []
+
 # Container for the exporter settings
 class Ls3ExporterSettings:
     def __init__(self,
@@ -431,9 +452,8 @@ class Ls3Exporter:
 
         return subsets
 
-    def export_ls3(self):
+    def write_ls3(self, ls3file):
         sce = self.config.context.scene
-        subsets = self.get_subsets()
 
         # Create a new XML document
         self.xmldoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
@@ -462,7 +482,7 @@ class Ls3Exporter:
                 autorEintragNode.setAttribute("AutorName", author.name)
             if author.email != zusiprops.ZusiAuthor.email[1]["default"]:
                 autorEintragNode.setAttribute("AutorEmail", author.email)
-            if author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
+            if ls3file.is_main_file and author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
                 autorEintragNode.setAttribute("AutorAufwand", str(author.effort))
             if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
                 autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
@@ -472,15 +492,17 @@ class Ls3Exporter:
         # Write the landscape itself
         landschaftNode = self.xmldoc.createElement("Landschaft")
         self.xmldoc.documentElement.appendChild(landschaftNode)
-        for idx, subset in enumerate(subsets):
+        for idx, subset in enumerate(ls3file.subsets):
             self.write_subset(subset[1], subset[0], landschaftNode)
 
         # Get path names
-        realpath = os.path.realpath(os.path.expanduser(self.config.filePath))
+        filepath = os.path.join(
+            os.path.realpath(os.path.expanduser(self.config.fileDirectory)),
+            ls3file.filename)
 
         if self.lsbwriter is not None:
-            (realname, ext) = os.path.splitext(realpath)
-            lsbpath = realname + ".lsb"
+            (basename, ext) = os.path.splitext(filepath)
+            lsbpath = basename + ".lsb"
         
             fp = open(lsbpath, 'wb')
             print('Exporting %s' % lsbpath)
@@ -491,8 +513,15 @@ class Ls3Exporter:
             landschaftNode.appendChild(lsbNode)
 
         # Write XML document to file
-        fp = open(realpath, 'w')
-        print('Exporting %s' % realpath)
+        fp = open(filepath, 'w')
+        print('Exporting %s' % filepath)
         fp.write(self.xmldoc.documentElement.toprettyxml())
 
         print("Bounding radius: %d m" % int(ceil(self.boundingr)))
+
+    def export_ls3(self):
+        ls3file = Ls3File()
+        ls3file.subsets = self.get_subsets()
+        ls3file.filename = self.config.fileName;
+        ls3file.is_main_file = True
+        self.write_ls3(ls3file)
