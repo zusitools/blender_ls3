@@ -168,11 +168,12 @@ class Ls3Exporter:
                     if getattr(texture_slot.texture.image, "source", "") == "FILE" and zusicommon.is_object_visible(texture_slot.texture, self.config.variantIDs)]
         return []
 
-    # Adds a new subset node to the specified <Landschaft> node.
-    # A list of objects to be incorporated into that subset is given, as well as the material to be written.
+    # Adds a new subset node to the specified <Landschaft> node. The subset is given by a Ls3Subset object
+    # containing the objects and the material to export.
     # Only the faces of the supplied objects having that particular material will be written.
-    def write_subset(self, objects, material, landschaftNode):
+    def write_subset(self, landschaftNode, subset):
         subsetNode = self.xmldoc.createElement("SubSet")
+        material = subset.material
         try:
             if material.zusi_landscape_type != bpy.types.Material.zusi_landscape_type[1]["default"]:
                 subsetNode.setAttribute("TypLs3", material.zusi_landscape_type)
@@ -189,18 +190,19 @@ class Ls3Exporter:
         except (IndexError, AttributeError):
             pass
 
-        self.write_subset_mesh(subsetNode, objects, material)
+        self.write_subset_mesh(subsetNode, subset)
         landschaftNode.appendChild(subsetNode)
 
-    # Writes the meshes of the specified objects to the specified subset node.
+    # Writes the meshes of the subset's objects to the specified subset node.
     # Only the faces having the specified material will be written.
-    def write_subset_mesh(self, subsetNode, objects, material):
+    def write_subset_mesh(self, subsetNode, subset):
         vertexdata = []
         facedata = []
+        material = subset.material
         active_texture_slots = self.get_active_texture_slots(material)
         active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
         
-        for ob in objects:
+        for ob in subset.objects:
             # Apply modifiers and transform the mesh so that the vertex coordinates
             # are global coordinates. Also recalculate the vertex normals.
             mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
@@ -394,11 +396,9 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
-    # Build list of subsets from the scene's objects. Each entry in the list
-    # contains a tuple: the list objects to export into that subset and the material of the faces to export.
-    # The subsets are ordered by name.
+    # Build list of subsets from the scene's objects. The subsets are ordered by name.
     def get_subsets(self):
-        # Dictionary that maps subset names to a tuple of a material and a list of objects in that subset
+        # Dictionary that maps a subset name to a Ls3Subset object.
         subset_dict = dict()
 
         # List of subsets that will be visible in the exported file
@@ -434,7 +434,8 @@ class Ls3Exporter:
 
                     # Write material to first entry of tuple
                     if subset_name not in subset_dict:
-                        subset_dict[subset_name] = (mat, [])
+                        subset_dict[subset_name] = Ls3Subset()
+                        subset_dict[subset_name].material = mat
 
                     # A selected object that is not visible in the exported variant can still
                     # influcence the list of exported subsets when exportSelected is "2"
@@ -443,7 +444,7 @@ class Ls3Exporter:
 
                     # Append visible object to second entry of tuple
                     if zusicommon.is_object_visible(ob, self.config.variantIDs):
-                        subset_dict[subset_name][1].append(ob)
+                        subset_dict[subset_name].objects.append(ob)
 
         # Sort subsets by name and filter out subsets that won't be visible due to variant export settings
         # (when exportSelected mode is "2")
@@ -492,8 +493,8 @@ class Ls3Exporter:
         # Write the landscape itself
         landschaftNode = self.xmldoc.createElement("Landschaft")
         self.xmldoc.documentElement.appendChild(landschaftNode)
-        for idx, subset in enumerate(ls3file.subsets):
-            self.write_subset(subset[1], subset[0], landschaftNode)
+        for subset in ls3file.subsets:
+            self.write_subset(landschaftNode, subset)
 
         # Get path names
         filepath = os.path.join(
