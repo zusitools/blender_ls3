@@ -136,15 +136,9 @@ class Ls3Exporter:
 
         try:
             from . import zusiconfig
-            use_lsb = zusiconfig.use_lsb
+            self.use_lsb = zusiconfig.use_lsb
         except:
-            use_lsb = False
-        
-        if use_lsb:
-            from . import lsb
-            self.lsbwriter = lsb.LsbWriter()
-        else:
-            self.lsbwriter = None
+            self.use_lsb = False
 
         # Initialize map of Blender Z bias values (float) to integer values
         # e.g. if values (-0.1, -0.05, 0, 0.1) appear in the scene, they will be
@@ -541,6 +535,12 @@ class Ls3Exporter:
 
     def write_ls3(self, ls3file):
         sce = self.config.context.scene
+
+        if self.use_lsb:
+            from . import lsb
+            self.lsbwriter = lsb.LsbWriter()
+        else:
+            self.lsbwriter = None
 
         # Create a new XML document
         self.xmldoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
