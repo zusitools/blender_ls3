@@ -177,8 +177,9 @@ class Ls3Exporter:
     # Returns whether the specified object and its children must be placed in their own file
     # in order to be animated correctly.
     def must_start_new_file(self, ob):
-        # Animated objects whose origin (relative to the parent) is not 0/0/0.
-        if is_animated(ob) and ob.matrix_local.to_translation != Vector((0.0, 0.0, 0.0)):
+        # Animated objects whose origin (relative to the parent) is not 0/0/0 or which have children.
+        if is_animated(ob) and (
+                len(ob.children) > 0 or ob.matrix_local.to_translation() != Vector((0.0, 0.0, 0.0))):
             return True
 
         # Objects with animated children.

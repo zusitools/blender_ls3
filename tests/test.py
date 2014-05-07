@@ -133,7 +133,7 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
-  def test_animation(self):
+  def test_animation_with_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
     mainfile = self.export({})
     print(mainfile.read())
@@ -180,11 +180,11 @@ class TestLs3Export(unittest.TestCase):
     linkedfile2_root = linkedfile2_tree.getroot()
 
     # Test that no <Animation>, <VerknAnimation> and <MeshAnimation> nodes are present.
-    self.assertEqual([], linkedfile2_tree.findall("//nAnimation"))
-    self.assertEqual([], linkedfile2_tree.findall("//VerknAnimation"))
-    self.assertEqual([], linkedfile2_tree.findall("//MeshnAnimation"))
+    self.assertEqual([], linkedfile2_tree.findall(".//Animation"))
+    self.assertEqual([], linkedfile2_tree.findall(".//VerknAnimation"))
+    self.assertEqual([], linkedfile2_tree.findall(".//MeshAnimation"))
 
-  def test_animation2(self):
+  def test_animation_without_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
     mainfile = self.export({})
     print(mainfile.read())
@@ -195,14 +195,20 @@ class TestLs3Export(unittest.TestCase):
     mainfile_tree = ET.parse(mainfile.name)
     mainfile_root = mainfile_tree.getroot()
 
-    linkedfile_tree = ET.parse(os.path.join(path, basename + "_Rad" + ext))
-    linkedfile_root = linkedfile_tree.getroot()
+    verknuepfte_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
 
     verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")
     self.assertEqual(1, len(verkn_animation_nodes))
 
-    mesh_animation_nodes = linkedfile_root.findall("./Landschaft/MeshAnimation")
-    self.assertEqual(0, len(mesh_animation_nodes))
+    linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
+    linkedfile_root = linkedfile_tree.getroot()
+
+    # The plane should not be in a separate file, as it animates with its parent
+    # and has no constraint.
+    self.assertEqual([], linkedfile_root.findall("./Landschaft/Verknuepfte"))
+    self.assertEqual([], linkedfile_root.findall("./Landschaft/VerknAnimation"))
+    self.assertEqual([], linkedfile_root.findall("./Landschaft/MeshAnimation"))
 
 
 if __name__ == '__main__':
