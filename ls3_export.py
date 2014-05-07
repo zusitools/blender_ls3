@@ -56,6 +56,14 @@ def get_children_recursive(ob):
         result |= get_children_recursive(child)
     return result
 
+def is_animated(ob):
+    return ob.animation_data is not None and ob.animation_data.action is not None \
+        or len(ob.constraints) > 0
+
+def is_root_subset(sub, ls3file):
+    print("is_root_subset", ls3file.root_obj, sub.objects)
+    return ls3file.root_obj in sub.objects
+
 # Returns a list of all animations of objects in this file and linked files.
 def get_animations_recursive(ls3file):
     result = set([ob.animation_data for ob in ls3file.objects if ob.animation_data is not None])
@@ -90,6 +98,7 @@ class Ls3Subset:
     def __init__(self):
         self.material = None
         self.objects = []
+        self.is_animated = []
 
 # Container for the exporter settings
 class Ls3ExporterSettings:
@@ -175,11 +184,11 @@ class Ls3Exporter:
     # in order to be animated correctly.
     def must_start_new_file(self, ob):
         # Animated objects whose origin (relative to the parent) is not 0/0/0.
-        if ob.animation_data is not None and ob.matrix_local.to_translation != Vector((0.0, 0.0, 0.0)):
+        if is_animated(ob) and ob.matrix_local.to_translation != Vector((0.0, 0.0, 0.0)):
             return True
 
         # Objects with animated children.
-        if any(map(lambda child: child.animation_data is not None, ob.children)):
+        if any(map(lambda child: is_animated(child), ob.children)):
             return True
 
         return False
@@ -478,6 +487,7 @@ class Ls3Exporter:
         # (only for exportSelected == "2")
         visible_subsets = set()
         
+        # Build list of subsets according to material and subset name settings.
         for ob in ls3file.objects:
             # If export setting is "export only selected objects", filter out unselected objects
             # from the beginning.
@@ -488,6 +498,10 @@ class Ls3Exporter:
                 subset_basename = ""
                 if ob.zusi_subset_name != "":
                     subset_basename = ob.zusi_subset_name + "$"
+
+                # Animated objects get their own subsets.
+                if is_animated(ob):
+                    subset_basename += ob.name + "$$"
 
                 # Build list of materials used (i.e. assigned to any face) in this object
                 used_materials = []
@@ -500,15 +514,14 @@ class Ls3Exporter:
 
                 # Add this object to every subset this object will be a part of.
                 for mat in used_materials:
-                    if mat == None:
-                        subset_name = "no_material"
-                    else:
-                        subset_name = subset_basename + mat.name
+                    subset_name = subset_basename + ("no_material" if mat is None else mat.name)
 
                     # Create new subset object and write the material.
                     if subset_name not in subset_dict:
-                        subset_dict[subset_name] = Ls3Subset()
-                        subset_dict[subset_name].material = mat
+                        new_subset = Ls3Subset()
+                        new_subset.material = mat
+                        new_subset.is_animated = is_animated(ob)
+                        subset_dict[subset_name] = new_subset
 
                     # A selected object that is not visible in the exported variant can still
                     # influcence the list of exported subsets when exportSelected is "2"
@@ -582,18 +595,20 @@ class Ls3Exporter:
         # Write animation declarations.
         for animation in get_animations_recursive(ls3file):
             animationNode = self.xmldoc.createElement("Animation")
-            animationNode.setAttribute("AniBeschreibung", animation.action.name)
+            animationNode.setAttribute("AniBeschreibung", "Rad-Rotation")
             landschaftNode.appendChild(animationNode)
 
-        # Write mesh animations.
-        mesh_animations = [ob.animation_data.action for ob in ls3file.objects if ob.animation_data is not None]
-        for mesh_animation in mesh_animations:
+        # Write mesh subset animations. Don't write animation data for the root subset
+        # as that is animated via a linked animation.
+        animated_subsets = [(idx, sub) for (idx, sub) in enumerate(ls3file.subsets)
+            if sub.is_animated and not is_root_subset(sub, ls3file)]
+        for idx, sub in animated_subsets:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             landschaftNode.appendChild(meshAnimationNode)
 
         # Write linked animations.
         for idx, linked_file in enumerate(ls3file.linked_files):
-            if linked_file.root_obj.animation_data is not None:
+            if is_animated(linked_file.root_obj):
                 verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
                 landschaftNode.appendChild(verknAnimationNode)
 

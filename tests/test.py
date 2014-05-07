@@ -144,7 +144,7 @@ class TestLs3Export(unittest.TestCase):
     mainfile_tree = ET.parse(mainfile.name)
     mainfile_root = mainfile_tree.getroot()
 
-    # Test for correct linked file.
+    # Test for correct linked file #1.
     verkn_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
 
@@ -160,13 +160,50 @@ class TestLs3Export(unittest.TestCase):
     verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")
     self.assertEqual(1, len(verkn_animation_nodes))
 
-    # Test linked file.
-    linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
+    # Test linked file #1.
+    linkedfile1_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
+    linkedfile1_root = linkedfile1_tree.getroot()
+
+    # Test for <VerknAnimation> node in linked file #1.
+    mesh_animation_nodes = linkedfile1_root.findall("./Landschaft/VerknAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+
+    # Test for correct linked file #2.
+    verkn_nodes = linkedfile1_root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verkn_nodes))
+
+    datei_node = verkn_nodes[0].findall("./Datei")[0]
+    self.assertEqual(basename + "_Kuppelstange" + ext, datei_node.attrib["Dateiname"])
+
+    # Test linked file #2.
+    linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Kuppelstange" + ext))
+    linkedfile2_root = linkedfile2_tree.getroot()
+
+    # Test that no <Animation>, <VerknAnimation> and <MeshAnimation> nodes are present.
+    self.assertEqual([], linkedfile2_tree.findall("//nAnimation"))
+    self.assertEqual([], linkedfile2_tree.findall("//VerknAnimation"))
+    self.assertEqual([], linkedfile2_tree.findall("//MeshnAnimation"))
+
+  def test_animation2(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    mainfile = self.export({})
+    print(mainfile.read())
+
+    (path, name) = os.path.split(mainfile.name)
+    (basename, ext) = os.path.splitext(name)
+
+    mainfile_tree = ET.parse(mainfile.name)
+    mainfile_root = mainfile_tree.getroot()
+
+    linkedfile_tree = ET.parse(os.path.join(path, basename + "_Rad" + ext))
     linkedfile_root = linkedfile_tree.getroot()
 
-    # Test for <MeshAnimation> node in linked file.
+    verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+
     mesh_animation_nodes = linkedfile_root.findall("./Landschaft/MeshAnimation")
-    self.assertEqual(1, len(mesh_animation_nodes))
+    self.assertEqual(0, len(mesh_animation_nodes))
+
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
