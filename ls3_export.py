@@ -703,6 +703,14 @@ class Ls3Exporter:
 
         # Get animations and their animation numbers.
         animations = get_animations_recursive(ls3file)
+        animations_by_type = dict()
+        for animation in animations:
+            ani_type = animation.animation_type
+            if ani_type not in animations_by_type:
+                animations_by_type[ani_type] = [animation]
+            else:
+                animations_by_type[ani_type].append(animation)
+
         animated_subsets = [(idx + 1, sub)
             for (idx, sub) in enumerate(ls3file.subsets)
             if sub.is_animated and not is_root_subset(sub, ls3file)]
@@ -711,8 +719,7 @@ class Ls3Exporter:
             if is_animated(linked_file.root_obj)]
 
         # Write animation declarations for this file and any linked file.
-        for animation in animations:
-            ani_type = animation.animation_type
+        for ani_type, animations in animations_by_type.items():
             animationNode = self.xmldoc.createElement("Animation")
             animationNode.setAttribute("AniID", ani_type)
             animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))

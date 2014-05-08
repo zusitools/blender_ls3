@@ -323,6 +323,37 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], linkedfile_root.findall("./Landschaft/VerknAnimation"))
     self.assertEqual([], linkedfile_root.findall("./Landschaft/MeshAnimation"))
 
+  def test_animation_structure_multiple_actions(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation3.blend"))
+    mainfile = self.export({})
+    print(mainfile.read())
+
+    (path, name) = os.path.split(mainfile.name)
+    (basename, ext) = os.path.splitext(name)
+
+    mainfile_tree = ET.parse(mainfile.name)
+    mainfile_root = mainfile_tree.getroot()
+
+    animation_nodes = mainfile_root.findall(".//Animation")
+    self.assertEqual(1, len(animation_nodes))
+
+    linkedfile1_tree = ET.parse(os.path.join(path, basename + "_Unterarm" + ext))
+    linkedfile1_root = linkedfile1_tree.getroot()
+
+    animation_nodes = linkedfile1_root.findall(".//Animation")
+    self.assertEqual(1, len(animation_nodes))
+
+    linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Oberarm" + ext))
+    linkedfile2_root = linkedfile2_tree.getroot()
+
+    animation_nodes = linkedfile2_root.findall(".//Animation")
+    self.assertEqual(1, len(animation_nodes))
+
+    linkedfile3_tree = ET.parse(os.path.join(path, basename + "_Schleifstueck" + ext))
+    linkedfile3_root = linkedfile3_tree.getroot()
+
+    self.assertEqual([], linkedfile3_root.findall(".//Animation"))
+
   def test_night_color(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "nightcolor.blend"))
     root = self.export_and_parse()
