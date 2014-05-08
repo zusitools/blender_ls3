@@ -657,7 +657,7 @@ class Ls3Exporter:
         for animation in animations:
             ani_type = animation.animation_type
             animationNode = self.xmldoc.createElement("Animation")
-            animationNode.setAttribute("AniId", ani_type)
+            animationNode.setAttribute("AniID", ani_type)
             animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))
             landschaftNode.appendChild(animationNode)
 
