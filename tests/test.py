@@ -54,14 +54,17 @@ class TestLs3Export(unittest.TestCase):
     return tree.getroot()
 
   def assertRotation(self, node, expected_x, expected_y, expected_z, expected_w):
+    self.assertXYZ(node, expected_x, expected_y, expected_z)
+    if expected_w != 0.0 or "W" in node.attrib:
+      self.assertAlmostEqual(expected_w, float(node.attrib["W"]), places = 5)
+
+  def assertXYZ(self, node, expected_x, expected_y, expected_z):
     if expected_x != 0.0 or "X" in node.attrib:
       self.assertAlmostEqual(expected_x, float(node.attrib["X"]), places = 5)
     if expected_y != 0.0 or "Y" in node.attrib:
       self.assertAlmostEqual(expected_y, float(node.attrib["Y"]), places = 5)
     if expected_z != 0.0 or "Z" in node.attrib:
       self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = 5)
-    if expected_w != 0.0 or "W" in node.attrib:
-      self.assertAlmostEqual(expected_w, float(node.attrib["W"]), places = 5)
 
   def test_export_empty(self):
     self.clear_scene()
@@ -206,6 +209,11 @@ class TestLs3Export(unittest.TestCase):
     mainfile_tree = ET.parse(mainfile.name)
     mainfile_root = mainfile_tree.getroot()
 
+    # Check for correct position of linked file #1.
+    verknuepfte_node = mainfile_root.findall("./Landschaft/Verknuepfte")[0]
+    p_node = verknuepfte_node.findall("./p")[0]
+    self.assertXYZ(p_node, 0, 1, 0)
+
     # Check for <AniNrs> node in <Animation> node.
     animation_node = mainfile_root.findall("./Landschaft/Animation")[0]
     ani_nrs_nodes = animation_node.findall("./AniNrs")
@@ -241,6 +249,11 @@ class TestLs3Export(unittest.TestCase):
     # Check linked file #1.
     linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
     linkedfile_root = linkedfile_tree.getroot()
+
+    # Check for correct position of linked file #2.
+    verknuepfte_node = linkedfile_root.findall("./Landschaft/Verknuepfte")[0]
+    p_node = verknuepfte_node.findall("./p")[0]
+    self.assertXYZ(p_node, 0, 0, 0.8)
 
     # Check for correct <VerknAnimation> node.
     verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
