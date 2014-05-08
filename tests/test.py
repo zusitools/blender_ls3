@@ -185,7 +185,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], linkedfile2_tree.findall(".//VerknAnimation"))
     self.assertEqual([], linkedfile2_tree.findall(".//MeshAnimation"))
 
-  def test_animation_with_constraints(self):
+  def test_animation_with_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
     mainfile = self.export({})
     print(mainfile.read())
