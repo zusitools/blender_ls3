@@ -613,11 +613,12 @@ class Ls3Exporter:
         for subset in ls3file.subsets:
             self.write_subset(landschaftNode, subset, ls3file)
 
-        # Get animations.
+        # Get animations and their animation numbers.
         animations = get_animations_recursive(ls3file)
-        animated_subsets = [(idx, sub) for (idx, sub) in enumerate(ls3file.subsets)
+        animated_subsets = [(idx + 1, sub)
+            for (idx, sub) in enumerate(ls3file.subsets)
             if sub.is_animated and not is_root_subset(sub, ls3file)]
-        animated_linked_files = [(idx + len(animated_subsets), linked)
+        animated_linked_files = [(idx + len(animated_subsets) + 1, linked)
             for (idx, linked) in enumerate(ls3file.linked_files)
             if is_animated(linked_file.root_obj)]
 
@@ -630,24 +631,24 @@ class Ls3Exporter:
             landschaftNode.appendChild(animationNode)
 
             # Write <AniNrs> nodes.
-            for idx, linked in animated_linked_files:
+            for aninr, linked in animated_linked_files:
                 if get_animation(linked.root_obj) == animation:
                     aniNrsNode = self.xmldoc.createElement("AniNrs")
-                    aniNrsNode.setAttribute("AniNr", str(idx + 1))
+                    aniNrsNode.setAttribute("AniNr", str(aninr))
                     animationNode.appendChild(aniNrsNode)
 
         # Write animation definitions for subsets and links in this file.
 
         # Write mesh subset animations. Don't write animation data for the root subset
         # as that is animated via a linked animation.
-        for idx, sub in animated_subsets:
+        for aninr, sub in animated_subsets:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             landschaftNode.appendChild(meshAnimationNode)
 
         # Write linked animations.
-        for idx, linked_file in animated_linked_files:
+        for aninr, linked_file in animated_linked_files:
             verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
-            verknAnimationNode.setAttribute("AniNr", str(idx + 1))
+            verknAnimationNode.setAttribute("AniNr", str(aninr))
             landschaftNode.appendChild(verknAnimationNode)
 
         # Get path names
