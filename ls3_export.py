@@ -453,6 +453,21 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
+    def write_animation(self, ob, animation_node):
+        animation = get_animation(ob)
+
+        # Get frame numbers of the 0.0 and 1.0 frames.
+        frame0 = self.config.context.scene.frame_start
+        frame1 = self.config.context.scene.frame_end
+
+        # Get frame numbers of keyframes.
+        keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
+
+        for keyframe_no in sorted(keyframe_nos):
+            aniPunktNode = self.xmldoc.createElement("AniPunkt")
+            aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
+            animation_node.appendChild(aniPunktNode)
+
     # Build list of files from the scene's objects. The main file will always be the first item in the list.
     def get_files(self):
         (basename, ext) = os.path.splitext(self.config.fileName)
@@ -650,6 +665,7 @@ class Ls3Exporter:
             verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
             verknAnimationNode.setAttribute("AniNr", str(aninr))
             landschaftNode.appendChild(verknAnimationNode)
+            self.write_animation(linked_file.root_obj, verknAnimationNode)
 
         # Get path names
         filepath = os.path.join(

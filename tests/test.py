@@ -208,6 +208,35 @@ class TestLs3Export(unittest.TestCase):
     verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
+    # Check for keyframes.
+    ani_pkt_nodes = verkn_animation_node.findall("./AniPunkt")
+    self.assertEqual(5, len(ani_pkt_nodes))
+
+    self.assertAlmostEqual(0.0, float(ani_pkt_nodes[0].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.25, float(ani_pkt_nodes[1].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.5, float(ani_pkt_nodes[2].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
+    self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
+
+    # Check linked file #1.
+    linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
+    linkedfile_root = linkedfile_tree.getroot()
+
+    # Check for correct <VerknAnimation> node.
+    verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
+    self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
+
+    # Check for keyframes.
+    ani_pkt_nodes = verkn_animation_node.findall("./AniPunkt")
+    self.assertEqual(5, len(ani_pkt_nodes))
+
+    self.assertAlmostEqual(0.0, float(ani_pkt_nodes[0].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.25, float(ani_pkt_nodes[1].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.5, float(ani_pkt_nodes[2].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
+    self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
+
+
   def test_animation_structure_without_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
     mainfile = self.export({})
