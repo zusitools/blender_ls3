@@ -354,6 +354,13 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual([], linkedfile3_root.findall(".//Animation"))
 
+  def test_animation_restore_frame_no(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation3.blend"))
+    bpy.context.scene.frame_set(5)
+    self.assertEqual(5, bpy.context.scene.frame_current)
+    self.export()
+    self.assertEqual(5, bpy.context.scene.frame_current)
+
   def test_night_color(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "nightcolor.blend"))
     root = self.export_and_parse()

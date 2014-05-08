@@ -501,6 +501,7 @@ class Ls3Exporter:
         keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
 
         # Write keyframes.
+        original_current_frame = self.config.context.scene.frame_current
         previous_rotation = None
         for keyframe_no in sorted(keyframe_nos):
             aniPunktNode = self.xmldoc.createElement("AniPunkt")
@@ -528,6 +529,7 @@ class Ls3Exporter:
                 if rotation.w != 0.0:
                     rotationNode.setAttribute("W", str(rotation.w))
                 aniPunktNode.appendChild(rotationNode)
+        self.config.context.scene.frame_set(original_current_frame)
 
     # Build list of files from the scene's objects. The main file will always be the first item in the list.
     def get_files(self):
