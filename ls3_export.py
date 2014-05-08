@@ -650,6 +650,12 @@ class Ls3Exporter:
                 fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
                 verknuepfteNode.appendChild(pNode)
 
+            scale = linked_file.root_obj.matrix_local.to_scale()
+            if scale != Vector((0.0, 0.0, 0.0)):
+                skNode = self.xmldoc.createElement("sk")
+                fill_node_xyz(skNode, scale.y, scale.x, scale.z)
+                verknuepfteNode.appendChild(skNode)
+
         # Write subsets.
         for subset in ls3file.subsets:
             self.write_subset(landschaftNode, subset, ls3file)

@@ -250,10 +250,12 @@ class TestLs3Export(unittest.TestCase):
     linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
     linkedfile_root = linkedfile_tree.getroot()
 
-    # Check for correct position of linked file #2.
+    # Check for correct position and scale of linked file #2.
     verknuepfte_node = linkedfile_root.findall("./Landschaft/Verknuepfte")[0]
     p_node = verknuepfte_node.findall("./p")[0]
     self.assertXYZ(p_node, 0, 0, 0.8)
+    sk_node = verknuepfte_node.findall("./sk")[0]
+    self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
 
     # Check for correct <VerknAnimation> node.
     verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
