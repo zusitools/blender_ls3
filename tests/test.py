@@ -92,7 +92,7 @@ class TestLs3Export(unittest.TestCase):
     root = self.export_and_parse()
 
     # <Landschaft> node contains one subset
-    landschaft_node = root.findall("./Landschaft")[0]
+    landschaft_node = root.find("./Landschaft")
     self.assertEqual(1, len(landschaft_node))
     self.assertEqual("SubSet", landschaft_node[0].tag)
 
@@ -122,10 +122,10 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(2, len(textur_nodes))
 
     # First texture must be the intransparent one, second texture the transparent one.
-    datei1_node = textur_nodes[0].findall("./Datei")[0]
+    datei1_node = textur_nodes[0].find("./Datei")
     self.assertEqual("texture.dds", datei1_node.attrib["Dateiname"][-len("texture.dds"):])
 
-    datei2_node = textur_nodes[1].findall("./Datei")[0]
+    datei2_node = textur_nodes[1].find("./Datei")
     self.assertEqual("texture_alpha.dds", datei2_node.attrib["Dateiname"][-len("texture_alpha.dds"):])
 
     # Check for correct UV coordinates.
@@ -161,7 +161,7 @@ class TestLs3Export(unittest.TestCase):
     verkn_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
 
-    datei_node = verkn_nodes[0].findall("./Datei")[0]
+    datei_node = verkn_nodes[0].find("./Datei")
     self.assertEqual(basename + "_RadRotation" + ext, datei_node.attrib["Dateiname"])
 
     # Test for <Animation> node.
@@ -186,7 +186,7 @@ class TestLs3Export(unittest.TestCase):
     verkn_nodes = linkedfile1_root.findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
 
-    datei_node = verkn_nodes[0].findall("./Datei")[0]
+    datei_node = verkn_nodes[0].find("./Datei")
     self.assertEqual(basename + "_Kuppelstange" + ext, datei_node.attrib["Dateiname"])
 
     # Test linked file #2.
@@ -210,12 +210,12 @@ class TestLs3Export(unittest.TestCase):
     mainfile_root = mainfile_tree.getroot()
 
     # Check for correct position of linked file #1.
-    verknuepfte_node = mainfile_root.findall("./Landschaft/Verknuepfte")[0]
-    p_node = verknuepfte_node.findall("./p")[0]
+    verknuepfte_node = mainfile_root.find("./Landschaft/Verknuepfte")
+    p_node = verknuepfte_node.find("./p")
     self.assertXYZ(p_node, 0, 1, 0)
 
     # Check for <AniNrs> node in <Animation> node.
-    animation_node = mainfile_root.findall("./Landschaft/Animation")[0]
+    animation_node = mainfile_root.find("./Landschaft/Animation")
     ani_nrs_nodes = animation_node.findall("./AniNrs")
     self.assertEqual(1, len(ani_nrs_nodes))
 
@@ -223,7 +223,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("1", ani_nrs_node.attrib["AniNr"])
 
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
+    verkn_animation_node = mainfile_root.find("./Landschaft/VerknAnimation")
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
@@ -251,14 +251,14 @@ class TestLs3Export(unittest.TestCase):
     linkedfile_root = linkedfile_tree.getroot()
 
     # Check for correct position and scale of linked file #2.
-    verknuepfte_node = linkedfile_root.findall("./Landschaft/Verknuepfte")[0]
-    p_node = verknuepfte_node.findall("./p")[0]
+    verknuepfte_node = linkedfile_root.find("./Landschaft/Verknuepfte")
+    p_node = verknuepfte_node.find("./p")
     self.assertXYZ(p_node, 0, 0, 0.8)
-    sk_node = verknuepfte_node.findall("./sk")[0]
+    sk_node = verknuepfte_node.find("./sk")
     self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
 
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = linkedfile_root.findall("./Landschaft/VerknAnimation")[0]
+    verkn_animation_node = linkedfile_root.find("./Landschaft/VerknAnimation")
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
