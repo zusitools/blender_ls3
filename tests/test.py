@@ -258,7 +258,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
 
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
+    verkn_animation_node = linkedfile_root.findall("./Landschaft/VerknAnimation")[0]
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
@@ -270,6 +270,16 @@ class TestLs3Export(unittest.TestCase):
     self.assertAlmostEqual(0.5, float(ani_pkt_nodes[2].attrib["AniZeit"]))
     self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
     self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
+
+    self.assertEqual([], verkn_animation_node.findall("./AniPunkt/p"))
+    q_nodes = verkn_animation_node.findall("./AniPunkt/q")
+    self.assertEqual(5, len(q_nodes))
+
+    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
+    self.assertRotation(q_nodes[1], 0, -0.707107, 0, 0.707107)
+    self.assertRotation(q_nodes[2], 0, -1, 0, 0)
+    self.assertRotation(q_nodes[3], 0, -0.707107, 0, -0.707107)
+    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
     # Check linked file #2.
     linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Kuppelstange" + ext))

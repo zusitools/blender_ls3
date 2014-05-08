@@ -468,13 +468,21 @@ class Ls3Exporter:
         keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
 
         # Write keyframes.
+        previous_rotation = None
         for keyframe_no in sorted(keyframe_nos):
             aniPunktNode = self.xmldoc.createElement("AniPunkt")
             aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
             animation_node.appendChild(aniPunktNode)
-
             self.config.context.scene.frame_set(keyframe_no)
-            rotation = ob.rotation_euler.to_quaternion()
+
+            # Make rotation Euler compatible with the previous frame to prevent axis flipping.
+            loc, rot, scale = ob.matrix_local.decompose()
+            if previous_rotation is not None:
+                rot_euler = rot.to_matrix().to_euler('XYZ', previous_rotation)
+            else:
+                rot_euler = rot.to_matrix().to_euler('XYZ')
+            previous_rotation = rot_euler
+            rotation = rot_euler.to_quaternion()
 
             rotationNode = None if rotation == Vector((0.0, 0.0, 0.0, 0.0)) else self.xmldoc.createElement("q")
             if rotationNode is not None:
