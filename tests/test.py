@@ -133,7 +133,7 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
-  def test_animation_with_constraint(self):
+  def test_animation_structure_with_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
     mainfile = self.export({})
     print(mainfile.read())
@@ -185,10 +185,33 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], linkedfile2_tree.findall(".//VerknAnimation"))
     self.assertEqual([], linkedfile2_tree.findall(".//MeshAnimation"))
 
-  def test_animation_without_constraint(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+  def test_animation_with_constraints(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
     mainfile = self.export({})
     print(mainfile.read())
+
+    (path, name) = os.path.split(mainfile.name)
+    (basename, ext) = os.path.splitext(name)
+
+    mainfile_tree = ET.parse(mainfile.name)
+    mainfile_root = mainfile_tree.getroot()
+
+    # Check for <AniNrs> node in <Animation> node.
+    animation_node = mainfile_root.findall("./Landschaft/Animation")[0]
+    ani_nrs_nodes = animation_node.findall("./AniNrs")
+    self.assertEqual(1, len(ani_nrs_nodes))
+
+    ani_nrs_node = ani_nrs_nodes[0]
+    self.assertEqual("1", ani_nrs_node.attrib["AniNr"])
+
+    # Check for correct <VerknAnimation> node.
+    verkn_animation_node = mainfile_root.findall("./Landschaft/VerknAnimation")[0]
+    self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
+
+  def test_animation_structure_without_constraint(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    mainfile = self.export({})
+    # print(mainfile.read())
 
     (path, name) = os.path.split(mainfile.name)
     (basename, ext) = os.path.splitext(name)

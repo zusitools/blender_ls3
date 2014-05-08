@@ -613,28 +613,42 @@ class Ls3Exporter:
         for subset in ls3file.subsets:
             self.write_subset(landschaftNode, subset, ls3file)
 
-        # Write animation declarations.
+        # Get animations.
         animations = get_animations_recursive(ls3file)
-        ani_types = set([animation.animation_type for animation in animations])
-        for ani_type in ani_types:
+        animated_subsets = [(idx, sub) for (idx, sub) in enumerate(ls3file.subsets)
+            if sub.is_animated and not is_root_subset(sub, ls3file)]
+        animated_linked_files = [(idx + len(animated_subsets), linked)
+            for (idx, linked) in enumerate(ls3file.linked_files)
+            if is_animated(linked_file.root_obj)]
+
+        # Write animation declarations for this file and any linked file.
+        for animation in animations:
+            ani_type = animation.animation_type
             animationNode = self.xmldoc.createElement("Animation")
             animationNode.setAttribute("AniId", ani_type)
             animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))
             landschaftNode.appendChild(animationNode)
 
+            # Write <AniNrs> nodes.
+            for idx, linked in animated_linked_files:
+                if get_animation(linked.root_obj) == animation:
+                    aniNrsNode = self.xmldoc.createElement("AniNrs")
+                    aniNrsNode.setAttribute("AniNr", str(idx + 1))
+                    animationNode.appendChild(aniNrsNode)
+
+        # Write animation definitions for subsets and links in this file.
+
         # Write mesh subset animations. Don't write animation data for the root subset
         # as that is animated via a linked animation.
-        animated_subsets = [(idx, sub) for (idx, sub) in enumerate(ls3file.subsets)
-            if sub.is_animated and not is_root_subset(sub, ls3file)]
         for idx, sub in animated_subsets:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             landschaftNode.appendChild(meshAnimationNode)
 
         # Write linked animations.
-        for idx, linked_file in enumerate(ls3file.linked_files):
-            if is_animated(linked_file.root_obj):
-                verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
-                landschaftNode.appendChild(verknAnimationNode)
+        for idx, linked_file in animated_linked_files:
+            verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
+            verknAnimationNode.setAttribute("AniNr", str(idx + 1))
+            landschaftNode.appendChild(verknAnimationNode)
 
         # Get path names
         filepath = os.path.join(
