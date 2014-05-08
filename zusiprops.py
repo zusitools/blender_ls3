@@ -445,6 +445,24 @@ variant_visibility_modes = [
     ("False", "Visible in all but the selected variants", ""),
 ]
 
+animation_types = [
+    ("0", "Undefined/signal controlled", ""),
+    ("1", "Continuous over time", ""),
+    ("2", "Speed (powered, braked)", ""),
+    ("3", "Speed (braked)", ""),
+    ("4", "Speed (powered)", ""),
+    ("5", "Speed", ""),
+    ("6", "Track curvature at front of vehicle", ""),
+    ("7", "Track curvature at rear of vehicle", ""),
+    ("8", "Pantograph A", ""),
+    ("9", "Pantograph B", ""),
+    ("10", "Pantograph C", ""),
+    ("11", "Pantograph D", ""),
+    ("12", "Doors left", ""),
+    ("13", "Doors right", ""),
+    ("14", "Tilt technology", ""),
+]
+
 
 #
 # Material
@@ -645,6 +663,16 @@ bpy.types.Scene.zusi_description = bpy.props.StringProperty(
     default = ""
 )
 
+#
+# Action
+#
+
+bpy.types.Action.animation_type = bpy.props.EnumProperty(
+    name = "Animation type",
+    description = "Defines how the animation is triggered in the simulator",
+    items = animation_types,
+    default = "0"
+)
 
 
 # ===

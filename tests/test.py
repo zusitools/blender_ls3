@@ -154,7 +154,8 @@ class TestLs3Export(unittest.TestCase):
     # Test for <Animation> node.
     animation_nodes = mainfile_root.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animation_nodes))
-    self.assertEqual("Rad-Rotation", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertEqual("2", animation_nodes[0].attrib["AniId"])
+    self.assertEqual("Speed (powered, braked)", animation_nodes[0].attrib["AniBeschreibung"])
 
     # Test for <VerknAnimation> node.
     verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")

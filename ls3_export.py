@@ -60,15 +60,35 @@ def is_animated(ob):
     return ob.animation_data is not None and ob.animation_data.action is not None \
         or len(ob.constraints) > 0
 
+def get_animation(ob):
+    """Returns the action controlling the animation of the specified object (or None)"""
+    if ob.animation_data is not None and ob.animation_data.action is not None:
+        return ob.animation_data.action
+    if len(ob.constraints) > 0 and ob.parent is not None:
+        # Find animated parent
+        return get_animation(ob.parent)
+    return None
+
+def get_ani_description(ani_id):
+    for animation_type in zusiprops.animation_types:
+        if animation_type[0] == ani_id:
+            return animation_type[1]
+    return ""
+
 def is_root_subset(sub, ls3file):
-    print("is_root_subset", ls3file.root_obj, sub.objects)
     return ls3file.root_obj in sub.objects
 
-# Returns a list of all animations of objects in this file and linked files.
-def get_animations_recursive(ls3file):
-    result = set([ob.animation_data for ob in ls3file.objects if ob.animation_data is not None])
+# Returns a set of all animations of objects in this file and linked files.
+def get_animations_recursive(ls3file, include_root = False):
+    result = set()
+    for ob in ls3file.objects:
+        if ob == ls3file.root_obj and not include_root:
+            continue
+        animation = get_animation(ob)
+        if animation is not None:
+            result.add(animation)
     for linked_file in ls3file.linked_files:
-        result |= get_animations_recursive(linked_file)
+        result |= get_animations_recursive(linked_file, True)
     return result
 
 # Stores all the things that later go into one LS3 file.
@@ -594,9 +614,12 @@ class Ls3Exporter:
             self.write_subset(landschaftNode, subset, ls3file)
 
         # Write animation declarations.
-        for animation in get_animations_recursive(ls3file):
+        animations = get_animations_recursive(ls3file)
+        ani_types = set([animation.animation_type for animation in animations])
+        for ani_type in ani_types:
             animationNode = self.xmldoc.createElement("Animation")
-            animationNode.setAttribute("AniBeschreibung", "Rad-Rotation")
+            animationNode.setAttribute("AniId", ani_type)
+            animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))
             landschaftNode.appendChild(animationNode)
 
         # Write mesh subset animations. Don't write animation data for the root subset
