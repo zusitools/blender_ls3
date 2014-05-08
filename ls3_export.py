@@ -692,7 +692,7 @@ class Ls3Exporter:
                 verknuepfteNode.appendChild(pNode)
 
             scale = linked_file.root_obj.matrix_local.to_scale()
-            if scale != Vector((0.0, 0.0, 0.0)):
+            if scale != Vector((1.0, 1.0, 1.0)):
                 skNode = self.xmldoc.createElement("sk")
                 fill_node_xyz(skNode, scale.y, scale.x, scale.z)
                 verknuepfteNode.appendChild(skNode)

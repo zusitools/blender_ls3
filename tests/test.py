@@ -213,6 +213,7 @@ class TestLs3Export(unittest.TestCase):
     verknuepfte_node = mainfile_root.find("./Landschaft/Verknuepfte")
     p_node = verknuepfte_node.find("./p")
     self.assertXYZ(p_node, 0, 1, 0)
+    self.assertEqual(None, verknuepfte_node.find('sk'))
 
     # Check for <AniNrs> node in <Animation> node.
     animation_node = mainfile_root.find("./Landschaft/Animation")
