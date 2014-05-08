@@ -322,6 +322,33 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], linkedfile_root.findall("./Landschaft/VerknAnimation"))
     self.assertEqual([], linkedfile_root.findall("./Landschaft/MeshAnimation"))
 
+  def test_night_color(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "nightcolor.blend"))
+    root = self.export_and_parse()
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(4, len(subsets))
+
+    # Subset 1 has no night color, C (diffuse) is white.
+    self.assertEqual("0FFFFFFFF", subsets[0].attrib["C"])
+    self.assertNotIn("E", subsets[0].attrib)
+
+    # Subset 2 has a night color of black and a day color of white.
+    # It will be black at night and white by day.
+    self.assertEqual("0FFFFFFFF", subsets[1].attrib["C"])
+    self.assertEqual("000000000", subsets[1].attrib["E"])
+
+    # Subset 3 has a night color of white and a day color of gray.
+    # This does not work in Zusi's lighting model (night color must be darker),
+    # so we adjust the night color accordingly (to be gray, too).
+    self.assertEqual("0FF000000", subsets[2].attrib["C"])
+    self.assertEqual("000808080", subsets[2].attrib["E"])
+
+    # Subset 4 allows overexposure and therefore has a (theoretical)
+    # day color of RGB(510, 510, 510).
+    self.assertEqual("0FFFFFFFF", subsets[3].attrib["C"])
+    self.assertEqual("000FFFFFF", subsets[3].attrib["E"])
+
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)

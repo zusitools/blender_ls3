@@ -479,21 +479,27 @@ bpy.types.Material.zusi_emit_color = bpy.props.FloatVectorProperty(
     default = (0.0, 0.0, 0.0)
 )
 
-bpy.types.Material.zusi_emit_alpha = bpy.props.FloatProperty(
-    name = "Night color alpha",
-    description = "The alpha value of the night color",
-    precision = 3,
-    min = 0.0,
-    max = 1.0,
-    soft_min = 0.0,
-    soft_max = 1.0,
-    default = 1.0
-)
-
 bpy.types.Material.zusi_use_emit = bpy.props.BoolProperty(
     name = "Use night color",
     description = "Use a specific night color for this material",
     default = False
+)
+
+bpy.types.Material.zusi_allow_overexposure = bpy.props.BoolProperty(
+    name = "Allow overexposure",
+    description = "Allow the day color for this material to be overexposed",
+    default = False
+)
+
+bpy.types.Material.zusi_overexposure_addition = bpy.props.FloatVectorProperty(
+    name = 'Overexposure addition',
+    description = 'Color to add to the day color in order to create overexposure',
+    subtype = 'COLOR',
+    min = 0.0,
+    max = 1.0,
+    soft_min = 0.0,
+    soft_max = 1.0,
+    default = (0.0, 0.0, 0.0)
 )
 
 bpy.types.Material.zusi_ambient_color = bpy.props.FloatVectorProperty(
@@ -751,7 +757,12 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             row = layout.row()
             row.enabled = mat.zusi_use_emit
             row.prop(mat, "zusi_emit_color", text="")
-            row.prop(mat, "zusi_emit_alpha", slider=True, text="Alpha")
+
+            row = layout.row()
+            row.prop(mat, "zusi_allow_overexposure", text = "Overexposure")
+            row = layout.row()
+            row.enabled = mat.zusi_allow_overexposure
+            row.prop(mat, "zusi_overexposure_addition", text="Add to diffuse")
 
 class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     bl_idname = 'zusi_texture_preset.edit'
