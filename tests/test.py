@@ -53,6 +53,16 @@ class TestLs3Export(unittest.TestCase):
     tree = ET.parse(exported_file.name)
     return tree.getroot()
 
+  def assertRotation(self, node, expected_x, expected_y, expected_z, expected_w):
+    if expected_x != 0.0 or "X" in node.attrib:
+      self.assertAlmostEqual(expected_x, float(node.attrib["X"]), places = 5)
+    if expected_y != 0.0 or "Y" in node.attrib:
+      self.assertAlmostEqual(expected_y, float(node.attrib["Y"]), places = 5)
+    if expected_z != 0.0 or "Z" in node.attrib:
+      self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = 5)
+    if expected_w != 0.0 or "W" in node.attrib:
+      self.assertAlmostEqual(expected_w, float(node.attrib["W"]), places = 5)
+
   def test_export_empty(self):
     self.clear_scene()
     root = self.export_and_parse()
@@ -217,6 +227,16 @@ class TestLs3Export(unittest.TestCase):
     self.assertAlmostEqual(0.5, float(ani_pkt_nodes[2].attrib["AniZeit"]))
     self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
     self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
+
+    self.assertEqual([], verkn_animation_node.findall("./AniPunkt/p"))
+    q_nodes = verkn_animation_node.findall("./AniPunkt/q")
+    self.assertEqual(5, len(q_nodes))
+
+    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
+    self.assertRotation(q_nodes[1], 0, 0.707107, 0, 0.707107)
+    self.assertRotation(q_nodes[2], 0, 1, 0, 0)
+    self.assertRotation(q_nodes[3], 0, 0.707107, 0, -0.707107)
+    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
     # Check linked file #1.
     linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
