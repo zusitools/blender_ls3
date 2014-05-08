@@ -269,6 +269,20 @@ class TestLs3Export(unittest.TestCase):
     self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
     self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
 
+    # Check linked file #2.
+    linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Kuppelstange" + ext))
+    linkedfile2_root = linkedfile2_tree.getroot()
+
+    # There should be 4 vertices, all of which have the Y coordinate 0 (because
+    # the translation is applied in the parent file's Verknuepfte node) and
+    # Z coordinates of -1 or 1 (the object is scaled!)
+    vertices = linkedfile2_root.findall("./Landschaft/SubSet/Vertex/p")
+    self.assertEqual(4, len(vertices))
+    for i in range(0, len(vertices)):
+      self.assertAlmostEqual(0.0, float(vertices[i].attrib["Y"]),
+        places = 5, msg = "Y coordinate of vertex " + str(i))
+      self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Z"])),
+        places = 5, msg = "Z coordinate of vertex " + str(i))
 
   def test_animation_structure_without_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))

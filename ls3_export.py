@@ -263,7 +263,11 @@ class Ls3Exporter:
             # Apply modifiers and transform the mesh so that the vertex coordinates
             # are global coordinates. Also recalculate the vertex normals.
             mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
-            mesh.transform(ob.matrix_world)
+
+            # Apply the object's transformation only for objects which are not root objects of their file.
+            if ob != ls3file.root_obj:
+              mesh.transform(ob.matrix_local)
+
             mesh.calc_normals()
 
             # If the object is mirrored/negatively scaled, the normals will come out the wrong way
