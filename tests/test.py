@@ -248,26 +248,19 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
     # Check linked file #1.
-    # Check for correct position and scale of linked file #2.
-    # verknuepfte_node = files["RadRotation"].find("./Landschaft/Verknuepfte")
-    # p_node = verknuepfte_node.find("./p")
-    # self.assertXYZ(p_node, 0, 0, 0.8)
-    # sk_node = verknuepfte_node.find("./sk")
-    # self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
-
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = files["RadRotation"].find("./Landschaft/MeshAnimation")
-    self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
+    mesh_animation_node = files["RadRotation"].find("./Landschaft/MeshAnimation")
+    self.assertEqual("1", mesh_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
-    self.assertKeyframes(verkn_animation_node, [0.0, 0.25, 0.5, 0.75, 1.0])
+    self.assertKeyframes(mesh_animation_node, [0.0, 0.25, 0.5, 0.75, 1.0])
 
-    p_nodes = verkn_animation_node.findall("./AniPunkt/p")
+    p_nodes = mesh_animation_node.findall("./AniPunkt/p")
     self.assertEqual(5, len(p_nodes))
     for i in range(0, 5):
       self.assertXYZ(p_nodes[i], 0, 0, 0.8, msg = "p node " + str(i))
 
-    q_nodes = verkn_animation_node.findall("./AniPunkt/q")
+    q_nodes = mesh_animation_node.findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
     self.assertRotation(q_nodes[0], 0, 0, 0, 1)
