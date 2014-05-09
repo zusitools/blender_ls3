@@ -334,6 +334,48 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual([], files["Schleifstueck"].findall(".//Animation"))
 
+  def test_subset_animation(self):
+    self.open("animation4")
+    mainfile = self.export_and_parse()
+
+    self.assertEqual([], mainfile.findall("./Landschaft/Verknuepfte"))
+    self.assertEqual([], mainfile.findall("./Landschaft/VerknAnimation"))
+
+    subsets = mainfile.findall("./Landschaft/SubSet")
+    self.assertEqual(2, len(subsets))
+
+    animationNodes = mainfile.findall("./Landschaft/Animation")
+    self.assertEqual(1, len(animationNodes))
+
+    aniNrsNodes = animationNodes[0].findall("./AniNrs")
+    self.assertEqual(1, len(aniNrsNodes))
+
+    # AniNr should be 2 as the second subset is animated (the first subset is not,
+    # but we skip it nonetheless in the animation indexing).
+    self.assertEqual("2", aniNrsNodes[0].attrib["AniNr"])
+
+    meshAnimationNodes = mainfile.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(meshAnimationNodes))
+    self.assertEqual("2", meshAnimationNodes[0].attrib["AniNr"])
+
+    keyframes = meshAnimationNodes[0].findall("AniPunkt")
+    self.assertEqual(5, len(keyframes))
+    self.assertAlmostEqual(0.0, float(keyframes[0].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.25, float(keyframes[1].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.5, float(keyframes[2].attrib["AniZeit"]))
+    self.assertAlmostEqual(0.75, float(keyframes[3].attrib["AniZeit"]))
+    self.assertAlmostEqual(1.0, float(keyframes[4].attrib["AniZeit"]))
+
+    self.assertEqual([], meshAnimationNodes[0].findall("./AniPunkt/p"))
+    q_nodes = meshAnimationNodes[0].findall("./AniPunkt/q")
+    self.assertEqual(5, len(q_nodes))
+
+    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
+    self.assertRotation(q_nodes[1], 0, 0, 0.707107, 0.707107)
+    self.assertRotation(q_nodes[2], 0, 0, 1, 0)
+    self.assertRotation(q_nodes[3], 0, 0, 0.707107, -0.707107)
+    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
+
   def test_animation_restore_frame_no(self):
     self.open("animation3")
     bpy.context.scene.frame_set(5)

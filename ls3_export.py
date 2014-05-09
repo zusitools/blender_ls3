@@ -122,11 +122,12 @@ class Ls3File:
 # Stores information about one subset of a LS3 file.
 #     material: The Blender material of this subset.
 #     objects: The objects to include in this subset.
+#     animated_obj: The object that defines this subset's animation, or None.
 class Ls3Subset:
     def __init__(self):
         self.material = None
         self.objects = []
-        self.is_animated = []
+        self.animated_obj = None
 
 # Container for the exporter settings
 class Ls3ExporterSettings:
@@ -617,7 +618,7 @@ class Ls3Exporter:
                     if subset_name not in subset_dict:
                         new_subset = Ls3Subset()
                         new_subset.material = mat
-                        new_subset.is_animated = is_animated(ob)
+                        new_subset.animated_obj = ob if is_animated(ob) else None
                         subset_dict[subset_name] = new_subset
 
                     # A selected object that is not visible in the exported variant can still
@@ -717,9 +718,12 @@ class Ls3Exporter:
             else:
                 animations_by_type[ani_type].append(animation)
 
+        # Collect mesh animations and linked animations as tuples (ani no., subset/linked file).
+        # The root subset of a file is not animated via a subset animation, but rather via a
+        # linked animation in the parent file.
         animated_subsets = [(idx + 1, sub)
             for (idx, sub) in enumerate(ls3file.subsets)
-            if sub.is_animated and not is_root_subset(sub, ls3file)]
+            if sub.animated_obj is not None and not is_root_subset(sub, ls3file)]
         animated_linked_files = [(idx + len(animated_subsets) + 1, linked)
             for (idx, linked) in enumerate(ls3file.linked_files)
             if is_animated(linked_file.root_obj)]
@@ -732,19 +736,21 @@ class Ls3Exporter:
             landschaftNode.appendChild(animationNode)
 
             # Write <AniNrs> nodes.
-            for aninr, linked in animated_linked_files:
-                if get_animation(linked.root_obj) == animation:
-                    aniNrsNode = self.xmldoc.createElement("AniNrs")
-                    aniNrsNode.setAttribute("AniNr", str(aninr))
-                    animationNode.appendChild(aniNrsNode)
+            aninrs = [aninr for aninr, linked in animated_linked_files if get_animation(linked.root_obj) == animation] \
+              + [aninr for aninr, subset in animated_subsets if get_animation(subset.animated_obj) == animation]
+            for aninr in aninrs:
+                aniNrsNode = self.xmldoc.createElement("AniNrs")
+                aniNrsNode.setAttribute("AniNr", str(aninr))
+                animationNode.appendChild(aniNrsNode)
 
         # Write animation definitions for subsets and links in this file.
 
-        # Write mesh subset animations. Don't write animation data for the root subset
-        # as that is animated via a linked animation.
+        # Write mesh subset animations.
         for aninr, sub in animated_subsets:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
+            meshAnimationNode.setAttribute("AniNr", str(aninr))
             landschaftNode.appendChild(meshAnimationNode)
+            self.write_animation(sub.animated_obj, meshAnimationNode)
 
         # Write linked animations.
         for aninr, linked_file in animated_linked_files:
