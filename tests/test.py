@@ -30,6 +30,8 @@ class TestLs3Export(unittest.TestCase):
     context['selected_objects'] = []
 
     tempfile_file = tempfile.NamedTemporaryFile(suffix=exportargs.get("ext", ".ls3"))
+    if "ext" in exportargs:
+      del exportargs["ext"]
     self.tempfiles.append(tempfile_file)
 
     tempfile_path = tempfile_file.name
@@ -67,7 +69,11 @@ class TestLs3Export(unittest.TestCase):
 
     for suffix in additional_suffixes:
       (path, name) = os.path.split(mainfile.name)
-      (basename, ext) = os.path.splitext(name)
+      split_file_name = name.split(os.extsep, 1)
+      if len(split_file_name) > 1:
+        basename, ext = split_file_name[0], os.extsep + split_file_name[1]
+      else:
+        basename, ext = split_file_name[0], ""
 
       additional_filename = os.path.join(path, basename + "_" + suffix + ext)
       additional_tree = ET.parse(additional_filename)
@@ -358,6 +364,20 @@ class TestLs3Export(unittest.TestCase):
     # day color of RGB(510, 510, 510).
     self.assertEqual("0FFFFFFFF", subsets[3].attrib["C"])
     self.assertEqual("000FFFFFF", subsets[3].attrib["E"])
+
+  def test_lod_suffix(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    mainfile = self.export({"ext":".lod1.ls3"})
+
+    path, name = os.path.split(mainfile.name)
+    basename, ext = name.split(os.extsep, 1)
+
+    self.assertTrue(os.path.exists(os.path.join(path, basename + "_RadRotation.lod1.ls3")))
+
+  def test_no_extension(self):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    mainfile = self.export({"ext":""})
+    self.assertTrue(os.path.exists(mainfile.name + "_RadRotation"))
 
 
 if __name__ == '__main__':
