@@ -29,7 +29,7 @@ class TestLs3Export(unittest.TestCase):
     context = bpy.context.copy()
     context['selected_objects'] = []
 
-    tempfile_file = tempfile.NamedTemporaryFile(suffix=".ls3")
+    tempfile_file = tempfile.NamedTemporaryFile(suffix=exportargs.get("ext", ".ls3"))
     self.tempfiles.append(tempfile_file)
 
     tempfile_path = tempfile_file.name
@@ -52,6 +52,29 @@ class TestLs3Export(unittest.TestCase):
     print(exported_file.read())
     tree = ET.parse(exported_file.name)
     return tree.getroot()
+
+  def export_and_parse_multiple(self, additional_suffixes, exportargs={}):
+    mainfile = self.export(exportargs)
+    print(mainfile.read())
+
+    (path, name) = os.path.split(mainfile.name)
+    (basename, ext) = os.path.splitext(name)
+
+    mainfile_tree = ET.parse(mainfile.name)
+    mainfile_root = mainfile_tree.getroot()
+
+    result = {"" : mainfile_root}
+
+    for suffix in additional_suffixes:
+      (path, name) = os.path.split(mainfile.name)
+      (basename, ext) = os.path.splitext(name)
+
+      additional_filename = os.path.join(path, basename + "_" + suffix + ext)
+      additional_tree = ET.parse(additional_filename)
+      additional_root = additional_tree.getroot()
+      result[suffix] = additional_root
+
+    return basename, ext, result
 
   def assertRotation(self, node, expected_x, expected_y, expected_z, expected_w):
     self.assertXYZ(node, expected_x, expected_y, expected_z)
@@ -148,75 +171,55 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_structure_with_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
-    mainfile = self.export({})
-    print(mainfile.read())
-
-    (path, name) = os.path.split(mainfile.name)
-    (basename, ext) = os.path.splitext(name)
-
-    mainfile_tree = ET.parse(mainfile.name)
-    mainfile_root = mainfile_tree.getroot()
+    basename, ext, files = self.export_and_parse_multiple(["RadRotation", "Kuppelstange"])
 
     # Test for correct linked file #1.
-    verkn_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
+    verkn_nodes = files[""].findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
 
     datei_node = verkn_nodes[0].find("./Datei")
     self.assertEqual(basename + "_RadRotation" + ext, datei_node.attrib["Dateiname"])
 
     # Test for <Animation> node.
-    animation_nodes = mainfile_root.findall("./Landschaft/Animation")
+    animation_nodes = files[""].findall("./Landschaft/Animation")
     self.assertEqual(1, len(animation_nodes))
     self.assertEqual("2", animation_nodes[0].attrib["AniID"])
     self.assertEqual("Speed (powered, braked)", animation_nodes[0].attrib["AniBeschreibung"])
 
     # Test for <VerknAnimation> node.
-    verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")
+    verkn_animation_nodes = files[""].findall("./Landschaft/VerknAnimation")
     self.assertEqual(1, len(verkn_animation_nodes))
 
     # Test linked file #1.
-    linkedfile1_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
-    linkedfile1_root = linkedfile1_tree.getroot()
-
     # Test for <VerknAnimation> node in linked file #1.
-    mesh_animation_nodes = linkedfile1_root.findall("./Landschaft/VerknAnimation")
+    mesh_animation_nodes = files["RadRotation"].findall("./Landschaft/VerknAnimation")
     self.assertEqual(1, len(mesh_animation_nodes))
 
     # Test for correct linked file #2.
-    verkn_nodes = linkedfile1_root.findall("./Landschaft/Verknuepfte")
+    verkn_nodes = files["RadRotation"].findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verkn_nodes))
 
     datei_node = verkn_nodes[0].find("./Datei")
     self.assertEqual(basename + "_Kuppelstange" + ext, datei_node.attrib["Dateiname"])
 
     # Test linked file #2.
-    linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Kuppelstange" + ext))
-    linkedfile2_root = linkedfile2_tree.getroot()
-
     # Test that no <Animation>, <VerknAnimation> and <MeshAnimation> nodes are present.
-    self.assertEqual([], linkedfile2_tree.findall(".//Animation"))
-    self.assertEqual([], linkedfile2_tree.findall(".//VerknAnimation"))
-    self.assertEqual([], linkedfile2_tree.findall(".//MeshAnimation"))
+    self.assertEqual([], files["Kuppelstange"].findall(".//Animation"))
+    self.assertEqual([], files["Kuppelstange"].findall(".//VerknAnimation"))
+    self.assertEqual([], files["Kuppelstange"].findall(".//MeshAnimation"))
 
   def test_animation_with_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
-    mainfile = self.export({})
-    print(mainfile.read())
-
-    (path, name) = os.path.split(mainfile.name)
-    (basename, ext) = os.path.splitext(name)
-
-    mainfile_tree = ET.parse(mainfile.name)
-    mainfile_root = mainfile_tree.getroot()
+    basename, ext, files = self.export_and_parse_multiple(["RadRotation", "Kuppelstange"])
 
     # Check for correct position of linked file #1.
-    verknuepfte_node = mainfile_root.find("./Landschaft/Verknuepfte")
+    verknuepfte_node = files[""].find("./Landschaft/Verknuepfte")
     p_node = verknuepfte_node.find("./p")
     self.assertXYZ(p_node, 0, 1, 0)
     self.assertEqual(None, verknuepfte_node.find('sk'))
 
     # Check for <AniNrs> node in <Animation> node.
-    animation_node = mainfile_root.find("./Landschaft/Animation")
+    animation_node = files[""].find("./Landschaft/Animation")
     ani_nrs_nodes = animation_node.findall("./AniNrs")
     self.assertEqual(1, len(ani_nrs_nodes))
 
@@ -224,7 +227,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("1", ani_nrs_node.attrib["AniNr"])
 
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = mainfile_root.find("./Landschaft/VerknAnimation")
+    verkn_animation_node = files[""].find("./Landschaft/VerknAnimation")
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
@@ -248,18 +251,15 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
     # Check linked file #1.
-    linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
-    linkedfile_root = linkedfile_tree.getroot()
-
     # Check for correct position and scale of linked file #2.
-    verknuepfte_node = linkedfile_root.find("./Landschaft/Verknuepfte")
+    verknuepfte_node = files["RadRotation"].find("./Landschaft/Verknuepfte")
     p_node = verknuepfte_node.find("./p")
     self.assertXYZ(p_node, 0, 0, 0.8)
     sk_node = verknuepfte_node.find("./sk")
     self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
 
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = linkedfile_root.find("./Landschaft/VerknAnimation")
+    verkn_animation_node = files["RadRotation"].find("./Landschaft/VerknAnimation")
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
@@ -283,13 +283,10 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
     # Check linked file #2.
-    linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Kuppelstange" + ext))
-    linkedfile2_root = linkedfile2_tree.getroot()
-
     # There should be 4 vertices, all of which have the Y coordinate 0 (because
     # the translation is applied in the parent file's Verknuepfte node) and
     # Z coordinates of -1 or 1 (the object is scaled!)
-    vertices = linkedfile2_root.findall("./Landschaft/SubSet/Vertex/p")
+    vertices = files["Kuppelstange"].findall("./Landschaft/SubSet/Vertex/p")
     self.assertEqual(4, len(vertices))
     for i in range(0, len(vertices)):
       self.assertAlmostEqual(0.0, float(vertices[i].attrib["Y"]),
@@ -299,60 +296,34 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_structure_without_constraint(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
-    mainfile = self.export({})
-    # print(mainfile.read())
+    basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
-    (path, name) = os.path.split(mainfile.name)
-    (basename, ext) = os.path.splitext(name)
-
-    mainfile_tree = ET.parse(mainfile.name)
-    mainfile_root = mainfile_tree.getroot()
-
-    verknuepfte_nodes = mainfile_root.findall("./Landschaft/Verknuepfte")
+    verknuepfte_nodes = files[""].findall("./Landschaft/Verknuepfte")
     self.assertEqual(1, len(verknuepfte_nodes))
 
-    verkn_animation_nodes = mainfile_root.findall("./Landschaft/VerknAnimation")
+    verkn_animation_nodes = files[""].findall("./Landschaft/VerknAnimation")
     self.assertEqual(1, len(verkn_animation_nodes))
-
-    linkedfile_tree = ET.parse(os.path.join(path, basename + "_RadRotation" + ext))
-    linkedfile_root = linkedfile_tree.getroot()
 
     # The plane should not be in a separate file, as it animates with its parent
     # and has no constraint.
-    self.assertEqual([], linkedfile_root.findall("./Landschaft/Verknuepfte"))
-    self.assertEqual([], linkedfile_root.findall("./Landschaft/VerknAnimation"))
-    self.assertEqual([], linkedfile_root.findall("./Landschaft/MeshAnimation"))
+    self.assertEqual([], files["RadRotation"].findall("./Landschaft/Verknuepfte"))
+    self.assertEqual([], files["RadRotation"].findall("./Landschaft/VerknAnimation"))
+    self.assertEqual([], files["RadRotation"].findall("./Landschaft/MeshAnimation"))
 
   def test_animation_structure_multiple_actions(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation3.blend"))
-    mainfile = self.export({})
-    print(mainfile.read())
+    basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm", "Schleifstueck"])
 
-    (path, name) = os.path.split(mainfile.name)
-    (basename, ext) = os.path.splitext(name)
-
-    mainfile_tree = ET.parse(mainfile.name)
-    mainfile_root = mainfile_tree.getroot()
-
-    animation_nodes = mainfile_root.findall(".//Animation")
+    animation_nodes = files[""].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
-    linkedfile1_tree = ET.parse(os.path.join(path, basename + "_Unterarm" + ext))
-    linkedfile1_root = linkedfile1_tree.getroot()
-
-    animation_nodes = linkedfile1_root.findall(".//Animation")
+    animation_nodes = files["Unterarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
-    linkedfile2_tree = ET.parse(os.path.join(path, basename + "_Oberarm" + ext))
-    linkedfile2_root = linkedfile2_tree.getroot()
-
-    animation_nodes = linkedfile2_root.findall(".//Animation")
+    animation_nodes = files["Oberarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
-    linkedfile3_tree = ET.parse(os.path.join(path, basename + "_Schleifstueck" + ext))
-    linkedfile3_root = linkedfile3_tree.getroot()
-
-    self.assertEqual([], linkedfile3_root.findall(".//Animation"))
+    self.assertEqual([], files["Schleifstueck"].findall(".//Animation"))
 
   def test_animation_restore_frame_no(self):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation3.blend"))
