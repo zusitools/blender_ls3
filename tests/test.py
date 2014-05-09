@@ -90,13 +90,19 @@ class TestLs3Export(unittest.TestCase):
     if expected_w != 0.0 or "W" in node.attrib:
       self.assertAlmostEqual(expected_w, float(node.attrib["W"]), places = 5)
 
-  def assertXYZ(self, node, expected_x, expected_y, expected_z):
+  def assertXYZ(self, node, expected_x, expected_y, expected_z, msg = None):
     if expected_x != 0.0 or "X" in node.attrib:
-      self.assertAlmostEqual(expected_x, float(node.attrib["X"]), places = 5)
+      self.assertAlmostEqual(expected_x, float(node.attrib["X"]), places = 5, msg = msg)
     if expected_y != 0.0 or "Y" in node.attrib:
-      self.assertAlmostEqual(expected_y, float(node.attrib["Y"]), places = 5)
+      self.assertAlmostEqual(expected_y, float(node.attrib["Y"]), places = 5, msg = msg)
     if expected_z != 0.0 or "Z" in node.attrib:
-      self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = 5)
+      self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = 5, msg = msg)
+
+  def assertKeyframes(self, node, keyframe_times):
+    keyframes = node.findall("AniPunkt")
+    self.assertEqual(len(keyframe_times), len(keyframes))
+    for idx, keyframe_time in enumerate(keyframe_times):
+      self.assertAlmostEqual(keyframe_time, float(keyframes[idx].attrib["AniZeit"]))
 
   def test_export_empty(self):
     self.clear_scene()
@@ -180,7 +186,7 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_structure_with_constraint(self):
     self.open("animation1")
-    basename, ext, files = self.export_and_parse_multiple(["RadRotation", "Kuppelstange"])
+    basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
     # Test for correct linked file #1.
     verkn_nodes = files[""].findall("./Landschaft/Verknuepfte")
@@ -200,26 +206,16 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(verkn_animation_nodes))
 
     # Test linked file #1.
-    # Test for <VerknAnimation> node in linked file #1.
-    mesh_animation_nodes = files["RadRotation"].findall("./Landschaft/VerknAnimation")
+    # Test for <MeshAnimation> node in linked file #1.
+    mesh_animation_nodes = files["RadRotation"].findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(mesh_animation_nodes))
 
-    # Test for correct linked file #2.
-    verkn_nodes = files["RadRotation"].findall("./Landschaft/Verknuepfte")
-    self.assertEqual(1, len(verkn_nodes))
-
-    datei_node = verkn_nodes[0].find("./Datei")
-    self.assertEqual(basename + "_Kuppelstange" + ext, datei_node.attrib["Dateiname"])
-
-    # Test linked file #2.
-    # Test that no <Animation>, <VerknAnimation> and <MeshAnimation> nodes are present.
-    self.assertEqual([], files["Kuppelstange"].findall(".//Animation"))
-    self.assertEqual([], files["Kuppelstange"].findall(".//VerknAnimation"))
-    self.assertEqual([], files["Kuppelstange"].findall(".//MeshAnimation"))
+    # No further linked file #2.
+    self.assertEqual([], files["RadRotation"].findall("./Landschaft/Verknuepfte"))
 
   def test_animation_with_constraint(self):
     self.open("animation1")
-    basename, ext, files = self.export_and_parse_multiple(["RadRotation", "Kuppelstange"])
+    basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
     # Check for correct position of linked file #1.
     verknuepfte_node = files[""].find("./Landschaft/Verknuepfte")
@@ -240,15 +236,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
-    ani_pkt_nodes = verkn_animation_node.findall("./AniPunkt")
-    self.assertEqual(5, len(ani_pkt_nodes))
-
-    self.assertAlmostEqual(0.0, float(ani_pkt_nodes[0].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.25, float(ani_pkt_nodes[1].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.5, float(ani_pkt_nodes[2].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
-    self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
-
+    self.assertKeyframes(verkn_animation_node, [0, 0.25, 0.5, 0.75, 1.0])
     self.assertEqual([], verkn_animation_node.findall("./AniPunkt/p"))
     q_nodes = verkn_animation_node.findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
@@ -261,27 +249,24 @@ class TestLs3Export(unittest.TestCase):
 
     # Check linked file #1.
     # Check for correct position and scale of linked file #2.
-    verknuepfte_node = files["RadRotation"].find("./Landschaft/Verknuepfte")
-    p_node = verknuepfte_node.find("./p")
-    self.assertXYZ(p_node, 0, 0, 0.8)
-    sk_node = verknuepfte_node.find("./sk")
-    self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
+    # verknuepfte_node = files["RadRotation"].find("./Landschaft/Verknuepfte")
+    # p_node = verknuepfte_node.find("./p")
+    # self.assertXYZ(p_node, 0, 0, 0.8)
+    # sk_node = verknuepfte_node.find("./sk")
+    # self.assertXYZ(sk_node, 0.050899, 0.050899, 0.050899)
 
     # Check for correct <VerknAnimation> node.
-    verkn_animation_node = files["RadRotation"].find("./Landschaft/VerknAnimation")
+    verkn_animation_node = files["RadRotation"].find("./Landschaft/MeshAnimation")
     self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
-    ani_pkt_nodes = verkn_animation_node.findall("./AniPunkt")
-    self.assertEqual(5, len(ani_pkt_nodes))
+    self.assertKeyframes(verkn_animation_node, [0.0, 0.25, 0.5, 0.75, 1.0])
 
-    self.assertAlmostEqual(0.0, float(ani_pkt_nodes[0].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.25, float(ani_pkt_nodes[1].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.5, float(ani_pkt_nodes[2].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.75, float(ani_pkt_nodes[3].attrib["AniZeit"]))
-    self.assertAlmostEqual(1.0, float(ani_pkt_nodes[4].attrib["AniZeit"]))
+    p_nodes = verkn_animation_node.findall("./AniPunkt/p")
+    self.assertEqual(5, len(p_nodes))
+    for i in range(0, 5):
+      self.assertXYZ(p_nodes[i], 0, 0, 0.8, msg = "p node " + str(i))
 
-    self.assertEqual([], verkn_animation_node.findall("./AniPunkt/p"))
     q_nodes = verkn_animation_node.findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
@@ -291,17 +276,17 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(q_nodes[3], 0, -0.707107, 0, -0.707107)
     self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
-    # Check linked file #2.
+    # Check subset.
     # There should be 4 vertices, all of which have the Y coordinate 0 (because
     # the translation is applied in the parent file's Verknuepfte node) and
-    # Z coordinates of -1 or 1 (the object is scaled!)
-    vertices = files["Kuppelstange"].findall("./Landschaft/SubSet/Vertex/p")
+    # Z coordinates between -0.1 and 0.1 (the object's scale is applied!)
+    vertices = files["RadRotation"].findall("./Landschaft/SubSet/Vertex/p")
     self.assertEqual(4, len(vertices))
     for i in range(0, len(vertices)):
       self.assertAlmostEqual(0.0, float(vertices[i].attrib["Y"]),
         places = 5, msg = "Y coordinate of vertex " + str(i))
-      self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Z"])),
-        places = 5, msg = "Z coordinate of vertex " + str(i))
+      self.assertLess(abs(float(vertices[i].attrib["Z"])), 0.1,
+        msg = "Z coordinate of vertex " + str(i))
 
   def test_animation_structure_without_constraint(self):
     self.open("animation2")
@@ -321,20 +306,32 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_structure_multiple_actions(self):
     self.open("animation3")
-    basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm", "Schleifstueck"])
+    basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm"])
 
     animation_nodes = files[""].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
+    aninrs_nodes = animation_nodes[0].findall("./AniNrs")
+    self.assertEqual(1, len(aninrs_nodes))
+    self.assertEqual("1", aninrs_nodes[0].attrib["AniNr"])
+
     animation_nodes = files["Unterarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
+
+    aninrs_nodes = animation_nodes[0].findall("./AniNrs")
+    self.assertEqual(1, len(aninrs_nodes))
+    self.assertEqual("1", aninrs_nodes[0].attrib["AniNr"])
 
     animation_nodes = files["Oberarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
-    self.assertEqual([], files["Schleifstueck"].findall(".//Animation"))
+    aninrs_nodes = animation_nodes[0].findall("./AniNrs")
+    self.assertEqual(1, len(aninrs_nodes))
+    self.assertEqual("2", aninrs_nodes[0].attrib["AniNr"])
 
-  def test_subset_animation(self):
+    # self.assertEqual([], files["Schleifstueck"].findall(".//Animation"))
+
+  def test_subset_animation_rotation(self):
     self.open("animation4")
     mainfile = self.export_and_parse()
 
@@ -358,14 +355,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(meshAnimationNodes))
     self.assertEqual("2", meshAnimationNodes[0].attrib["AniNr"])
 
-    keyframes = meshAnimationNodes[0].findall("AniPunkt")
-    self.assertEqual(5, len(keyframes))
-    self.assertAlmostEqual(0.0, float(keyframes[0].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.25, float(keyframes[1].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.5, float(keyframes[2].attrib["AniZeit"]))
-    self.assertAlmostEqual(0.75, float(keyframes[3].attrib["AniZeit"]))
-    self.assertAlmostEqual(1.0, float(keyframes[4].attrib["AniZeit"]))
-
+    self.assertKeyframes(meshAnimationNodes[0], [0.0, 0.25, 0.5, 0.75, 1.0])
     self.assertEqual([], meshAnimationNodes[0].findall("./AniPunkt/p"))
     q_nodes = meshAnimationNodes[0].findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
@@ -376,6 +366,42 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(q_nodes[3], 0, 0, 0.707107, -0.707107)
     self.assertRotation(q_nodes[4], 0, 0, 0, -1)
 
+  def test_subset_animation_rotation_with_offset(self):
+    self.open("animation5")
+    mainfile = self.export_and_parse()
+
+    self.assertEqual([], mainfile.findall("./Landschaft/Verknuepfte"))
+    self.assertEqual([], mainfile.findall("./Landschaft/VerknAnimation"))
+
+    subsets = mainfile.findall("./Landschaft/SubSet")
+    self.assertEqual(1, len(subsets))
+
+    animationNodes = mainfile.findall("./Landschaft/Animation")
+    self.assertEqual(1, len(animationNodes))
+
+    aniNrsNodes = animationNodes[0].findall("./AniNrs")
+    self.assertEqual(1, len(aniNrsNodes))
+    self.assertEqual("1", aniNrsNodes[0].attrib["AniNr"])
+
+    meshAnimationNodes = mainfile.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(meshAnimationNodes))
+    self.assertEqual("1", meshAnimationNodes[0].attrib["AniNr"])
+
+    self.assertKeyframes(meshAnimationNodes[0], [0.0, 0.25, 0.5, 0.75, 1.0])
+
+    p_nodes = meshAnimationNodes[0].findall("./AniPunkt/p")
+    self.assertEqual(5, len(p_nodes))
+    for i in range(0, 5):
+      self.assertXYZ(p_nodes[i], -3, 2, 4, msg = "p node " + str(i))
+
+    q_nodes = meshAnimationNodes[0].findall("./AniPunkt/q")
+    self.assertEqual(5, len(q_nodes))
+
+    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
+    self.assertRotation(q_nodes[1], 0, 0, 0.707107, 0.707107)
+    self.assertRotation(q_nodes[2], 0, 0, 1, 0)
+    self.assertRotation(q_nodes[3], 0, 0, 0.707107, -0.707107)
+    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
   def test_animation_restore_frame_no(self):
     self.open("animation3")
     bpy.context.scene.frame_set(5)

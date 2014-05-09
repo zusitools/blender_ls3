@@ -83,6 +83,12 @@ def get_ani_description(ani_id):
             return animation_type[1]
     return ""
 
+def has_location_animation(action):
+    return action is not None and any([fcurve.data_path == "location" for fcurve in action.fcurves])
+
+def has_rotation_animation(action):
+    return action is not None and any([fcurve.data_path.startswith("rotation") for fcurve in action.fcurves])
+
 def is_root_subset(sub, ls3file):
     return ls3file.root_obj in sub.objects
 
@@ -206,16 +212,8 @@ class Ls3Exporter:
     # Returns whether the specified object and its children must be placed in their own file
     # in order to be animated correctly.
     def must_start_new_file(self, ob):
-        # Animated objects whose origin (relative to the parent) is not 0/0/0 or which have children.
-        if is_animated(ob) and (
-                len(ob.children) > 0 or ob.matrix_local.to_translation() != Vector((0.0, 0.0, 0.0))):
-            return True
-
-        # Objects with animated children.
-        if any(map(lambda child: is_animated(child), ob.children)):
-            return True
-
-        return False
+        # Objects with children start a new file.
+        return len(ob.children) > 0
 
     # Returns a list of the active texture slots of the given material.
     def get_active_texture_slots(self, material):
@@ -273,9 +271,20 @@ class Ls3Exporter:
             # are global coordinates. Also recalculate the vertex normals.
             mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
 
-            # Apply the object's transformation only for objects which are not root objects of their file.
-            if ob != ls3file.root_obj:
-              mesh.transform(ob.matrix_local)
+            # Apply the object's transformation only for subsets which are not root subsets of their file
+            # (for the root subsets, the transformation will be written into the link in the parent file).
+            # For animated subsets, apply only the scale part (the translation and rotation part will be
+            # written as part of the animation).
+            if not is_root_subset(subset, ls3file):
+                if ob == subset.animated_obj:
+                    # TODO: Warn if scaling is animated (Zusi does not support this and the export result
+                    # will depend on the current frame.
+                    scale1 = Matrix.Scale(ob.scale.x, 4, Vector((1.0, 0.0, 0.0)))
+                    scale2 = Matrix.Scale(ob.scale.y, 4, Vector((0.0, 1.0, 0.0)))
+                    scale3 = Matrix.Scale(ob.scale.z, 4, Vector((0.0, 0.0, 1.0)))
+                    mesh.transform(scale1 * scale2 * scale3)
+                else:
+                    mesh.transform(ob.matrix_local)
 
             mesh.calc_normals()
 
@@ -491,7 +500,7 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
-    def write_animation(self, ob, animation_node):
+    def write_animation(self, ob, animation_node, write_translation = True, write_rotation = True):
         animation = get_animation(ob)
 
         # Get frame numbers of the 0.0 and 1.0 frames.
@@ -509,27 +518,36 @@ class Ls3Exporter:
             aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
             animation_node.appendChild(aniPunktNode)
             self.config.context.scene.frame_set(keyframe_no)
-
-            # Make rotation Euler compatible with the previous frame to prevent axis flipping.
             loc, rot, scale = ob.matrix_local.decompose()
-            if previous_rotation is not None:
-                rot_euler = rot.to_matrix().to_euler('XYZ', previous_rotation)
-            else:
-                rot_euler = rot.to_matrix().to_euler('XYZ')
-            previous_rotation = rot_euler
-            rotation = rot_euler.to_quaternion()
 
-            rotationNode = None if rotation == Vector((0.0, 0.0, 0.0, 0.0)) else self.xmldoc.createElement("q")
-            if rotationNode is not None:
-                if rotation.x != 0.0:
-                    rotationNode.setAttribute("Y", str(rotation.x))
-                if rotation.y != 0.0:
-                    rotationNode.setAttribute("X", str(rotation.y))
-                if rotation.z != 0.0:
-                    rotationNode.setAttribute("Z", str(rotation.z))
-                if rotation.w != 0.0:
-                    rotationNode.setAttribute("W", str(rotation.w))
-                aniPunktNode.appendChild(rotationNode)
+            if write_translation:
+                translationNode = (None if loc == Vector((0.0, 0.0, 0.0))
+                    else self.xmldoc.createElement("p"))
+                if translationNode is not None:
+                    fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
+                    aniPunktNode.appendChild(translationNode)
+
+            if write_rotation:
+                # Make rotation Euler compatible with the previous frame to prevent axis flipping.
+                if previous_rotation is not None:
+                    rot_euler = rot.to_matrix().to_euler('XYZ', previous_rotation)
+                else:
+                    rot_euler = rot.to_matrix().to_euler('XYZ')
+                previous_rotation = rot_euler
+                rotation = rot_euler.to_quaternion()
+
+                rotationNode = (None if rotation == Vector((0.0, 0.0, 0.0, 0.0))
+                    else self.xmldoc.createElement("q"))
+                if rotationNode is not None:
+                    if rotation.x != 0.0:
+                        rotationNode.setAttribute("Y", str(rotation.x))
+                    if rotation.y != 0.0:
+                        rotationNode.setAttribute("X", str(rotation.y))
+                    if rotation.z != 0.0:
+                        rotationNode.setAttribute("Z", str(rotation.z))
+                    if rotation.w != 0.0:
+                        rotationNode.setAttribute("W", str(rotation.w))
+                    aniPunktNode.appendChild(rotationNode)
         self.config.context.scene.frame_set(original_current_frame)
 
     # Build list of files from the scene's objects. The main file will always be the first item in the list.
@@ -692,12 +710,23 @@ class Ls3Exporter:
             verknuepfteNode.appendChild(dateiNode)
             landschaftNode.appendChild(verknuepfteNode)
 
+            # Include location and rotation in the link information if they are
+            # not animated.
+            write_translation = not has_location_animation(get_animation(linked_file.root_obj))
             translation = linked_file.root_obj.matrix_local.to_translation()
-            if translation != Vector((0.0, 0.0, 0.0)):
+            if write_translation and translation != Vector((0.0, 0.0, 0.0)):
                 pNode = self.xmldoc.createElement("p")
                 fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
                 verknuepfteNode.appendChild(pNode)
 
+            write_rotation = not has_rotation_animation(get_animation(linked_file.root_obj))
+            rotation = linked_file.root_obj.matrix_local.to_euler()
+            if write_rotation and rotation != Vector((0.0, 0.0, 0.0)):
+                phiNode = self.xmldoc.createElement("phi")
+                fill_node_xyz(phiNode, -rotation.y, rotation.x, rotation.z)
+                verknuepfteNode.appendChild(phiNode)
+
+            # Always include scale in the link information because this cannot be animated.
             scale = linked_file.root_obj.matrix_local.to_scale()
             if scale != Vector((1.0, 1.0, 1.0)):
                 skNode = self.xmldoc.createElement("sk")
@@ -736,8 +765,8 @@ class Ls3Exporter:
             landschaftNode.appendChild(animationNode)
 
             # Write <AniNrs> nodes.
-            aninrs = [aninr for aninr, linked in animated_linked_files if get_animation(linked.root_obj) == animation] \
-              + [aninr for aninr, subset in animated_subsets if get_animation(subset.animated_obj) == animation]
+            aninrs = [aninr for aninr, linked in animated_linked_files if get_animation(linked.root_obj) in animations] \
+              + [aninr for aninr, subset in animated_subsets if get_animation(subset.animated_obj) in animations]
             for aninr in aninrs:
                 aniNrsNode = self.xmldoc.createElement("AniNrs")
                 aniNrsNode.setAttribute("AniNr", str(aninr))
@@ -750,14 +779,18 @@ class Ls3Exporter:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             landschaftNode.appendChild(meshAnimationNode)
-            self.write_animation(sub.animated_obj, meshAnimationNode)
+            self.write_animation(sub.animated_obj, meshAnimationNode,
+                write_translation = sub.animated_obj != ls3file.root_obj,
+                write_rotation = sub.animated_obj != ls3file.root_obj)
 
         # Write linked animations.
         for aninr, linked_file in animated_linked_files:
             verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
             verknAnimationNode.setAttribute("AniNr", str(aninr))
             landschaftNode.appendChild(verknAnimationNode)
-            self.write_animation(linked_file.root_obj, verknAnimationNode)
+            self.write_animation(linked_file.root_obj, verknAnimationNode,
+                write_translation = has_location_animation(get_animation(linked_file.root_obj)),
+                write_rotation = has_rotation_animation(get_animation(linked_file.root_obj)))
 
         # Get path names
         filepath = os.path.join(
