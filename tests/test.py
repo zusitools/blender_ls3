@@ -19,6 +19,9 @@ class TestLs3Export(unittest.TestCase):
       tempfile.close()
     shutil.rmtree(self.tempdir)
 
+  def open(self, filename):
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", filename + ".blend"))
+
   def clear_scene(self):
     for ob in bpy.context.scene.objects:
       bpy.context.scene.objects.unlink(ob)
@@ -132,11 +135,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(12, len(face_nodes))
 
   def test_multitexturing(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "multitexturing.blend"))
+    self.open("multitexturing")
     self.assert_exported_cube_multitexturing()
 
   def test_multitexturing_inactive_texture(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "multitexturing_activetextures.blend"))
+    self.open("multitexturing_activetextures")
     self.assert_exported_cube_multitexturing()
 
   def assert_exported_cube_multitexturing(self, exportargs={}):
@@ -176,7 +179,7 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(v2, 2), [.25, .75])
 
   def test_animation_structure_with_constraint(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
+    self.open("animation1")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation", "Kuppelstange"])
 
     # Test for correct linked file #1.
@@ -215,7 +218,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], files["Kuppelstange"].findall(".//MeshAnimation"))
 
   def test_animation_with_constraint(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation1.blend"))
+    self.open("animation1")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation", "Kuppelstange"])
 
     # Check for correct position of linked file #1.
@@ -301,7 +304,7 @@ class TestLs3Export(unittest.TestCase):
         places = 5, msg = "Z coordinate of vertex " + str(i))
 
   def test_animation_structure_without_constraint(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    self.open("animation2")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
     verknuepfte_nodes = files[""].findall("./Landschaft/Verknuepfte")
@@ -317,7 +320,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], files["RadRotation"].findall("./Landschaft/MeshAnimation"))
 
   def test_animation_structure_multiple_actions(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation3.blend"))
+    self.open("animation3")
     basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm", "Schleifstueck"])
 
     animation_nodes = files[""].findall(".//Animation")
@@ -332,14 +335,14 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], files["Schleifstueck"].findall(".//Animation"))
 
   def test_animation_restore_frame_no(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation3.blend"))
+    self.open("animation3")
     bpy.context.scene.frame_set(5)
     self.assertEqual(5, bpy.context.scene.frame_current)
     self.export()
     self.assertEqual(5, bpy.context.scene.frame_current)
 
   def test_night_color(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "nightcolor.blend"))
+    self.open("nightcolor")
     root = self.export_and_parse()
 
     subsets = root.findall("./Landschaft/SubSet")
@@ -366,7 +369,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("000FFFFFF", subsets[3].attrib["E"])
 
   def test_lod_suffix(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    self.open("animation2")
     mainfile = self.export({"ext":".lod1.ls3"})
 
     path, name = os.path.split(mainfile.name)
@@ -375,7 +378,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertTrue(os.path.exists(os.path.join(path, basename + "_RadRotation.lod1.ls3")))
 
   def test_no_extension(self):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", "animation2.blend"))
+    self.open("animation2")
     mainfile = self.export({"ext":""})
     self.assertTrue(os.path.exists(mainfile.name + "_RadRotation"))
 
