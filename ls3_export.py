@@ -778,6 +778,7 @@ class Ls3Exporter:
         for aninr, sub in animated_subsets:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
+            meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(sub)))
             landschaftNode.appendChild(meshAnimationNode)
             self.write_animation(sub.animated_obj, meshAnimationNode,
                 write_translation = sub.animated_obj != ls3file.root_obj,
@@ -787,6 +788,7 @@ class Ls3Exporter:
         for aninr, linked_file in animated_linked_files:
             verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
             verknAnimationNode.setAttribute("AniNr", str(aninr))
+            verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
             landschaftNode.appendChild(verknAnimationNode)
             self.write_animation(linked_file.root_obj, verknAnimationNode,
                 write_translation = has_location_animation(get_animation(linked_file.root_obj)),

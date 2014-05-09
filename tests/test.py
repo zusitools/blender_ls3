@@ -308,6 +308,7 @@ class TestLs3Export(unittest.TestCase):
     self.open("animation3")
     basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm"])
 
+    # Test animation of linked file "Unterarm" in main file.
     animation_nodes = files[""].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
@@ -315,6 +316,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(aninrs_nodes))
     self.assertEqual("1", aninrs_nodes[0].attrib["AniNr"])
 
+    self.assertEqual([], files[""].findall(".//MeshAnimation"))
+    verkn_animation_nodes = files[""].findall(".//VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+    self.assertEqual("1", verkn_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
+
+    # Test animation of linked file "Oberarm" in file "Unterarm"
     animation_nodes = files["Unterarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
@@ -322,6 +330,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(aninrs_nodes))
     self.assertEqual("1", aninrs_nodes[0].attrib["AniNr"])
 
+    self.assertEqual([], files["Unterarm"].findall(".//MeshAnimation"))
+    verkn_animation_nodes = files["Unterarm"].findall(".//VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+    self.assertEqual("1", verkn_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
+
+    # Test animation of subset "Schleifstueck" in file "Oberarm"
     animation_nodes = files["Oberarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
 
@@ -329,7 +344,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(aninrs_nodes))
     self.assertEqual("2", aninrs_nodes[0].attrib["AniNr"])
 
-    # self.assertEqual([], files["Schleifstueck"].findall(".//Animation"))
+    self.assertEqual([], files["Oberarm"].findall(".//VerknAnimation"))
+    mesh_animation_nodes = files["Oberarm"].findall(".//MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+    self.assertEqual("2", mesh_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("1", mesh_animation_nodes[0].attrib["AniIndex"])
 
   def test_subset_animation_rotation(self):
     self.open("animation4")
