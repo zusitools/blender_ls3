@@ -424,6 +424,7 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
                 filename,
                 directory,
                 str(setting[3]),    # exportSelected
+                ls3_export.get_exporter_setting("exportAnimations"),
                 ls3_export.get_exporter_setting("optimizeMesh"),
                 ls3_export.get_exporter_setting("maxUVDelta"),
                 ls3_export.get_exporter_setting("maxCoordDelta"),

@@ -463,7 +463,7 @@ class Ls3Exporter:
         subsetNode.setAttribute("C", rgba_to_hex_string(diffuse_color, material.alpha))
         if material.zusi_use_ambient:
             subsetNode.setAttribute("CA", rgba_to_hex_string(material.zusi_ambient_color,
-                material.zusi_ambient_alpha - emit_alpha))
+                material.zusi_ambient_alpha))
         if material.zusi_use_emit:
             # Emit alpha is ignored in Zusi.
             subsetNode.setAttribute("E", rgba_to_hex_string(emit_color, 0))
