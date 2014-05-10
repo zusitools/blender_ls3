@@ -535,6 +535,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], mainfile.findall(".//VerknAnimation"))
     self.assertEqual([], mainfile.findall(".//MeshAnimation"))
     self.assertEqual([], mainfile.findall(".//Animation"))
+    self.assertEqual(1, len(mainfile.findall("./Landschaft/SubSet")))
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
