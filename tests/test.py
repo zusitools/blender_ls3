@@ -59,6 +59,8 @@ class TestLs3Export(unittest.TestCase):
     return tree.getroot()
 
   def export_and_parse_multiple(self, additional_suffixes, exportargs={}):
+    if "exportAnimations" not in exportargs:
+      exportargs["exportAnimations"] = True
     mainfile = self.export(exportargs)
     print(mainfile.read())
 
@@ -183,6 +185,10 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(v1, 1), [0, 1])
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
+
+  def test_variants(self):
+    self.open("variants")
+    root = self.export_and_parse()
 
   def test_animation_structure_with_constraint(self):
     self.open("animation1")
@@ -345,7 +351,7 @@ class TestLs3Export(unittest.TestCase):
 
   def test_subset_animation_rotation(self):
     self.open("animation4")
-    mainfile = self.export_and_parse()
+    mainfile = self.export_and_parse({"exportAnimations":True})
 
     self.assertEqual([], mainfile.findall("./Landschaft/Verknuepfte"))
     self.assertEqual([], mainfile.findall("./Landschaft/VerknAnimation"))
@@ -380,7 +386,7 @@ class TestLs3Export(unittest.TestCase):
 
   def test_subset_animation_rotation_with_offset(self):
     self.open("animation5")
-    mainfile = self.export_and_parse()
+    mainfile = self.export_and_parse({"exportAnimations":True})
 
     self.assertEqual([], mainfile.findall("./Landschaft/Verknuepfte"))
     self.assertEqual([], mainfile.findall("./Landschaft/VerknAnimation"))
@@ -450,7 +456,7 @@ class TestLs3Export(unittest.TestCase):
 
   def test_lod_suffix(self):
     self.open("animation2")
-    mainfile = self.export({"ext":".lod1.ls3"})
+    mainfile = self.export({"ext" : ".lod1.ls3", "exportAnimations" : True})
 
     path, name = os.path.split(mainfile.name)
     basename, ext = name.split(os.extsep, 1)
@@ -459,14 +465,22 @@ class TestLs3Export(unittest.TestCase):
 
   def test_no_extension(self):
     self.open("animation2")
-    mainfile = self.export({"ext":""})
+    mainfile = self.export({"ext" : "", "exportAnimations" : True})
     self.assertTrue(os.path.exists(mainfile.name + "_RadRotation"))
 
   def test_animation_range_extends_scene_range(self):
     self.open("animation6")
-    mainfile = self.export_and_parse()
+    mainfile = self.export_and_parse({"exportAnimations" : True})
     mesh_animation_node = mainfile.find("./Landschaft/MeshAnimation")
     self.assertKeyframes(mesh_animation_node, [0, 1, 2])
+
+  def test_dont_export_animation(self):
+    self.open("animation3")
+    mainfile = self.export_and_parse({"exportAnimations" : False})
+    self.assertEqual([], mainfile.findall(".//Verknuepfte"))
+    self.assertEqual([], mainfile.findall(".//VerknAnimation"))
+    self.assertEqual([], mainfile.findall(".//MeshAnimation"))
+    self.assertEqual([], mainfile.findall(".//Animation"))
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)

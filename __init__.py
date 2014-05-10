@@ -282,6 +282,12 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         default = ls3_export.get_exporter_setting("exportSelected"),
     )
 
+    exportAnimations = bpy.props.BoolProperty(
+        name = "Export animations",
+        description = "Export animations from keyframes (this might create/overwrite additional files)",
+        default = ls3_export.get_exporter_setting("exportAnimations")
+    )
+
     optimizeMesh = bpy.props.BoolProperty(
         name = "Optimize mesh",
         description = "Optimize mesh before exporting",
@@ -339,6 +345,8 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         row = layout.row()
         row.prop(self, "exportSelected", text = "Export")
         row = layout.row()
+        row.prop(self, "exportAnimations")
+        row = layout.row()
         row.prop(self, "optimizeMesh")
         row = layout.row(align = False)
         row.alignment = "RIGHT"
@@ -355,6 +363,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             self.properties.filename,
             self.properties.directory,
             self.properties.exportSelected,
+            self.properties.exportAnimations,
             self.properties.optimizeMesh,
             self.properties.maxUVDelta,
             self.properties.maxCoordDelta,

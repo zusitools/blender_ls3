@@ -29,6 +29,7 @@ rgba_to_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[
 # The default settings for the exporter
 default_export_settings = {
     "exportSelected" : "0",
+    "exportAnimations" : False,
     "optimizeMesh" : True,
     "maxCoordDelta" : 0.001,
     "maxUVDelta" : 0.02,
@@ -63,10 +64,6 @@ def get_children_recursive(ob):
     for child in ob.children:
         result |= get_children_recursive(child)
     return result
-
-def is_animated(ob):
-    return ob.animation_data is not None and ob.animation_data.action is not None \
-        or len(ob.constraints) > 0
 
 def get_animation(ob):
     """Returns the action controlling the animation of the specified object (or None)"""
@@ -143,6 +140,7 @@ class Ls3ExporterSettings:
                 fileName,
                 fileDirectory,
                 exportSelected,
+                exportAnimations,
                 optimizeMesh,
                 maxUVDelta,
                 maxCoordDelta,
@@ -155,6 +153,7 @@ class Ls3ExporterSettings:
         self.fileName = fileName
         self.fileDirectory = fileDirectory
         self.exportSelected = exportSelected
+        self.exportAnimations = exportAnimations
         self.optimizeMesh = optimizeMesh
         self.maxUVDelta = maxUVDelta
         self.maxCoordDelta = maxCoordDelta
@@ -213,7 +212,12 @@ class Ls3Exporter:
     # in order to be animated correctly.
     def must_start_new_file(self, ob):
         # Objects with children start a new file.
-        return len(ob.children) > 0
+        return self.config.exportAnimations and len(ob.children) > 0
+
+    def is_animated(self, ob):
+        return self.config.exportAnimations and (
+             ob.animation_data is not None and ob.animation_data.action is not None \
+             or len(ob.constraints) > 0)
 
     # Returns a list of the active texture slots of the given material.
     def get_active_texture_slots(self, material):
@@ -616,7 +620,7 @@ class Ls3Exporter:
                     subset_basename = ob.zusi_subset_name + "$"
 
                 # Animated objects get their own subsets.
-                if is_animated(ob):
+                if self.is_animated(ob):
                     subset_basename += ob.name + "$$"
 
                 # Build list of materials used (i.e. assigned to any face) in this object
@@ -636,7 +640,7 @@ class Ls3Exporter:
                     if subset_name not in subset_dict:
                         new_subset = Ls3Subset()
                         new_subset.material = mat
-                        new_subset.animated_obj = ob if is_animated(ob) else None
+                        new_subset.animated_obj = ob if self.is_animated(ob) else None
                         subset_dict[subset_name] = new_subset
 
                     # A selected object that is not visible in the exported variant can still
@@ -738,7 +742,7 @@ class Ls3Exporter:
             self.write_subset(landschaftNode, subset, ls3file)
 
         # Get animations and their animation numbers.
-        animations = get_animations_recursive(ls3file)
+        animations = get_animations_recursive(ls3file) if self.config.exportAnimations else []
         animations_by_type = dict()
         for animation in animations:
             ani_type = animation.animation_type
@@ -755,7 +759,7 @@ class Ls3Exporter:
             if sub.animated_obj is not None and not is_root_subset(sub, ls3file)]
         animated_linked_files = [(idx + len(animated_subsets) + 1, linked)
             for (idx, linked) in enumerate(ls3file.linked_files)
-            if is_animated(linked_file.root_obj)]
+            if self.is_animated(linked_file.root_obj)]
 
         # Write animation declarations for this file and any linked file.
         for ani_type, animations in animations_by_type.items():
