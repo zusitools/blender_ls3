@@ -462,6 +462,11 @@ class TestLs3Export(unittest.TestCase):
     mainfile = self.export({"ext":""})
     self.assertTrue(os.path.exists(mainfile.name + "_RadRotation"))
 
+  def test_animation_range_extends_scene_range(self):
+    self.open("animation6")
+    mainfile = self.export_and_parse()
+    mesh_animation_node = mainfile.find("./Landschaft/MeshAnimation")
+    self.assertKeyframes(mesh_animation_node, [0, 1, 2])
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
