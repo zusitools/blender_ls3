@@ -283,9 +283,10 @@ class Ls3Exporter:
                 if ob == subset.animated_obj:
                     # TODO: Warn if scaling is animated (Zusi does not support this and the export result
                     # will depend on the current frame.
-                    scale1 = Matrix.Scale(ob.scale.x, 4, Vector((1.0, 0.0, 0.0)))
-                    scale2 = Matrix.Scale(ob.scale.y, 4, Vector((0.0, 1.0, 0.0)))
-                    scale3 = Matrix.Scale(ob.scale.z, 4, Vector((0.0, 0.0, 1.0)))
+                    scale = ob.matrix_local.to_scale()
+                    scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
+                    scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
+                    scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
                     mesh.transform(scale1 * scale2 * scale3)
                 else:
                     mesh.transform(ob.matrix_local)

@@ -420,6 +420,38 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(q_nodes[2], 0, 0, 1, 0)
     self.assertRotation(q_nodes[3], 0, 0, 0.707107, -0.707107)
     self.assertRotation(q_nodes[4], 0, 0, 0, -1)
+
+  def test_scaled_nonanimated_subset(self):
+    self.open("animation7")
+    files = self.export_and_parse_multiple(["Cube"])[2]
+
+    # Check that the <Verknuepfte> node has correct scaling.
+    verknuepfte_node = files[""].find("./Landschaft/Verknuepfte")
+    sk_node = verknuepfte_node.find("./sk")
+    self.assertXYZ(sk_node, 0.5, 0.5, 0.5)
+
+    # Check that the animated subset in the linked file has its scaling
+    # applied (relative to the parent subset) and the non-animated subset has not
+    # (the scale is contained in the <Verknuepfte> node).
+    mesh_animation_node = files["Cube"].find("./Landschaft/MeshAnimation")
+    animated_subset_index = int(mesh_animation_node.attrib["AniIndex"])
+
+    subsets = files["Cube"].findall("./Landschaft/SubSet")
+    animated_subset = subsets[animated_subset_index]
+    nonanimated_subset = subsets[(animated_subset_index + 1) % 2]
+
+    vertices = animated_subset.findall("./Vertex/p")
+    self.assertEqual(24, len(vertices))
+    for i in range(0, 24):
+      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Y"])), places = 5)
+      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Z"])), places = 5)
+
+    vertices = nonanimated_subset.findall("./Vertex/p")
+    self.assertEqual(24, len(vertices))
+    for i in range(0, 24):
+      self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Y"])), places = 5)
+      self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Z"])), places = 5)
+
   def test_animation_restore_frame_no(self):
     self.open("animation3")
     bpy.context.scene.frame_set(5)
