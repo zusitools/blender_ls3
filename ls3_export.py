@@ -279,17 +279,21 @@ class Ls3Exporter:
             # (for the root subsets, the transformation will be written into the link in the parent file).
             # For animated subsets, apply only the scale part (the translation and rotation part will be
             # written as part of the animation).
-            if not is_root_subset(subset, ls3file):
-                if ob == subset.animated_obj:
-                    # TODO: Warn if scaling is animated (Zusi does not support this and the export result
-                    # will depend on the current frame.
-                    scale = ob.matrix_local.to_scale()
-                    scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
-                    scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
-                    scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
-                    mesh.transform(scale1 * scale2 * scale3)
-                else:
-                    mesh.transform(ob.matrix_local)
+            if self.config.exportAnimations:
+                if not is_root_subset(subset, ls3file):
+                    if ob == subset.animated_obj:
+                        # TODO: Warn if scaling is animated (Zusi does not support this and the export result
+                        # will depend on the current frame.
+                        scale = ob.matrix_local.to_scale()
+                        scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
+                        scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
+                        scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
+                        mesh.transform(scale1 * scale2 * scale3)
+                    else:
+                        mesh.transform(ob.matrix_local)
+            else:
+                # Ignore everything when animated export is enabled and just apply the global transformation.
+                mesh.transform(ob.matrix_world)
 
             mesh.calc_normals()
 

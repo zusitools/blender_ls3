@@ -452,6 +452,28 @@ class TestLs3Export(unittest.TestCase):
       self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Y"])), places = 5)
       self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Z"])), places = 5)
 
+  def test_scaled_nonanimated_subset_without_animation(self):
+    self.open("animation7")
+    mainfile = self.export_and_parse()
+
+    subsets = mainfile.findall("./Landschaft/SubSet")
+
+    vertices = subsets[0].findall("./Vertex/p")
+    self.assertEqual(24, len(vertices))
+    for i in range(0, 24):
+      # X coordinate between 2.5 and 3.5.
+      self.assertLess(abs(float(vertices[i].attrib["X"]) - 3), 1.01)
+      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Y"])), places = 5)
+      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Z"])), places = 5)
+
+    vertices = subsets[1].findall("./Vertex/p")
+    self.assertEqual(24, len(vertices))
+    for i in range(0, 24):
+      # X coordinate between 5.75 and 6.25
+      self.assertLess(abs(float(vertices[i].attrib["X"]) - 6), 0.51)
+      self.assertAlmostEqual(0.25, abs(float(vertices[i].attrib["Y"])), places = 5)
+      self.assertAlmostEqual(0.25, abs(float(vertices[i].attrib["Z"])), places = 5)
+
   def test_animation_restore_frame_no(self):
     self.open("animation3")
     bpy.context.scene.frame_set(5)
