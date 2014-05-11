@@ -553,6 +553,12 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual([], files["Mond"].findall(".//Verknuepfte"))
 
+  def test_boundingr_translation(self):
+    self.open("boundingr_translation")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    verknuepfte_node = mainfile.find("./Landschaft/Verknuepfte")
+    self.assertEqual("9", verknuepfte_node.attrib["BoundingR"])
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   unittest.TextTestRunner(verbosity=2).run(suite)
