@@ -16,12 +16,12 @@
 #  ***** GPL LICENSE BLOCK *****
  
 bl_info = {
-    'name': 'Zusi Landscape Format (.ls3)',
+    'name': 'Zusi Scenery Format (.ls3)',
     'author': 'Johannes',
     'version': (0, 1, 0),
     'blender': (2, 6, 3),
-    'location': 'File > Import -> Zusi Landscape (.ls3) / File -> Export > Zusi Landscape (.ls3)',
-    'description': 'Import and export files from/to the Zusi Landscape format (.ls3)',
+    'location': 'File > Import -> Zusi Scenery (.ls3) / File -> Export > Zusi Scenery (.ls3)',
+    'description': 'Import and export files from/to the Zusi Scenery format (.ls3)',
     'category': 'Import-Export',
 }
  
@@ -131,7 +131,7 @@ class ZusiLodImportSettingList(zusiprops.CheckBoxList):
 
 class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
     bl_idname = "io_import_scene.ls"
-    bl_description = 'Import from Zusi 2 Landscape file format (.ls)'
+    bl_description = 'Import from Zusi 2 Scenery file format (.ls)'
     bl_label = "Import LS"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -176,7 +176,7 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
 
 class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     bl_idname = "io_import_scene.ls3"
-    bl_description = 'Import from Zusi Landscape file format (.ls3)'
+    bl_description = 'Import from Zusi Scenery file format (.ls3)'
     bl_label = "Import LS3"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -257,7 +257,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
  
 class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
     bl_idname = "io_export_scene.ls3"
-    bl_description = 'Export to Zusi Landscape file format (.ls3)'
+    bl_description = 'Export to Zusi Scenery file format (.ls3)'
     bl_label = "Export LS3"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -395,7 +395,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
 class EXPORT_OT_ls3_batch(bpy.types.Operator):
     bl_idname = "io_export_scene.ls3_batch"
-    bl_description = 'Batch export to Zusi Landscape file format (.ls3)'
+    bl_description = 'Batch export to Zusi Scenery file format (.ls3)'
     bl_label = "Batch export LS3"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -501,13 +501,13 @@ class VIEW_OT_show_variants(bpy.types.Operator):
 # ---
 
 def menu_func_import_ls(self, context):
-    self.layout.operator(IMPORT_OT_ls3.bl_idname, text="Zusi 2 Landscape (.ls) ...")
+    self.layout.operator(IMPORT_OT_ls3.bl_idname, text="Zusi 2 Scenery (.ls) ...")
  
 def menu_func_import(self, context):
-    self.layout.operator(IMPORT_OT_ls3.bl_idname, text="Zusi Landscape (.ls3) ...")
+    self.layout.operator(IMPORT_OT_ls3.bl_idname, text="Zusi Scenery (.ls3) ...")
  
 def menu_func_export(self, context):
-    self.layout.operator(EXPORT_OT_ls3.bl_idname, text="Zusi Landscape (.ls3) ...")
+    self.layout.operator(EXPORT_OT_ls3.bl_idname, text="Zusi Scenery (.ls3) ...")
 
 def menu_func_show_variants(self, context):
     self.layout.operator(VIEW_OT_show_variants.bl_idname, text="Show variants ...")

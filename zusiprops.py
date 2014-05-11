@@ -415,7 +415,7 @@ def template_list(layout, listtype_name, list_id, dataptr, propname, active_data
 # Custom properties
 # ---
 
-landscape_types = [
+scenery_types = [
     ("0", "Unspecified", ""),
     ("1", "Grundplatte", ""),
     ("2", "Bahndamm", ""),
@@ -572,10 +572,11 @@ bpy.types.Material.zusi_texture_preset = bpy.props.EnumProperty(
     update = on_zusi_texture_preset_update,
 )
 
+# This cannot be renamed to zusi_scenery_type because of existing files.
 bpy.types.Material.zusi_landscape_type = bpy.props.EnumProperty(
-    name = "Landscape type",
-    description = "The landscape type to assign to this subset",
-    items = landscape_types,
+    name = "Scenery type",
+    description = "The scenery type to assign to this subset",
+    items = scenery_types,
     default = "0"
 )
 
