@@ -1152,7 +1152,7 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
 class ZUSI_AUTHORS_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_authors.add'
     bl_label = "Add author"
-    bl_description = "Add a author to the scene"
+    bl_description = "Add an author to the scene"
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
