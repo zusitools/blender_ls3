@@ -799,11 +799,17 @@ class Ls3Exporter:
                 # For each animation name, collect the actions that participate in this animation.
                 animations_by_name = dict()
                 for animation in animations:
-                    for name_wrapper in animation.zusi_animation_names:
-                        name = name_wrapper.name
+                    if len(animation.zusi_animation_names) == 0:
+                        name = get_ani_description(ani_type)
                         if name not in animations_by_name:
                             animations_by_name[name] = set()
                         animations_by_name[name].add(animation)
+                    else:
+                        for name_wrapper in animation.zusi_animation_names:
+                            name = name_wrapper.name
+                            if name not in animations_by_name:
+                                animations_by_name[name] = set()
+                            animations_by_name[name].add(animation)
 
                 # Write the animations ordered by name.
                 for name in sorted(animations_by_name.keys()):

@@ -568,6 +568,14 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("Track curvature at front of vehicle", animation_nodes[2].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[2], [3])
 
+  def test_animation_names_id_0(self):
+    self.open("animation_names_id0")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    animation_nodes = mainfile.findall("./Landschaft/Animation")
+    self.assertEqual(1, len(animation_nodes))
+    self.assertNotEqual("", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[0], [1])
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})
