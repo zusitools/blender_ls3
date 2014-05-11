@@ -552,6 +552,22 @@ class TestLs3Export(unittest.TestCase):
     action.zusi_animation_speed = 1.2
     self.assertAlmostEqual(0.2652582, action.zusi_animation_wheel_diameter, places = 6)
 
+  def test_animation_duration(self):
+    self.open("animation_speed")
+    action = bpy.data.actions[0]
+    action.zusi_animation_speed = 0
+    self.assertEqual(0, action.zusi_animation_speed)
+    self.assertAlmostEqual(0, action.zusi_animation_duration, places = 6)
+
+    action.zusi_animation_duration = 4
+    self.assertAlmostEqual(0.25, action.zusi_animation_speed, places = 6)
+
+    action.zusi_animation_speed = 0.1
+    self.assertAlmostEqual(10, action.zusi_animation_duration, places = 6)
+
+    action.zusi_animation_duration = 0
+    self.assertAlmostEqual(0, action.zusi_animation_speed, places = 6)
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})

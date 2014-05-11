@@ -388,6 +388,13 @@ def get_zusi_animation_wheel_diameter(self):
 def set_zusi_animation_wheel_diameter(self, diameter):
     self.zusi_animation_speed = 0 if diameter == 0 else 1 / (diameter * pi)
 
+# Conversion animation speed <=> animation duration for door animations
+def get_zusi_animation_duration(self):
+    return 0 if self.zusi_animation_speed == 0 else 1 / self.zusi_animation_speed
+
+def set_zusi_animation_duration(self, duration):
+    self.zusi_animation_speed = 0 if duration == 0 else 1 / duration
+
 # ---
 # Custom properties
 # ---
@@ -703,6 +710,8 @@ bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
 bpy.types.Action.zusi_animation_wheel_diameter = property(
     get_zusi_animation_wheel_diameter, set_zusi_animation_wheel_diameter)
 
+bpy.types.Action.zusi_animation_duration = property(
+    get_zusi_animation_duration, set_zusi_animation_duration)
 
 # ===
 # Custom UI
@@ -998,16 +1007,16 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
 # Animation info UI
 # ---
 
-class ACTION_OT_set_zusi_wheel_diameter(bpy.types.Operator):
-    bl_idname = 'action.set_zusi_wheel_diameter'
+class ACTION_OT_set_zusi_animation_wheel_diameter(bpy.types.Operator):
+    bl_idname = 'action.set_zusi_animation_wheel_diameter'
     bl_label = "Set wheel diameter"
-    bl_description = "Set the animation speed of a wheel animation action to conform to the specified wheel diameter."
+    bl_description = "Set the animation speed of a wheel animation action to conform to the specified wheel diameter"
     bl_options = {'INTERNAL'}
 
     action_name = bpy.props.StringProperty(options = {'HIDDEN'})
 
     wheel_diameter = bpy.props.FloatProperty(
-        name = "Wheel diameter",
+        name = "Wheel diameter [m]",
         description = "Wheel diameter in meters",
         min = 0.0
     )
@@ -1019,6 +1028,29 @@ class ACTION_OT_set_zusi_wheel_diameter(bpy.types.Operator):
 
     def execute(self, context):
         bpy.data.actions[self.properties.action_name].zusi_animation_wheel_diameter = self.properties.wheel_diameter
+        return {'FINISHED'}
+
+class ACTION_OT_set_zusi_animation_duration(bpy.types.Operator):
+    bl_idname = 'action.set_zusi_animation_duration'
+    bl_label = "Set duration"
+    bl_description = "Set the animation speed of a door animation action to conform to the specified animation duration"
+    bl_options = {'INTERNAL'}
+
+    action_name = bpy.props.StringProperty(options = {'HIDDEN'})
+
+    duration = bpy.props.FloatProperty(
+        name = "Duration [s]",
+        description = "Duration in seconds",
+        min = 0.0
+    )
+
+    def invoke(self, context, event):
+        self.properties.duration = bpy.data.actions[self.properties.action_name].zusi_animation_duration
+        context.window_manager.invoke_props_dialog(self)
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        bpy.data.actions[self.properties.action_name].zusi_animation_duration = self.properties.duration
         return {'FINISHED'}
 
 class SCENE_PT_zusi_animations(bpy.types.Panel):
@@ -1036,7 +1068,7 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
 
         if len(bpy.data.actions):
             action = bpy.data.actions[context.scene.zusi_animations_index]
-            ani_speed_enabled = action.zusi_animation_type not in ["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "14"]
+            ani_speed_enabled = action.zusi_animation_type in ["0", "1"]
             layout.row().prop(action, "name")
             layout.row().prop(action, "zusi_animation_type")
             row = layout.row()
@@ -1045,7 +1077,11 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             if action.zusi_animation_type in ["2", "3", "4", "5"]:
                 row = layout.row()
                 row.label("Wheel diameter: %.2f m" % action.zusi_animation_wheel_diameter)
-                row.operator("action.set_zusi_wheel_diameter", text = "Set").action_name = action.name
+                row.operator("action.set_zusi_animation_wheel_diameter", text = "Set").action_name = action.name
+            elif action.zusi_animation_type in ["12", "13"]:
+                row = layout.row()
+                row.label("Duration: %.2f s" % action.zusi_animation_duration)
+                row.operator("action.set_zusi_animation_duration", text = "Set").action_name = action.name
 
 # ---
 # Author info UI
