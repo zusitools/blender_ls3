@@ -17,6 +17,7 @@
  
 import bpy
 from . import zusicommon
+from math import pi
 
 # This file defines Zusi specific custom properties and the corresponding UI.
 
@@ -377,6 +378,16 @@ def on_zusi_texture_preset_update(self, context):
     if newpreset in [7, 9]:
         mat.texture_stage_1.D3DTSS_ALPHAARG2 = "3" # D3DTA_TFACTOR
 
+
+# Conversion animation speed <=> wheel diameter for wheel animations
+def get_zusi_animation_wheel_diameter(self):
+    if self.zusi_animation_speed == 0:
+        return 0
+    return 1 / (self.zusi_animation_speed * pi)
+
+def set_zusi_animation_wheel_diameter(self, diameter):
+    self.zusi_animation_speed = 0 if diameter == 0 else 1 / (diameter * pi)
+
 # ---
 # Custom properties
 # ---
@@ -669,6 +680,8 @@ bpy.types.Scene.zusi_description = bpy.props.StringProperty(
     default = ""
 )
 
+bpy.types.Scene.zusi_animations_index= bpy.props.IntProperty()
+
 #
 # Action
 #
@@ -683,8 +696,12 @@ bpy.types.Action.zusi_animation_type = bpy.props.EnumProperty(
 bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
     name = "Animation speed",
     description = "Speed of the animation, meaning depends on animation type",
-    default = 0.0
+    default = 0.0,
+    min = 0.0
 )
+
+bpy.types.Action.zusi_animation_wheel_diameter = property(
+    get_zusi_animation_wheel_diameter, set_zusi_animation_wheel_diameter)
 
 
 # ===
@@ -976,6 +993,59 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
             entry = sce.zusi_variants[sce.zusi_variants_index]
             row = layout.row()
             row.prop(entry, "name")
+
+# ---
+# Animation info UI
+# ---
+
+class ACTION_OT_set_zusi_wheel_diameter(bpy.types.Operator):
+    bl_idname = 'action.set_zusi_wheel_diameter'
+    bl_label = "Set wheel diameter"
+    bl_description = "Set the animation speed of a wheel animation action to conform to the specified wheel diameter."
+    bl_options = {'INTERNAL'}
+
+    action_name = bpy.props.StringProperty(options = {'HIDDEN'})
+
+    wheel_diameter = bpy.props.FloatProperty(
+        name = "Wheel diameter",
+        description = "Wheel diameter in meters",
+        min = 0.0
+    )
+
+    def invoke(self, context, event):
+        self.properties.wheel_diameter = bpy.data.actions[self.properties.action_name].zusi_animation_wheel_diameter
+        context.window_manager.invoke_props_dialog(self)
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        bpy.data.actions[self.properties.action_name].zusi_animation_wheel_diameter = self.properties.wheel_diameter
+        return {'FINISHED'}
+
+class SCENE_PT_zusi_animations(bpy.types.Panel):
+    bl_label = "Zusi animations"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+
+    def draw(self, context):
+        layout = self.layout
+        sce = context.scene
+
+        row = layout.row()
+        row.template_list("UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
+
+        if len(bpy.data.actions):
+            action = bpy.data.actions[context.scene.zusi_animations_index]
+            ani_speed_enabled = action.zusi_animation_type not in ["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "14"]
+            layout.row().prop(action, "name")
+            layout.row().prop(action, "zusi_animation_type")
+            row = layout.row()
+            row.active = ani_speed_enabled
+            row.prop(action, "zusi_animation_speed")
+            if action.zusi_animation_type in ["2", "3", "4", "5"]:
+                row = layout.row()
+                row.label("Wheel diameter: %.2f m" % action.zusi_animation_wheel_diameter)
+                row.operator("action.set_zusi_wheel_diameter", text = "Set").action_name = action.name
 
 # ---
 # Author info UI

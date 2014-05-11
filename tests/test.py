@@ -536,6 +536,22 @@ class TestLs3Export(unittest.TestCase):
     animation2 = mainfile.find("./Landschaft/VerknAnimation")
     self.assertEqual(0.0, float(animation2.attrib["AniGeschw"]))
 
+  def test_animation_wheel_diameter(self):
+    self.open("animation_speed")
+    action = bpy.data.actions[0]
+    action.zusi_animation_speed = 0
+    self.assertEqual(0, action.zusi_animation_speed)
+    self.assertAlmostEqual(0, action.zusi_animation_wheel_diameter, places = 6)
+
+    action.zusi_animation_wheel_diameter = 0.9 # see example in documentation
+    self.assertAlmostEqual(0.3536776, action.zusi_animation_speed, places = 6)
+
+    action.zusi_animation_wheel_diameter = 0 # see example in documentation
+    self.assertAlmostEqual(0, action.zusi_animation_speed, places = 6)
+
+    action.zusi_animation_speed = 1.2
+    self.assertAlmostEqual(0.2652582, action.zusi_animation_wheel_diameter, places = 6)
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})
