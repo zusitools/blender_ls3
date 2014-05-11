@@ -32,10 +32,31 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(1.0, mat.diffuse_color.r)
     self.assertAlmostEqual(1.0, mat.diffuse_color.g)
     self.assertAlmostEqual(1.0, mat.diffuse_color.b)
+
     self.assertEqual(True, mat.zusi_use_emit)
     self.assertAlmostEqual(0.2, mat.zusi_emit_color.r)
     self.assertAlmostEqual(0.2, mat.zusi_emit_color.g)
     self.assertAlmostEqual(0.2, mat.zusi_emit_color.b)
+
+    self.assertEqual(False, mat.zusi_allow_overexposure)
+
+  def test_overexposure(self):
+    self.ls3_import("overexposure.ls3")
+
+    mat = bpy.data.objects["overexposure.ls3.1"].data.materials[0]
+    self.assertAlmostEqual(1.0, mat.diffuse_color.r)
+    self.assertAlmostEqual(1.0, mat.diffuse_color.g)
+    self.assertAlmostEqual(1.0, mat.diffuse_color.b)
+
+    self.assertEqual(True, mat.zusi_use_emit)
+    self.assertAlmostEqual(1.0, mat.zusi_emit_color.r)
+    self.assertAlmostEqual(1.0, mat.zusi_emit_color.g)
+    self.assertAlmostEqual(1.0, mat.zusi_emit_color.b)
+
+    self.assertEqual(True, mat.zusi_allow_overexposure)
+    self.assertAlmostEqual(1.0, mat.zusi_overexposure_addition.r)
+    self.assertAlmostEqual(1.0, mat.zusi_overexposure_addition.g)
+    self.assertAlmostEqual(1.0, mat.zusi_overexposure_addition.b)
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)

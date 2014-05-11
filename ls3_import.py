@@ -158,6 +158,19 @@ class Ls3Importer:
             mat.zusi_use_emit = True
             (mat.zusi_emit_color, ignored) = hex_string_to_rgba(night_color)
             mat.diffuse_color += mat.zusi_emit_color
+
+            if mat.diffuse_color.r > 1.0 or mat.diffuse_color.g > 1.0 or mat.diffuse_color.b > 1.0:
+                mat.zusi_allow_overexposure = True
+                mat.zusi_overexposure_addition = mathutils.Color((
+                    max(0.0, mat.diffuse_color.r - 1),
+                    max(0.0, mat.diffuse_color.g - 1),
+                    max(0.0, mat.diffuse_color.b - 1)
+                ))
+                mat.diffuse_color = mathutils.Color((
+                    min(mat.diffuse_color.r, 1.0),
+                    min(mat.diffuse_color.g, 1.0),
+                    min(mat.diffuse_color.b, 1.0)
+                ))
         else:
             mat.zusi_use_emit = False
 
