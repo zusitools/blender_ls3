@@ -789,7 +789,9 @@ class Ls3Exporter:
             if self.is_animated(linked_file.root_obj)]
 
         # Write animation declarations for this file and any linked file.
-        for ani_type, animations in animations_by_type.items():
+        for ani_type in sorted(animations_by_type.keys()):
+            animations = animations_by_type[ani_type]
+
             # For animation type 0, the animation name is relevant. A separate <Animation> node is written for
             # each animation name. For all other animation types, only one <Animation> node is written for
             # all animations of this type, using a generic name.
