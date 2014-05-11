@@ -1064,7 +1064,10 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
         sce = context.scene
 
         row = layout.row()
-        row.template_list("UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
+        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+            row.template_list(bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
+        else:
+            row.template_list("UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
 
         if len(bpy.data.actions):
             action = bpy.data.actions[context.scene.zusi_animations_index]
