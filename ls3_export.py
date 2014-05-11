@@ -766,7 +766,7 @@ class Ls3Exporter:
         animations = get_animations_recursive(ls3file) if self.config.exportAnimations else []
         animations_by_type = dict()
         for animation in animations:
-            ani_type = animation.animation_type
+            ani_type = animation.zusi_animation_type
             if ani_type not in animations_by_type:
                 animations_by_type[ani_type] = [animation]
             else:
@@ -804,6 +804,7 @@ class Ls3Exporter:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(sub)))
+            meshAnimationNode.setAttribute("AniGeschw", str(get_animation(subset.animated_obj).zusi_animation_speed))
             landschaftNode.appendChild(meshAnimationNode)
             translation_length = self.write_animation(sub.animated_obj, meshAnimationNode,
                 write_translation = sub.animated_obj != ls3file.root_obj,
@@ -815,6 +816,7 @@ class Ls3Exporter:
             verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
             verknAnimationNode.setAttribute("AniNr", str(aninr))
             verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
+            verknAnimationNode.setAttribute("AniGeschw", str(get_animation(linked_file.root_obj).zusi_animation_speed))
             landschaftNode.appendChild(verknAnimationNode)
             self.write_animation(linked_file.root_obj, verknAnimationNode,
                 write_translation = has_location_animation(get_animation(linked_file.root_obj)),

@@ -673,11 +673,17 @@ bpy.types.Scene.zusi_description = bpy.props.StringProperty(
 # Action
 #
 
-bpy.types.Action.animation_type = bpy.props.EnumProperty(
+bpy.types.Action.zusi_animation_type = bpy.props.EnumProperty(
     name = "Animation type",
     description = "Defines how the animation is triggered in the simulator",
     items = animation_types,
     default = "0"
+)
+
+bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
+    name = "Animation speed",
+    description = "Speed of the animation, meaning depends on animation type",
+    default = 0.0
 )
 
 

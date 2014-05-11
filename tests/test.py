@@ -528,6 +528,14 @@ class TestLs3Export(unittest.TestCase):
     mesh_animation_node = mainfile.find("./Landschaft/MeshAnimation")
     self.assertKeyframes(mesh_animation_node, [0, 1, 2])
 
+  def test_animation_speed(self):
+    self.open("animation_speed")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    animation1 = mainfile.find("./Landschaft/MeshAnimation")
+    self.assertEqual(1.5, float(animation1.attrib["AniGeschw"]))
+    animation2 = mainfile.find("./Landschaft/VerknAnimation")
+    self.assertEqual(0.0, float(animation2.attrib["AniGeschw"]))
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})
