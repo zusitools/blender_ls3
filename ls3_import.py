@@ -171,6 +171,22 @@ class Ls3Importer:
                     min(mat.diffuse_color.g, 1.0),
                     min(mat.diffuse_color.b, 1.0)
                 ))
+
+            if mat.zusi_use_ambient:
+                ambient_color = mat.zusi_ambient_color + mat.zusi_emit_color
+
+                if ambient_color.r > 1.0 or ambient_color.g > 1.0 or ambient_color.b > 1.0:
+                    mat.zusi_allow_overexposure = True
+                    mat.zusi_overexposure_addition_ambient = mathutils.Color((
+                        max(0.0, ambient_color.r - 1),
+                        max(0.0, ambient_color.g - 1),
+                        max(0.0, ambient_color.b - 1)
+                    ))
+                    mat.zusi_ambient_color = mathutils.Color((
+                        min(ambient_color.r, 1.0),
+                        min(ambient_color.g, 1.0),
+                        min(ambient_color.b, 1.0)
+                    ))
         else:
             mat.zusi_use_emit = False
 
