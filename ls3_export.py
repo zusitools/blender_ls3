@@ -446,30 +446,33 @@ class Ls3Exporter:
         # Set ambient, diffuse, and emit color.
         # Zusi's lighting model works as follows:
         # An object will always have its night color (day and night).
-        # By day the diffuse color is added to the night color.
+        # By day the diffuse and ambient color are added to the night color.
         # It follows from this that an object can only get darker at night, not lighter.
 
         diffuse_color = material.diffuse_color * material.diffuse_intensity
+        ambient_color = material.zusi_ambient_color if material.zusi_use_ambient else Color((1, 1, 1))
 
-        # Adjust emit color to be always darker than the diffuse color.
+        # Adjust emit color to be always darker than the diffuse and ambient color.
         emit_color = material.zusi_emit_color if material.zusi_use_emit else Color((0, 0, 0))
         emit_color = Color((
-            min(emit_color.r, diffuse_color.r),
-            min(emit_color.g, diffuse_color.g),
-            min(emit_color.b, diffuse_color.b),
+            min(emit_color.r, diffuse_color.r, ambient_color.r),
+            min(emit_color.g, diffuse_color.g, ambient_color.g),
+            min(emit_color.b, diffuse_color.b, ambient_color.b),
         ))
 
-        # Subtract emit color from the diffuse color.
+        # Subtract emit color from the diffuse and ambient color.
         if material.zusi_use_emit:
             diffuse_color -= emit_color
+            ambient_color -= emit_color
 
         # Add overexposure to the diffuse color.
         if material.zusi_allow_overexposure:
             diffuse_color = normalize_color(diffuse_color + material.zusi_overexposure_addition)
+            ambient_color = normalize_color(ambient_color + material.zusi_overexposure_addition_ambient)
 
         subsetNode.setAttribute("C", rgba_to_hex_string(diffuse_color, material.alpha))
         if material.zusi_use_ambient:
-            subsetNode.setAttribute("CA", rgba_to_hex_string(material.zusi_ambient_color,
+            subsetNode.setAttribute("CA", rgba_to_hex_string(ambient_color,
                 material.zusi_ambient_alpha))
         if material.zusi_use_emit:
             # Emit alpha is ignored in Zusi.

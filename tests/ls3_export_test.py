@@ -493,6 +493,35 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("0FFFFFFFF", subsets[3].attrib["C"])
     self.assertEqual("000FFFFFF", subsets[3].attrib["E"])
 
+  def test_ambient_color(self):
+    self.open("ambientcolor")
+    root = self.export_and_parse()
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(4, len(subsets))
+
+    # Subset 1 has a diffuse color of white and an ambient color of gray.
+    self.assertEqual("0FFFFFFFF", subsets[0].attrib["C"])
+    self.assertEqual("0FF808080", subsets[0].attrib["CA"])
+    self.assertNotIn("E", subsets[0].attrib)
+
+    # Subset 2 has a diffuse color of white and an ambient/night color of gray.
+    self.assertEqual("0FF808080", subsets[1].attrib["C"])
+    self.assertEqual("0FF000000", subsets[1].attrib["CA"])
+    self.assertEqual("000808080", subsets[1].attrib["E"])
+
+    # Subset 3 has a night color that is lighter than the ambient color.
+    # It will be reduced to be darker than both diffuse and ambient color.
+    self.assertEqual("0FF808080", subsets[2].attrib["C"])
+    self.assertEqual("0FF000000", subsets[2].attrib["CA"])
+    self.assertEqual("000808080", subsets[2].attrib["E"])
+
+    # Subset 4 has a night color of gray, an ambient color of white
+    # and a gray ambient overexposure.
+    self.assertEqual("0FF808080", subsets[3].attrib["C"])
+    self.assertEqual("0FFFFFFFF", subsets[3].attrib["CA"])
+    self.assertEqual("000808080", subsets[3].attrib["E"])
+
   def test_lod_suffix(self):
     self.open("animation2")
     mainfile = self.export({"ext" : ".lod1.ls3", "exportAnimations" : True})

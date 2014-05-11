@@ -527,8 +527,19 @@ bpy.types.Material.zusi_allow_overexposure = bpy.props.BoolProperty(
 )
 
 bpy.types.Material.zusi_overexposure_addition = bpy.props.FloatVectorProperty(
-    name = 'Overexposure addition',
-    description = 'Color to add to the day color in order to create overexposure',
+    name = 'Overexposure addition (Diffuse)',
+    description = 'Color to add to the diffuse day color in order to create overexposure',
+    subtype = 'COLOR',
+    min = 0.0,
+    max = 1.0,
+    soft_min = 0.0,
+    soft_max = 1.0,
+    default = (0.0, 0.0, 0.0)
+)
+
+bpy.types.Material.zusi_overexposure_addition_ambient = bpy.props.FloatVectorProperty(
+    name = 'Overexposure addition (Ambient)',
+    description = 'Color to add to the ambient day color in order to create overexposure',
     subtype = 'COLOR',
     min = 0.0,
     max = 1.0,
@@ -820,8 +831,10 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             diffuse_color = mat.diffuse_color * mat.diffuse_intensity
             if mat.zusi_use_emit:
                 emit_color = mat.zusi_emit_color
-                if emit_color.r > diffuse_color.r or emit_color.g > diffuse_color.g or emit_color.b > diffuse_color.b:
-                    layout.row().label(text = "Must be darker than diffuse color (%.3f, %.3f, %.3f) in all components."
+                ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else Color((1, 1, 1))
+                if emit_color.r > diffuse_color.r or emit_color.g > diffuse_color.g or emit_color.b > diffuse_color.b \
+                        or emit_color.r > ambient_color.r or emit_color.g > ambient_color.g or emit_color.b > ambient_color.b:
+                    layout.row().label(text = "Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components."
                         % (diffuse_color.r, diffuse_color.g, diffuse_color.b), icon = "ERROR")
 
             row = layout.row()
@@ -831,7 +844,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             row.prop(mat, "zusi_overexposure_addition", text = "Add to diffuse")
 
             # Warn the user when overexposure is not exportable.
-            if mat.zusi_allow_overexposure:
+            if row.enabled:
                 emit_color = mat.zusi_emit_color if mat.zusi_use_emit else mathutils.Color((0, 0, 0))
                 resulting_diffuse = diffuse_color - emit_color + mat.zusi_overexposure_addition
                 if (resulting_diffuse.r > 1.0 or resulting_diffuse.g > 1.0 or resulting_diffuse.b > 1.0):
@@ -839,6 +852,17 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                     layout.row().label(text = "Must have Diffuse - Night + Overexposure <= 1.0 in all components",
                         icon = "ERROR")
 
+            row = layout.row()
+            row.enabled = mat.zusi_allow_overexposure and mat.zusi_use_ambient
+            row.prop(mat, "zusi_overexposure_addition_ambient", text = "Add to ambient")
+
+            if row.enabled:
+                emit_color = mat.zusi_emit_color if mat.zusi_use_emit else mathutils.Color((0, 0, 0))
+                resulting_ambient = mat.zusi_ambient_color - emit_color + mat.zusi_overexposure_addition_ambient
+                if (resulting_ambient.r > 1.0 or resulting_ambient.g > 1.0 or resulting_ambient.b > 1.0):
+                    # Intentionally cryptic error message, as only pros should use this feature :)
+                    layout.row().label(text = "Must have Ambient - Night + Overexposure <= 1.0 in all components",
+                        icon = "ERROR")
 
 class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     bl_idname = 'zusi_texture_preset.edit'
