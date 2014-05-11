@@ -45,6 +45,14 @@ class ZusiFileVariant(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariant)
 
+class ZusiAnimationName(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(
+        name = "Name",
+        description = "Animation name"
+    )
+
+bpy.utils.register_class(ZusiAnimationName)
+
 if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
     class ZusiFileVariantList(bpy.types.UIList):
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -395,6 +403,14 @@ def get_zusi_animation_duration(self):
 def set_zusi_animation_duration(self, duration):
     self.zusi_animation_speed = 0 if duration == 0 else 1 / duration
 
+# Unified wrapper for template lists both in Blender <= 2.65 and above.
+def template_list(layout, listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = 5):
+    if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+        layout.template_list(dataptr, propname, active_dataptr, active_propname, rows = rows, prop_list = "template_list_controls")
+    else:
+        layout.template_list(listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = rows)
+    pass
+
 # ---
 # Custom properties
 # ---
@@ -713,6 +729,14 @@ bpy.types.Action.zusi_animation_wheel_diameter = property(
 bpy.types.Action.zusi_animation_duration = property(
     get_zusi_animation_duration, set_zusi_animation_duration)
 
+bpy.types.Action.zusi_animation_names = bpy.props.CollectionProperty(
+    name = "Animation names",
+    description = "Animation names this action belongs to, if animation type is 'Undefined/signal controlled'",
+    type = ZusiAnimationName,
+)
+
+bpy.types.Action.zusi_animation_names_index = bpy.props.IntProperty()
+
 # ===
 # Custom UI
 # ===
@@ -987,10 +1011,7 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         row = layout.row()
 
         # Show list of variants
-        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
-            row.template_list(sce, "zusi_variants", sce, "zusi_variants_index", rows = 3, prop_list = "template_list_controls")
-        else:
-            row.template_list("ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index", rows = 3)
+        template_list(row, "ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index", rows = 3)
 
         # Show add/remove operator
         col = row.column(align = True)
@@ -1055,6 +1076,34 @@ class ACTION_OT_set_zusi_animation_duration(bpy.types.Operator):
         bpy.data.actions[self.properties.action_name].zusi_animation_duration = self.properties.duration
         return {'FINISHED'}
 
+class ACTION_OT_add_zusi_animation_name(bpy.types.Operator):
+    bl_idname = 'action.add_zusi_animation_name'
+    bl_label = "Add animation name"
+    bl_description = "Add the name of an animation this action belongs to"
+    bl_options = {'INTERNAL'}
+
+    def invoke(self, context, event):
+        bpy.data.actions[context.scene.zusi_animations_index].zusi_animation_names.add().name = "Animation"
+        return{'FINISHED'}
+
+class ACTION_OT_del_zusi_animation_name(bpy.types.Operator):
+    bl_idname = 'action.del_zusi_animation_name'
+    bl_label = "Remove animation name"
+    bl_description = "Remove the selected animation name from the list of animations this action belongs to"
+
+    @classmethod
+    def poll(self, context):
+        return len(bpy.data.actions) > 0 and \
+            len(bpy.data.actions[context.scene.zusi_animations_index].zusi_animation_names) > 0
+
+    def invoke(self, context, event):
+        action = bpy.data.actions[context.scene.zusi_animations_index]
+        animation_names = action.zusi_animation_names
+        if action.zusi_animation_names_index >= 0 and len(animation_names) > 0:
+            animation_names.remove(action.zusi_animation_names_index)
+            action.zusi_animation_names_index = max(action.zusi_animation_names_index - 1, 0)
+        return{'FINISHED'}
+
 class SCENE_PT_zusi_animations(bpy.types.Panel):
     bl_label = "Zusi animations"
     bl_space_type = "PROPERTIES"
@@ -1065,11 +1114,7 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
-        row = layout.row()
-        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
-            row.template_list(bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
-        else:
-            row.template_list("UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
+        template_list(layout.row(), "UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
 
         if len(bpy.data.actions):
             action = bpy.data.actions[context.scene.zusi_animations_index]
@@ -1087,6 +1132,18 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
                 row = layout.row()
                 row.label("Duration: %.2f s" % action.zusi_animation_duration)
                 row.operator("action.set_zusi_animation_duration", text = "Set").action_name = action.name
+            elif action.zusi_animation_type == "0":
+                box = layout.box()
+                box.row().label(text = "Part of the following animations:")
+                row = box.row()
+                template_list(row, "UI_UL_list", "zusi_animation_name_list", action, "zusi_animation_names", action, "zusi_animation_names_index", rows = 3)
+                # Show add/remove operators.
+                col = row.column(align = True)
+                col.operator("action.add_zusi_animation_name", icon = "ZOOMIN", text = "")
+                col.operator("action.del_zusi_animation_name", icon = "ZOOMOUT", text = "")
+
+                if len(action.zusi_animation_names):
+                    box.row().prop(action.zusi_animation_names[action.zusi_animation_names_index], "name")
 
 # ---
 # Author info UI
@@ -1151,10 +1208,7 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
 
         # Show list of authors
         row = layout.row()
-        if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
-            row.template_list(sce, "zusi_authors", sce, "zusi_authors_index", rows = 3, prop_list = "template_list_controls")
-        else:
-            row.template_list("ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index", rows = 3)
+        template_list(row, "ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index", rows = 3)
 
         # Show add/remove operator
         col = row.column(align = True)
