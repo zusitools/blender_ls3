@@ -156,7 +156,8 @@ class Ls3Importer:
 
         if night_color != "":
             mat.zusi_use_emit = True
-            (mat.zusi_emit_color, mat.zusi_emit_alpha) = hex_string_to_rgba(night_color)
+            (mat.zusi_emit_color, ignored) = hex_string_to_rgba(night_color)
+            mat.diffuse_color += mat.zusi_emit_color
         else:
             mat.zusi_use_emit = False
 
