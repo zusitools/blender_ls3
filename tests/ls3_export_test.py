@@ -54,7 +54,7 @@ class TestLs3Export(unittest.TestCase):
 
   def export_and_parse(self, exportargs={}):
     exported_file = self.export(exportargs)
-    print(exported_file.read())
+    # print(exported_file.read())
     tree = ET.parse(exported_file.name)
     return tree.getroot()
 
@@ -62,7 +62,7 @@ class TestLs3Export(unittest.TestCase):
     if "exportAnimations" not in exportargs:
       exportargs["exportAnimations"] = True
     mainfile = self.export(exportargs)
-    print(mainfile.read())
+    # print(mainfile.read())
 
     (path, name) = os.path.split(mainfile.name)
     (basename, ext) = os.path.splitext(name)
