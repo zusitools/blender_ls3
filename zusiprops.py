@@ -1016,9 +1016,10 @@ class ACTION_OT_set_zusi_animation_wheel_diameter(bpy.types.Operator):
     action_name = bpy.props.StringProperty(options = {'HIDDEN'})
 
     wheel_diameter = bpy.props.FloatProperty(
-        name = "Wheel diameter [m]",
-        description = "Wheel diameter in meters",
-        min = 0.0
+        name = "Wheel diameter",
+        description = "Wheel diameter",
+        subtype = 'DISTANCE',
+        min = 0.0,
     )
 
     def invoke(self, context, event):
@@ -1041,7 +1042,8 @@ class ACTION_OT_set_zusi_animation_duration(bpy.types.Operator):
     duration = bpy.props.FloatProperty(
         name = "Duration [s]",
         description = "Duration in seconds",
-        min = 0.0
+        subtype = 'TIME',
+        min = 0.0,
     )
 
     def invoke(self, context, event):
