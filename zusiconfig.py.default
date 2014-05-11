@@ -3,11 +3,12 @@
 # value accordingly.
 
 default_export_settings = {
-	#	"exportSelected" : "0",
-	#	"optimizeMesh" : True,
-	#	"maxCoordDelta" : 0.001,
-	#	"maxUVDelta" : 0.02,
-	#	"maxNormalAngle" : 10,
+    #    "exportSelected" : "0",
+    #    "exportAnimations" : False,
+    #    "optimizeMesh" : True,
+    #    "maxCoordDelta" : 0.001,
+    #    "maxUVDelta" : 0.02,
+    #    "maxNormalAngle" : 10,
 }
 
 # Linux users must enter the path to the Zusi data directory here, e.g.
@@ -23,7 +24,7 @@ datapath = ""
 # then change the defaults and rename this file to zusiconfig.py
 
 #default_author = {
-#	'name' : "",
-#	'id' : 0,
-#	'email' : "",
+#    'name' : "",
+#    'id' : 0,
+#    'email' : "",
 #}
