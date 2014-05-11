@@ -537,6 +537,22 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], mainfile.findall(".//Animation"))
     self.assertEqual(1, len(mainfile.findall("./Landschaft/SubSet")))
 
+  def test_boundingr(self):
+    self.open("boundingr")
+    basename, ext, files = self.export_and_parse_multiple(["Planet", "Mond"])
+
+    # Check bounding radius of file "Planet".
+    verknuepfte_nodes = files[""].findall(".//Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
+    self.assertEqual("12", verknuepfte_nodes[0].attrib["BoundingR"])
+
+    # Check bounding radius of file "Mond".
+    verknuepfte_nodes = files["Planet"].findall(".//Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
+    self.assertEqual("8", verknuepfte_nodes[0].attrib["BoundingR"])
+
+    self.assertEqual([], files["Mond"].findall(".//Verknuepfte"))
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   unittest.TextTestRunner(verbosity=2).run(suite)

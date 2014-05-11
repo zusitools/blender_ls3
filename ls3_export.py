@@ -19,7 +19,7 @@ import bpy
 import os
 import xml.dom.minidom as dom
 from . import zusicommon, zusiprops
-from math import ceil, sqrt, pi, pow
+from math import ceil, pi
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
@@ -131,6 +131,7 @@ class Ls3Subset:
         self.material = None
         self.objects = []
         self.animated_obj = None
+        self.boundingr = 0
 
 # Container for the exporter settings
 class Ls3ExporterSettings:
@@ -383,7 +384,7 @@ class Ls3Exporter:
                     if must_flip_normals:
                         normal = list(map(lambda x : -x, normal))
 
-                    ls3file.boundingr = max(ls3file.boundingr, sqrt(pow(v.co[0], 2) + pow(v.co[1], 2) + pow(v.co[2], 2)))
+                    subset.boundingr = max(subset.boundingr, v.co.length)
 
                     # The coordinates are transformed into the Zusi coordinate system.
                     # The vertex index is appended for reordering vertices
@@ -510,7 +511,11 @@ class Ls3Exporter:
             subsetNode.appendChild(texture_node)
 
     def write_animation(self, ob, animation_node, write_translation = True, write_rotation = True):
+        """Writes an animation into an animation node (<MeshAnimation> or <VerknAnimation>) and
+        returns the length of the longest translation vector of the animation
+        (or 0 if write_translation is False)."""
         animation = get_animation(ob)
+        translation_length = 0
 
         # Get frame numbers of the 0.0 and 1.0 frames.
         frame0 = self.config.context.scene.frame_start
@@ -535,6 +540,7 @@ class Ls3Exporter:
                 if translationNode is not None:
                     fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
                     aniPunktNode.appendChild(translationNode)
+                    translation_length = max(translation_length, loc.length)
 
             if write_rotation:
                 # Make rotation Euler compatible with the previous frame to prevent axis flipping.
@@ -558,6 +564,7 @@ class Ls3Exporter:
                         rotationNode.setAttribute("W", str(rotation.w))
                     aniPunktNode.appendChild(rotationNode)
         self.config.context.scene.frame_set(original_current_frame)
+        return translation_length
 
     # Build list of files from the scene's objects. The main file will always be the first item in the list.
     def get_files(self):
@@ -714,29 +721,37 @@ class Ls3Exporter:
         # Write linked files.
         for linked_file in ls3file.linked_files:
             verknuepfteNode = self.xmldoc.createElement("Verknuepfte")
+            verknuepfteNode.setAttribute("BoundingR", str(int(ceil(linked_file.boundingr))))
             dateiNode = self.xmldoc.createElement("Datei")
             dateiNode.setAttribute("Dateiname", linked_file.filename)
             verknuepfteNode.appendChild(dateiNode)
             landschaftNode.appendChild(verknuepfteNode)
 
+            translation = linked_file.root_obj.matrix_local.to_translation()
+            rotation = linked_file.root_obj.matrix_local.to_euler()
+            scale = linked_file.root_obj.matrix_local.to_scale()
+            max_scale_factor = max(scale.x, scale.y, scale.z)
+
             # Include location and rotation in the link information if they are
             # not animated.
             write_translation = not has_location_animation(get_animation(linked_file.root_obj))
-            translation = linked_file.root_obj.matrix_local.to_translation()
             if write_translation and translation != Vector((0.0, 0.0, 0.0)):
                 pNode = self.xmldoc.createElement("p")
                 fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
                 verknuepfteNode.appendChild(pNode)
+                ls3file.boundingr = max(ls3file.boundingr,
+                    max_scale_factor * linked_file.boundingr + translation.length)
+            elif write_translation:
+                ls3file.boundingr = max(ls3file.boundingr,
+                    max_scale_factor * linked_file.boundingr)
 
             write_rotation = not has_rotation_animation(get_animation(linked_file.root_obj))
-            rotation = linked_file.root_obj.matrix_local.to_euler()
             if write_rotation and rotation != Vector((0.0, 0.0, 0.0)):
                 phiNode = self.xmldoc.createElement("phi")
                 fill_node_xyz(phiNode, -rotation.y, rotation.x, rotation.z)
                 verknuepfteNode.appendChild(phiNode)
 
             # Always include scale in the link information because this cannot be animated.
-            scale = linked_file.root_obj.matrix_local.to_scale()
             if scale != Vector((1.0, 1.0, 1.0)):
                 skNode = self.xmldoc.createElement("sk")
                 fill_node_xyz(skNode, scale.y, scale.x, scale.z)
@@ -745,6 +760,7 @@ class Ls3Exporter:
         # Write subsets.
         for subset in ls3file.subsets:
             self.write_subset(landschaftNode, subset, ls3file)
+            ls3file.boundingr = max(ls3file.boundingr, subset.boundingr)
 
         # Get animations and their animation numbers.
         animations = get_animations_recursive(ls3file) if self.config.exportAnimations else []
@@ -789,9 +805,10 @@ class Ls3Exporter:
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(sub)))
             landschaftNode.appendChild(meshAnimationNode)
-            self.write_animation(sub.animated_obj, meshAnimationNode,
+            translation_length = self.write_animation(sub.animated_obj, meshAnimationNode,
                 write_translation = sub.animated_obj != ls3file.root_obj,
                 write_rotation = sub.animated_obj != ls3file.root_obj)
+            ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
 
         # Write linked animations.
         for aninr, linked_file in animated_linked_files:
