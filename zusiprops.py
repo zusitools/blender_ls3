@@ -16,6 +16,7 @@
 #  ***** GPL LICENSE BLOCK *****
  
 import bpy
+import mathutils
 from . import zusicommon
 from math import pi
 
@@ -815,11 +816,29 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             row.enabled = mat.zusi_use_emit
             row.prop(mat, "zusi_emit_color", text="")
 
+            # Warn the user when night color is not exportable.
+            diffuse_color = mat.diffuse_color * mat.diffuse_intensity
+            if mat.zusi_use_emit:
+                emit_color = mat.zusi_emit_color
+                if emit_color.r > diffuse_color.r or emit_color.g > diffuse_color.g or emit_color.b > diffuse_color.b:
+                    layout.row().label(text = "Must be darker than diffuse color (%.3f, %.3f, %.3f) in all components."
+                        % (diffuse_color.r, diffuse_color.g, diffuse_color.b), icon = "ERROR")
+
             row = layout.row()
             row.prop(mat, "zusi_allow_overexposure", text = "Overexposure")
             row = layout.row()
             row.enabled = mat.zusi_allow_overexposure
-            row.prop(mat, "zusi_overexposure_addition", text="Add to diffuse")
+            row.prop(mat, "zusi_overexposure_addition", text = "Add to diffuse")
+
+            # Warn the user when overexposure is not exportable.
+            if mat.zusi_allow_overexposure:
+                emit_color = mat.zusi_emit_color if mat.zusi_use_emit else mathutils.Color((0, 0, 0))
+                resulting_diffuse = diffuse_color - emit_color + mat.zusi_overexposure_addition
+                if (resulting_diffuse.r > 1.0 or resulting_diffuse.g > 1.0 or resulting_diffuse.b > 1.0):
+                    # Intentionally cryptic error message, as only pros should use this feature :)
+                    layout.row().label(text = "Must have Diffuse - Night + Overexposure <= 1.0 in all components",
+                        icon = "ERROR")
+
 
 class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     bl_idname = 'zusi_texture_preset.edit'
