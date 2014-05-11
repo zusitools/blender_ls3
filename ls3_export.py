@@ -80,6 +80,12 @@ def get_ani_description(ani_id):
             return animation_type[1]
     return ""
 
+def get_aninrs(animations, animated_linked_files, animated_subsets):
+    """Returns the animation numbers for a list of animations. The animation number corresponds to the
+    1-indexed number of the subset/linked file that has the animation."""
+    return [aninr for aninr, linked in animated_linked_files if get_animation(linked.root_obj) in animations] \
+        + [aninr for aninr, subset in animated_subsets if get_animation(subset.animated_obj) in animations]
+
 def has_location_animation(action):
     return action is not None and any([fcurve.data_path == "location" for fcurve in action.fcurves])
 
@@ -784,18 +790,47 @@ class Ls3Exporter:
 
         # Write animation declarations for this file and any linked file.
         for ani_type, animations in animations_by_type.items():
-            animationNode = self.xmldoc.createElement("Animation")
-            animationNode.setAttribute("AniID", ani_type)
-            animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))
-            landschaftNode.appendChild(animationNode)
+            # For animation type 0, the animation name is relevant. A separate <Animation> node is written for
+            # each animation name. For all other animation types, only one <Animation> node is written for
+            # all animations of this type, using a generic name.
+            if ani_type == "0":
+                # For each animation name, collect the actions that participate in this animation.
+                animations_by_name = dict()
+                for animation in animations:
+                    for name_wrapper in animation.zusi_animation_names:
+                        name = name_wrapper.name
+                        if name not in animations_by_name:
+                            animations_by_name[name] = set()
+                        animations_by_name[name].add(animation)
 
-            # Write <AniNrs> nodes.
-            aninrs = [aninr for aninr, linked in animated_linked_files if get_animation(linked.root_obj) in animations] \
-              + [aninr for aninr, subset in animated_subsets if get_animation(subset.animated_obj) in animations]
-            for aninr in aninrs:
-                aniNrsNode = self.xmldoc.createElement("AniNrs")
-                aniNrsNode.setAttribute("AniNr", str(aninr))
-                animationNode.appendChild(aniNrsNode)
+                # Write the animations ordered by name.
+                for name in sorted(animations_by_name.keys()):
+                    aninrs = get_aninrs(animations_by_name[name], animated_linked_files, animated_subsets)
+
+                    animationNode = self.xmldoc.createElement("Animation")
+                    animationNode.setAttribute("AniID", ani_type)
+                    animationNode.setAttribute("AniBeschreibung", name)
+                    landschaftNode.appendChild(animationNode)
+
+                    # Write <AniNrs> nodes.
+                    aninrs = get_aninrs(animations_by_name[name], animated_linked_files, animated_subsets)
+                    for aninr in aninrs:
+                        aniNrsNode = self.xmldoc.createElement("AniNrs")
+                        aniNrsNode.setAttribute("AniNr", str(aninr))
+                        animationNode.appendChild(aniNrsNode)
+
+            else:
+                animationNode = self.xmldoc.createElement("Animation")
+                animationNode.setAttribute("AniID", ani_type)
+                animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))
+                landschaftNode.appendChild(animationNode)
+
+                # Write <AniNrs> nodes.
+                aninrs = get_aninrs(animations, animated_linked_files, animated_subsets) 
+                for aninr in aninrs:
+                    aniNrsNode = self.xmldoc.createElement("AniNrs")
+                    aniNrsNode.setAttribute("AniNr", str(aninr))
+                    animationNode.appendChild(aniNrsNode)
 
         # Write animation definitions for subsets and links in this file.
 

@@ -106,6 +106,10 @@ class TestLs3Export(unittest.TestCase):
     for idx, keyframe_time in enumerate(keyframe_times):
       self.assertAlmostEqual(keyframe_time, float(keyframes[idx].attrib["AniZeit"]))
 
+  def assertAniNrs(self, animation_node, ani_nrs):
+    aninrs_nodes = animation_node.findall("./AniNrs")
+    self.assertEqual(set(ani_nrs), set([int(node.attrib["AniNr"]) for node in aninrs_nodes]))
+
   def test_export_empty(self):
     self.clear_scene()
     root = self.export_and_parse()
@@ -231,11 +235,7 @@ class TestLs3Export(unittest.TestCase):
 
     # Check for <AniNrs> node in <Animation> node.
     animation_node = files[""].find("./Landschaft/Animation")
-    ani_nrs_nodes = animation_node.findall("./AniNrs")
-    self.assertEqual(1, len(ani_nrs_nodes))
-
-    ani_nrs_node = ani_nrs_nodes[0]
-    self.assertEqual("1", ani_nrs_node.attrib["AniNr"])
+    self.assertAniNrs(animation_node, [1])
 
     # Check for correct <VerknAnimation> node.
     verkn_animation_node = files[""].find("./Landschaft/VerknAnimation")
@@ -310,10 +310,7 @@ class TestLs3Export(unittest.TestCase):
     # Test animation of linked file "Unterarm" in main file.
     animation_nodes = files[""].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
-
-    aninrs_nodes = animation_nodes[0].findall("./AniNrs")
-    self.assertEqual(1, len(aninrs_nodes))
-    self.assertEqual("1", aninrs_nodes[0].attrib["AniNr"])
+    self.assertAniNrs(animation_nodes[0], [1])
 
     self.assertEqual([], files[""].findall(".//MeshAnimation"))
     verkn_animation_nodes = files[""].findall(".//VerknAnimation")
@@ -324,10 +321,7 @@ class TestLs3Export(unittest.TestCase):
     # Test animation of linked file "Oberarm" in file "Unterarm"
     animation_nodes = files["Unterarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
-
-    aninrs_nodes = animation_nodes[0].findall("./AniNrs")
-    self.assertEqual(1, len(aninrs_nodes))
-    self.assertEqual("1", aninrs_nodes[0].attrib["AniNr"])
+    self.assertAniNrs(animation_nodes[0], [1])
 
     self.assertEqual([], files["Unterarm"].findall(".//MeshAnimation"))
     verkn_animation_nodes = files["Unterarm"].findall(".//VerknAnimation")
@@ -338,10 +332,7 @@ class TestLs3Export(unittest.TestCase):
     # Test animation of subset "Schleifstueck" in file "Oberarm"
     animation_nodes = files["Oberarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
-
-    aninrs_nodes = animation_nodes[0].findall("./AniNrs")
-    self.assertEqual(1, len(aninrs_nodes))
-    self.assertEqual("2", aninrs_nodes[0].attrib["AniNr"])
+    self.assertAniNrs(animation_nodes[0], [2])
 
     self.assertEqual([], files["Oberarm"].findall(".//VerknAnimation"))
     mesh_animation_nodes = files["Oberarm"].findall(".//MeshAnimation")
@@ -362,12 +353,9 @@ class TestLs3Export(unittest.TestCase):
     animationNodes = mainfile.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animationNodes))
 
-    aniNrsNodes = animationNodes[0].findall("./AniNrs")
-    self.assertEqual(1, len(aniNrsNodes))
-
     # AniNr should be 2 as the second subset is animated (the first subset is not,
     # but we skip it nonetheless in the animation indexing).
-    self.assertEqual("2", aniNrsNodes[0].attrib["AniNr"])
+    self.assertAniNrs(animationNodes[0], [2])
 
     meshAnimationNodes = mainfile.findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(meshAnimationNodes))
@@ -396,10 +384,7 @@ class TestLs3Export(unittest.TestCase):
 
     animationNodes = mainfile.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animationNodes))
-
-    aniNrsNodes = animationNodes[0].findall("./AniNrs")
-    self.assertEqual(1, len(aniNrsNodes))
-    self.assertEqual("1", aniNrsNodes[0].attrib["AniNr"])
+    self.assertAniNrs(animationNodes[0], [1])
 
     meshAnimationNodes = mainfile.findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(meshAnimationNodes))
@@ -567,6 +552,21 @@ class TestLs3Export(unittest.TestCase):
 
     action.zusi_animation_duration = 0
     self.assertAlmostEqual(0, action.zusi_animation_speed, places = 6)
+
+  def test_animation_names(self):
+    self.open("animation_names")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    animation_nodes = mainfile.findall("./Landschaft/Animation")
+    self.assertEqual(3, len(animation_nodes))
+
+    self.assertEqual("Hp0-Hp1", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[0], [1])
+
+    self.assertEqual("Hp0-Hp2", animation_nodes[1].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[1], [1, 2])
+
+    self.assertEqual("Track curvature at front of vehicle", animation_nodes[2].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[2], [3])
 
   def test_dont_export_animation(self):
     self.open("animation3")
