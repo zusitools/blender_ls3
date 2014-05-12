@@ -886,9 +886,9 @@ class Ls3Exporter:
             landschaftNode.appendChild(lsbNode)
 
         # Write XML document to file
-        fp = open(filepath, 'w')
         print('Exporting %s' % filepath)
-        fp.write(self.xmldoc.documentElement.toprettyxml())
+        with open(filepath, 'wb') as fp:
+            fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8"))
 
         print("Bounding radius: %d m" % int(ceil(ls3file.boundingr)))
 

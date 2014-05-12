@@ -132,6 +132,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual({}, root[1].attrib)
     self.assertEqual(0, len(root[1]))
 
+  def test_xml_declaration(self):
+    mainfile = self.export()
+    xmldecl = b'<?xml version="1.0" encoding="UTF-8"?>'
+    self.assertEqual(xmldecl, mainfile.read()[:len(xmldecl)])
+
   def test_export_simple_cube(self):
     root = self.export_and_parse()
 
