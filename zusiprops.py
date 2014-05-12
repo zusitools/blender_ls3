@@ -736,11 +736,32 @@ bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
     min = 0.0
 )
 
-bpy.types.Action.zusi_animation_wheel_diameter = property(
-    get_zusi_animation_wheel_diameter, set_zusi_animation_wheel_diameter)
+if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+    bpy.types.Action.zusi_animation_wheel_diameter = property(
+        get_zusi_animation_wheel_diameter, set_zusi_animation_wheel_diameter)
 
-bpy.types.Action.zusi_animation_duration = property(
-    get_zusi_animation_duration, set_zusi_animation_duration)
+    bpy.types.Action.zusi_animation_duration = property(
+        get_zusi_animation_duration, set_zusi_animation_duration)
+else:
+    bpy.types.Action.zusi_animation_wheel_diameter = bpy.props.FloatProperty(
+        name = "Wheel diameter",
+        description = "The animation speed converted into a wheel diameter for wheel animations",
+        subtype = "DISTANCE",
+        default = 0.0,
+        min = 0.0,
+        get = get_zusi_animation_wheel_diameter,
+        set = set_zusi_animation_wheel_diameter
+    )
+
+    bpy.types.Action.zusi_animation_duration = bpy.props.FloatProperty(
+        name = "Animation duration",
+        description = "The animation speed converted into an animation duration (in seconds) for door animations",
+        subtype = "TIME",
+        default = 0.0,
+        min = 0.0,
+        get = get_zusi_animation_duration,
+        set = set_zusi_animation_duration
+    )
 
 bpy.types.Action.zusi_animation_names = bpy.props.CollectionProperty(
     name = "Animation names",
@@ -1170,12 +1191,18 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             row.prop(action, "zusi_animation_speed")
             if action.zusi_animation_type in ["2", "3", "4", "5"]:
                 row = layout.row()
-                row.label("Wheel diameter: %.2f m" % action.zusi_animation_wheel_diameter)
-                row.operator("action.set_zusi_animation_wheel_diameter", text = "Set").action_name = action.name
+                if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+                    row.label("Wheel diameter: %.2f m" % action.zusi_animation_wheel_diameter)
+                    row.operator("action.set_zusi_animation_wheel_diameter", text = "Set").action_name = action.name
+                else:
+                    row.prop(action, "zusi_animation_wheel_diameter")
             elif action.zusi_animation_type in ["12", "13"]:
                 row = layout.row()
-                row.label("Duration: %.2f s" % action.zusi_animation_duration)
-                row.operator("action.set_zusi_animation_duration", text = "Set").action_name = action.name
+                if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+                    row.label("Duration: %.2f s" % action.zusi_animation_duration)
+                    row.operator("action.set_zusi_animation_duration", text = "Set").action_name = action.name
+                else:
+                    row.prop(action, "zusi_animation_duration")
             elif action.zusi_animation_type == "0":
                 box = layout.box()
                 box.row().label(text = "Part of the following animations:")
