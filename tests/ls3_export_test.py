@@ -137,6 +137,27 @@ class TestLs3Export(unittest.TestCase):
     xmldecl = b'<?xml version="1.0" encoding="UTF-8"?>'
     self.assertEqual(xmldecl, mainfile.read()[:len(xmldecl)])
 
+  def test_line_endings(self):
+    self.clear_scene()
+    xmldecl = b'<?xml version="1.0" encoding="UTF-8"?>'
+
+    oldlinesep = os.linesep
+    try:
+      os.linesep = '\n'
+      mainfile = self.export()
+      contents = mainfile.read()
+      self.assertNotIn(b'\r', contents)
+      lines = contents.decode().split('\n')
+      self.assertEqual(6, len(lines))
+
+      os.linesep = '\r\n'
+      mainfile = self.export()
+      contents = mainfile.read()
+      lines = contents.decode().split('\r\n')
+      self.assertEqual(6, len(lines))
+    finally:
+      os.linesep = oldlinesep
+
   def test_export_simple_cube(self):
     root = self.export_and_parse()
 

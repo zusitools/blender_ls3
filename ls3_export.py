@@ -888,7 +888,7 @@ class Ls3Exporter:
         # Write XML document to file
         print('Exporting %s' % filepath)
         with open(filepath, 'wb') as fp:
-            fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8"))
+            fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep))
 
         print("Bounding radius: %d m" % int(ceil(ls3file.boundingr)))
 
