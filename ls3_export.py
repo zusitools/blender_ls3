@@ -559,15 +559,18 @@ class Ls3Exporter:
                 else:
                     rot_euler = rot.to_matrix().to_euler('XYZ')
                 previous_rotation = rot_euler
-                rotation = rot_euler.to_quaternion()
+
+                # Convert rotation into Zusi's coordinate system.
+                rot_euler_swapped = Euler((-rot_euler.y, rot_euler.x, rot_euler.z))
+                rotation = rot_euler_swapped.to_quaternion()
 
                 rotationNode = (None if rotation == Vector((0.0, 0.0, 0.0, 0.0))
                     else self.xmldoc.createElement("q"))
                 if rotationNode is not None:
                     if rotation.x != 0.0:
-                        rotationNode.setAttribute("Y", str(rotation.x))
+                        rotationNode.setAttribute("X", str(rotation.x))
                     if rotation.y != 0.0:
-                        rotationNode.setAttribute("X", str(rotation.y))
+                        rotationNode.setAttribute("Y", str(rotation.y))
                     if rotation.z != 0.0:
                         rotationNode.setAttribute("Z", str(rotation.z))
                     if rotation.w != 0.0:

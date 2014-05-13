@@ -636,6 +636,22 @@ class TestLs3Export(unittest.TestCase):
     # Should not crash during export.
     self.export_and_parse({"exportAnimations" : True})
 
+  def test_animation_rotation_axes(self):
+    self.open("animation9")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+
+    mesh_animation_nodes = mainfile.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(3, len(mesh_animation_nodes))
+
+    ani_frames = [node.findall("./AniPunkt") for node in mesh_animation_nodes]
+
+    self.assertRotation(ani_frames[0][0].find("q"), 0, 0, 0, 1)
+    self.assertRotation(ani_frames[0][1].find("q"), 0, .707107, 0, .707107)
+    self.assertRotation(ani_frames[1][0].find("q"), 0, 0, 0, 1)
+    self.assertRotation(ani_frames[1][1].find("q"), -.707107, 0, 0, .707107)
+    self.assertRotation(ani_frames[2][0].find("q"), 0, 0, 0, 1)
+    self.assertRotation(ani_frames[2][1].find("q"), 0, 0, .707107, .707107)
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})
