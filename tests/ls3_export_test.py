@@ -631,6 +631,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotEqual("", animation_nodes[0].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[0], [1])
 
+  def test_animation_with_constraints_only(self):
+    self.open("animation8")
+    # Should not crash during export.
+    self.export_and_parse({"exportAnimations" : True})
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})

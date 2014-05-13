@@ -66,7 +66,8 @@ def get_children_recursive(ob):
     return result
 
 def get_animation(ob):
-    """Returns the action controlling the animation of the specified object (or None)"""
+    """Returns the action controlling the animation of the specified object,
+    or None if the object's animation is not controlled by an action."""
     if ob.animation_data is not None and ob.animation_data.action is not None:
         return ob.animation_data.action
     if len(ob.constraints) > 0 and ob.parent is not None:
@@ -224,7 +225,7 @@ class Ls3Exporter:
     def is_animated(self, ob):
         return self.config.exportAnimations and (
              ob.animation_data is not None and ob.animation_data.action is not None \
-             or len(ob.constraints) > 0)
+             or (len(ob.constraints) > 0 and get_animation(ob) is not None))
 
     # Returns a list of the active texture slots of the given material.
     def get_active_texture_slots(self, material):
