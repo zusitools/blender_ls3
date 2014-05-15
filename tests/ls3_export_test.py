@@ -663,6 +663,13 @@ class TestLs3Export(unittest.TestCase):
     for p_node in subset.findall("./Vertex/p"):
       self.assertAlmostEqual(1, abs(float(p_node.attrib["Z"])))
 
+  def test_animation_parent_name(self):
+    self.open("animation_parent_name")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    # CubeC is parent of CubeB, which is parent of CubeA.
+    # We should therefore have only one link in the main file.
+    self.assertEqual(1, len(mainfile.findall("./Landschaft/Verknuepfte")))
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})

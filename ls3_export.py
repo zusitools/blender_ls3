@@ -591,7 +591,9 @@ class Ls3Exporter:
         main_file.objects = set(self.config.context.scene.objects.values())
         main_file.is_main_file = True
         work_list = [main_file]
-        result = [main_file]
+
+        # The resulting files are indexed by their root object. The main file is the only file without a root object.
+        result = { None : main_file }
 
         while len(work_list):
             cur_file = work_list.pop()
@@ -599,7 +601,7 @@ class Ls3Exporter:
             # If there is an object which needs its own file, we "split" this object and its descendants
             # into a separate file.
             splitobj = None
-            for ob in cur_file.objects:
+            for ob in sorted(cur_file.objects, key = lambda ob: ob.name):
                 if ob != cur_file.root_obj and self.must_start_new_file(ob):
                     splitobj = ob
                     break
@@ -607,21 +609,25 @@ class Ls3Exporter:
             if splitobj is not None:
                 # Place this object and all its children into a new file.
                 new_file = Ls3File()
-                new_file.filename = basename + "_" + ob.name + ext
-                new_file.root_obj = ob
-                new_file.objects = set([ob])
-                new_file.objects |= get_children_recursive(ob)
+                new_file.filename = basename + "_" + splitobj.name + ext
+                new_file.root_obj = splitobj
+                new_file.objects = set([splitobj])
+                new_file.objects |= get_children_recursive(splitobj)
                 new_file.is_main_file = False
 
                 cur_file.objects -= new_file.objects
-                cur_file.linked_files.append(new_file)
                 work_list.append(new_file)
-                result.append(new_file)
+                result[splitobj] = new_file
                 work_list.append(cur_file) # needs more work, splitobj might not have been the only splitting object!
 
-        for ls3file in result:
+        # Get subsets and create linked file relation according to parent relation.
+        for root_obj, ls3file in result.items():
             ls3file.subsets = self.get_subsets(ls3file)
-        return result
+            if ls3file.root_obj is not None:
+                result[ls3file.root_obj.parent].linked_files.append(ls3file)
+
+        # Main file is the first item in the list.
+        return [result[None]] + [ls3file for ls3file in result.values() if ls3file.root_obj is not None]
 
     # Build list of subsets from a file's objects. The subsets are ordered by name.
     def get_subsets(self, ls3file):
