@@ -5,25 +5,29 @@ import tempfile
 import unittest
 
 class TestLs3Import(unittest.TestCase):
+  @classmethod
+  def setUpClass(cls):
+    # Copy test LS3 files into temporary directory.
+    cls._tempdir = tempfile.mkdtemp()
+    shutil.copytree("ls3s", os.path.join(cls._tempdir, "ls3s"))
+
+  @classmethod
+  def tearDownClass(cls):
+    shutil.rmtree(cls._tempdir)
+
   def setUp(self):
+    # Clear scene.
     bpy.ops.wm.read_homefile()
     for ob in bpy.context.scene.objects:
       bpy.context.scene.objects.unlink(ob)
       bpy.data.objects.remove(ob)
     bpy.context.scene.update()
 
-    # Copy test LS3 files into temporary directory.
-    self.tempdir = tempfile.mkdtemp()
-    shutil.copytree("ls3s", os.path.join(self.tempdir, "ls3s"))
-
-  def tearDown(self):
-    shutil.rmtree(self.tempdir)
-
   def ls3_import(self, filename, importargs={}):
     bpy.ops.io_import_scene.ls3(bpy.context.copy(),
-      filepath=os.path.join(self.tempdir, "ls3s", filename),
+      filepath=os.path.join(self._tempdir, "ls3s", filename),
       filename=filename,
-      directory=os.path.join(self.tempdir, "ls3s"),
+      directory=os.path.join(self._tempdir, "ls3s"),
       **importargs)
 
   def assertColorEqual(self, expected, actual):

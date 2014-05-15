@@ -6,21 +6,26 @@ import unittest
 import xml.etree.ElementTree as ET
 
 class TestLs3Export(unittest.TestCase):
+  @classmethod
+  def setUpClass(cls):
+    # Copy test blend files into temporary directory.
+    cls._tempdir = tempfile.mkdtemp()
+    shutil.copytree("blends", os.path.join(cls._tempdir, "blends"))
+
+  @classmethod
+  def tearDownClass(cls):
+    shutil.rmtree(cls._tempdir)
+
   def setUp(self):
     bpy.ops.wm.read_homefile()
-
-    # Copy test blend files into temporary directory
     self.tempfiles = []
-    self.tempdir = tempfile.mkdtemp()
-    shutil.copytree("blends", os.path.join(self.tempdir, "blends"))
 
   def tearDown(self):
     for tempfile in self.tempfiles:
       tempfile.close()
-    shutil.rmtree(self.tempdir)
 
   def open(self, filename):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self.tempdir, "blends", filename + ".blend"))
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self._tempdir, "blends", filename + ".blend"))
 
   def clear_scene(self):
     for ob in bpy.context.scene.objects:
