@@ -652,6 +652,17 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(ani_frames[2][0].find("q"), 0, 0, 0, 1)
     self.assertRotation(ani_frames[2][1].find("q"), 0, 0, .707107, .707107)
 
+  def test_animation_parenting_scale(self):
+    self.open("animation_parenting_scale")
+    linkedfile = self.export_and_parse_multiple(["Cube"])[2]["Cube"]
+
+    # There are two Cubes with the same material; one is the parent of the other.
+    # The child cube has a scale of 0.5, but is not animated. The cubes should
+    # be exported into one subset and the scale should be correctly applied.
+    subset = linkedfile.find("./Landschaft/SubSet")
+    for p_node in subset.findall("./Vertex/p"):
+      self.assertAlmostEqual(1, abs(float(p_node.attrib["Z"])))
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})

@@ -283,12 +283,12 @@ class Ls3Exporter:
             # are global coordinates. Also recalculate the vertex normals.
             mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
 
-            # Apply the object's transformation only for subsets which are not root subsets of their file
-            # (for the root subsets, the transformation will be written into the link in the parent file).
+            # Apply the object's transformation only for if the object does not define the root subsets of its file
+            # (else the transformation will be written into the link in the parent file).
             # For animated subsets, apply only the scale part (the translation and rotation part will be
             # written as part of the animation).
             if self.config.exportAnimations:
-                if not is_root_subset(subset, ls3file):
+                if ob != ls3file.root_obj:
                     if ob == subset.animated_obj:
                         # TODO: Warn if scaling is animated (Zusi does not support this and the export result
                         # will depend on the current frame.
