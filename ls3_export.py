@@ -583,9 +583,9 @@ class Ls3Exporter:
     def get_files(self):
         split_file_name = self.config.fileName.split(os.extsep, 1)
         if len(split_file_name) > 1:
-          basename, ext = split_file_name[0], (os.extsep + split_file_name[1])
+            basename, ext = split_file_name[0], (os.extsep + split_file_name[1])
         else:
-          basename, ext = split_file_name[0], ""
+            basename, ext = split_file_name[0], ""
         main_file = Ls3File()
         main_file.filename = self.config.fileName
         main_file.objects = set(self.config.context.scene.objects.values())
