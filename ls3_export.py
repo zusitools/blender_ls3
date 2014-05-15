@@ -747,7 +747,7 @@ class Ls3Exporter:
             landschaftNode.appendChild(verknuepfteNode)
 
             translation = linked_file.root_obj.matrix_local.to_translation()
-            rotation = linked_file.root_obj.matrix_local.to_euler()
+            rotation = linked_file.root_obj.matrix_local.to_euler('YXZ')
             scale = linked_file.root_obj.matrix_local.to_scale()
             max_scale_factor = max(scale.x, scale.y, scale.z)
 

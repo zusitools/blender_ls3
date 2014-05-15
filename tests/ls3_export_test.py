@@ -675,6 +675,12 @@ class TestLs3Export(unittest.TestCase):
     # We should therefore have only one link in the main file.
     self.assertEqual(1, len(mainfile.findall("./Landschaft/Verknuepfte")))
 
+  def test_subset_rotation_without_animation(self):
+    self.open("subset_rotation")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    phi_node = mainfile.find("./Landschaft/Verknuepfte/phi")
+    self.assertXYZ(phi_node, -.194957, -.489116, .397863)
+
   def test_dont_export_animation(self):
     self.open("animation3")
     mainfile = self.export_and_parse({"exportAnimations" : False})
