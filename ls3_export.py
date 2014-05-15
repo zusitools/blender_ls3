@@ -93,8 +93,8 @@ def has_location_animation(action):
 def has_rotation_animation(action):
     return action is not None and any([fcurve.data_path.startswith("rotation") for fcurve in action.fcurves])
 
-def is_root_subset(sub, ls3file):
-    return ls3file.root_obj in sub.objects
+def is_root_subset(subset, ls3file):
+    return ls3file.root_obj in subset.objects
 
 # Returns a set of all animations of objects in this file and linked files.
 def get_animations_recursive(ls3file, include_root = False):
@@ -794,9 +794,9 @@ class Ls3Exporter:
         # Collect mesh animations and linked animations as tuples (ani no., subset/linked file).
         # The root subset of a file is not animated via a subset animation, but rather via a
         # linked animation in the parent file.
-        animated_subsets = [(idx + 1, sub)
-            for (idx, sub) in enumerate(ls3file.subsets)
-            if sub.animated_obj is not None and not is_root_subset(sub, ls3file)]
+        animated_subsets = [(idx + 1, subset)
+            for (idx, subset) in enumerate(ls3file.subsets)
+            if subset.animated_obj is not None and not is_root_subset(subset, ls3file)]
         animated_linked_files = [(idx + len(animated_subsets) + 1, linked)
             for (idx, linked) in enumerate(ls3file.linked_files)
             if self.is_animated(linked_file.root_obj)]
@@ -856,15 +856,15 @@ class Ls3Exporter:
         # Write animation definitions for subsets and links in this file.
 
         # Write mesh subset animations.
-        for aninr, sub in animated_subsets:
+        for aninr, subset in animated_subsets:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
-            meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(sub)))
+            meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(subset)))
             meshAnimationNode.setAttribute("AniGeschw", str(get_animation(subset.animated_obj).zusi_animation_speed))
             landschaftNode.appendChild(meshAnimationNode)
-            translation_length = self.write_animation(sub.animated_obj, meshAnimationNode,
-                write_translation = sub.animated_obj != ls3file.root_obj,
-                write_rotation = sub.animated_obj != ls3file.root_obj)
+            translation_length = self.write_animation(subset.animated_obj, meshAnimationNode,
+                write_translation = subset.animated_obj != ls3file.root_obj,
+                write_rotation = subset.animated_obj != ls3file.root_obj)
             ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
 
         # Write linked animations.
