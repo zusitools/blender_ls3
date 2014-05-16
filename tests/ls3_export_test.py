@@ -92,7 +92,7 @@ class TestLs3Export(unittest.TestCase):
 
     return basename, ext, result
 
-  def assertRotation(self, node, expected_x, expected_y, expected_z, expected_w):
+  def assertXYZW(self, node, expected_x, expected_y, expected_z, expected_w):
     self.assertXYZ(node, expected_x, expected_y, expected_z)
     if expected_w != 0.0 or "W" in node.attrib:
       self.assertAlmostEqual(expected_w, float(node.attrib["W"]), places = 5)
@@ -278,11 +278,11 @@ class TestLs3Export(unittest.TestCase):
     q_nodes = verkn_animation_node.findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
-    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
-    self.assertRotation(q_nodes[1], 0, 0.707107, 0, 0.707107)
-    self.assertRotation(q_nodes[2], 0, 1, 0, 0)
-    self.assertRotation(q_nodes[3], 0, 0.707107, 0, -0.707107)
-    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
+    self.assertXYZW(q_nodes[0], 0, 0, 0, 1)
+    self.assertXYZW(q_nodes[1], 0, 0.707107, 0, 0.707107)
+    self.assertXYZW(q_nodes[2], 0, 1, 0, 0)
+    self.assertXYZW(q_nodes[3], 0, 0.707107, 0, -0.707107)
+    self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
     # Check linked file #1.
     # Check for correct <VerknAnimation> node.
@@ -300,11 +300,11 @@ class TestLs3Export(unittest.TestCase):
     q_nodes = mesh_animation_node.findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
-    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
-    self.assertRotation(q_nodes[1], 0, -0.707107, 0, 0.707107)
-    self.assertRotation(q_nodes[2], 0, -1, 0, 0)
-    self.assertRotation(q_nodes[3], 0, -0.707107, 0, -0.707107)
-    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
+    self.assertXYZW(q_nodes[0], 0, 0, 0, 1)
+    self.assertXYZW(q_nodes[1], 0, -0.707107, 0, 0.707107)
+    self.assertXYZW(q_nodes[2], 0, -1, 0, 0)
+    self.assertXYZW(q_nodes[3], 0, -0.707107, 0, -0.707107)
+    self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
     # Check subset.
     # There should be 4 vertices, all of which have the Y coordinate 0 (because
@@ -397,11 +397,11 @@ class TestLs3Export(unittest.TestCase):
     q_nodes = meshAnimationNodes[0].findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
-    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
-    self.assertRotation(q_nodes[1], 0, 0, 0.707107, 0.707107)
-    self.assertRotation(q_nodes[2], 0, 0, 1, 0)
-    self.assertRotation(q_nodes[3], 0, 0, 0.707107, -0.707107)
-    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
+    self.assertXYZW(q_nodes[0], 0, 0, 0, 1)
+    self.assertXYZW(q_nodes[1], 0, 0, 0.707107, 0.707107)
+    self.assertXYZW(q_nodes[2], 0, 0, 1, 0)
+    self.assertXYZW(q_nodes[3], 0, 0, 0.707107, -0.707107)
+    self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
   def test_subset_animation_rotation_with_offset(self):
     self.open("animation5")
@@ -431,11 +431,11 @@ class TestLs3Export(unittest.TestCase):
     q_nodes = meshAnimationNodes[0].findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
-    self.assertRotation(q_nodes[0], 0, 0, 0, 1)
-    self.assertRotation(q_nodes[1], 0, 0, 0.707107, 0.707107)
-    self.assertRotation(q_nodes[2], 0, 0, 1, 0)
-    self.assertRotation(q_nodes[3], 0, 0, 0.707107, -0.707107)
-    self.assertRotation(q_nodes[4], 0, 0, 0, -1)
+    self.assertXYZW(q_nodes[0], 0, 0, 0, 1)
+    self.assertXYZW(q_nodes[1], 0, 0, 0.707107, 0.707107)
+    self.assertXYZW(q_nodes[2], 0, 0, 1, 0)
+    self.assertXYZW(q_nodes[3], 0, 0, 0.707107, -0.707107)
+    self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
   def test_scaled_nonanimated_subset(self):
     self.open("animation7")
@@ -650,12 +650,12 @@ class TestLs3Export(unittest.TestCase):
 
     ani_frames = [node.findall("./AniPunkt") for node in mesh_animation_nodes]
 
-    self.assertRotation(ani_frames[0][0].find("q"), 0, 0, 0, 1)
-    self.assertRotation(ani_frames[0][1].find("q"), 0, .707107, 0, .707107)
-    self.assertRotation(ani_frames[1][0].find("q"), 0, 0, 0, 1)
-    self.assertRotation(ani_frames[1][1].find("q"), -.707107, 0, 0, .707107)
-    self.assertRotation(ani_frames[2][0].find("q"), 0, 0, 0, 1)
-    self.assertRotation(ani_frames[2][1].find("q"), 0, 0, .707107, .707107)
+    self.assertXYZW(ani_frames[0][0].find("q"), 0, 0, 0, 1)
+    self.assertXYZW(ani_frames[0][1].find("q"), 0, .707107, 0, .707107)
+    self.assertXYZW(ani_frames[1][0].find("q"), 0, 0, 0, 1)
+    self.assertXYZW(ani_frames[1][1].find("q"), -.707107, 0, 0, .707107)
+    self.assertXYZW(ani_frames[2][0].find("q"), 0, 0, 0, 1)
+    self.assertXYZW(ani_frames[2][1].find("q"), 0, 0, .707107, .707107)
 
   def test_animation_rotation_axes_linked(self):
     self.open("animation_linked_rotation")
@@ -665,15 +665,15 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(verkn_animation_nodes))
 
     ani_frames = verkn_animation_nodes[0].findall("./AniPunkt")
-    self.assertRotation(ani_frames[0].find("q"), 0, -0.258819, 0, 0.965925)
-    self.assertRotation(ani_frames[1].find("q"), -0.707106, 0, 0, 0.707107)
+    self.assertXYZW(ani_frames[0].find("q"), 0, -0.258819, 0, 0.965925)
+    self.assertXYZW(ani_frames[1].find("q"), -0.707106, 0, 0, 0.707107)
 
     mesh_animation_nodes = files["RotY"].findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(mesh_animation_nodes))
 
     ani_frames = mesh_animation_nodes[0].findall("./AniPunkt")
-    self.assertRotation(ani_frames[0].find("q"), 0.408218, 0.2345697, -0.109381, 0.875426)
-    self.assertRotation(ani_frames[1].find("q"), 0.365998, -0.4531538, 0.2113099, 0.784885)
+    self.assertXYZW(ani_frames[0].find("q"), 0.408218, 0.2345697, -0.109381, 0.875426)
+    self.assertXYZW(ani_frames[1].find("q"), 0.365998, -0.4531538, 0.2113099, 0.784885)
 
   def test_animation_parenting_scale(self):
     self.open("animation_parenting_scale")
