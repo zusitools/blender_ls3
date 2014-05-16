@@ -130,15 +130,24 @@ class Ls3File:
         self.root_obj = None
 
 # Stores information about one subset of a LS3 file.
+#     name: The name of the subset (internal to the exporter).
 #     material: The Blender material of this subset.
 #     objects: The objects to include in this subset.
 #     animated_obj: The object that defines this subset's animation, or None.
+#     boundingr: The bounding radius of this subset.
 class Ls3Subset:
     def __init__(self):
+        self.name = ""
         self.material = None
         self.objects = []
         self.animated_obj = None
         self.boundingr = 0
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 
 # Container for the exporter settings
 class Ls3ExporterSettings:
@@ -670,6 +679,7 @@ class Ls3Exporter:
                     # Create new subset object and write the material.
                     if subset_name not in subset_dict:
                         new_subset = Ls3Subset()
+                        new_subset.name = subset_name
                         new_subset.material = mat
                         new_subset.animated_obj = ob if self.is_animated(ob) else None
                         subset_dict[subset_name] = new_subset
