@@ -657,6 +657,24 @@ class TestLs3Export(unittest.TestCase):
     self.assertRotation(ani_frames[2][0].find("q"), 0, 0, 0, 1)
     self.assertRotation(ani_frames[2][1].find("q"), 0, 0, .707107, .707107)
 
+  def test_animation_rotation_axes_linked(self):
+    self.open("animation_linked_rotation")
+    files = self.export_and_parse_multiple(["RotY"])[2]
+
+    verkn_animation_nodes = files[""].findall("./Landschaft/VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+
+    ani_frames = verkn_animation_nodes[0].findall("./AniPunkt")
+    self.assertRotation(ani_frames[0].find("q"), 0, -0.258819, 0, 0.965925)
+    self.assertRotation(ani_frames[1].find("q"), -0.707106, 0, 0, 0.707107)
+
+    mesh_animation_nodes = files["RotY"].findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+
+    ani_frames = mesh_animation_nodes[0].findall("./AniPunkt")
+    self.assertRotation(ani_frames[0].find("q"), 0.408218, 0.2345697, -0.109381, 0.875426)
+    self.assertRotation(ani_frames[1].find("q"), 0.365998, -0.4531538, 0.2113099, 0.784885)
+
   def test_animation_parenting_scale(self):
     self.open("animation_parenting_scale")
     linkedfile = self.export_and_parse_multiple(["Cube"])[2]["Cube"]

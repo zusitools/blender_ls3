@@ -555,9 +555,9 @@ class Ls3Exporter:
             if write_rotation:
                 # Make rotation Euler compatible with the previous frame to prevent axis flipping.
                 if previous_rotation is not None:
-                    rot_euler = rot.to_matrix().to_euler('XYZ', previous_rotation)
+                    rot_euler = rot.to_matrix().to_euler('YXZ', previous_rotation)
                 else:
-                    rot_euler = rot.to_matrix().to_euler('XYZ')
+                    rot_euler = rot.to_matrix().to_euler('YXZ')
                 previous_rotation = rot_euler
 
                 # Convert rotation into Zusi's coordinate system.
