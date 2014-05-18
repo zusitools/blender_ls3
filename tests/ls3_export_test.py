@@ -638,8 +638,19 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_with_constraints_only(self):
     self.open("animation8")
-    # Should not crash during export.
-    self.export_and_parse({"exportAnimations" : True})
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+
+    # The subset "Treibstange" should be animated and have the animation
+    # type of the "Raddrehung" empty.
+    animation_node = mainfile.find("./Landschaft/Animation")
+    self.assertEqual("5", animation_node.attrib["AniID"])
+    ani_nrs_nodes = animation_node.findall("AniNrs")
+    self.assertEqual(2, len(ani_nrs_nodes))
+    self.assertNotEqual(None, animation_node.find("./AniNrs[@AniNr='1']"))
+
+    mesh_animation_nodes = mainfile.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+    self.assertEqual("1", mesh_animation_nodes[0].attrib["AniNr"])
 
   def test_animation_rotation_axes(self):
     self.open("animation9")
