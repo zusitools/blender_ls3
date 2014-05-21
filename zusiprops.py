@@ -852,7 +852,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             diffuse_color = mat.diffuse_color * mat.diffuse_intensity
             if mat.zusi_use_emit:
                 emit_color = mat.zusi_emit_color
-                ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else Color((1, 1, 1))
+                ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else mathutils.Color((1, 1, 1))
                 if emit_color.r > diffuse_color.r or emit_color.g > diffuse_color.g or emit_color.b > diffuse_color.b \
                         or emit_color.r > ambient_color.r or emit_color.g > ambient_color.g or emit_color.b > ambient_color.b:
                     layout.row().label(text = "Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components."
