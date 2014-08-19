@@ -719,6 +719,15 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual([], mainfile.findall(".//Animation"))
     self.assertEqual(1, len(mainfile.findall("./Landschaft/SubSet")))
 
+  def test_zbias(self):
+    self.open("zbias")
+    mainfile = self.export_and_parse()
+    subsets = mainfile.findall("./Landschaft/SubSet")
+    self.assertEqual('-1', subsets[0].attrib["zBias"])
+    self.assertNotIn("zBias", subsets[1].attrib)
+    self.assertEqual('1', subsets[2].attrib["zBias"])
+    self.assertEqual('1', subsets[3].attrib["zBias"])
+
   def test_boundingr(self):
     self.open("boundingr")
     basename, ext, files = self.export_and_parse_multiple(["Planet", "Mond"])

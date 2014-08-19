@@ -165,8 +165,8 @@ class Ls3Exporter:
         # Initialize map of Blender Z bias values (float) to integer values
         # e.g. if values (-0.1, -0.05, 0, 0.1) appear in the scene, they will be
         # mapped to (-2, -1, 0, 1).
-        zbiases_pos = sorted([mat.offset_z for mat in bpy.data.materials if mat.offset_z > 0])
-        zbiases_neg = sorted([mat.offset_z for mat in bpy.data.materials if mat.offset_z < 0], reverse = True)
+        zbiases_pos = sorted(set([mat.offset_z for mat in bpy.data.materials if mat.offset_z > 0]))
+        zbiases_neg = sorted(set([mat.offset_z for mat in bpy.data.materials if mat.offset_z < 0]), reverse = True)
 
         self.z_bias_map = { 0.0 : 0 }
         self.z_bias_map.update(dict((value, idx + 1) for idx, value in enumerate(zbiases_pos)))
