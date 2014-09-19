@@ -115,6 +115,14 @@ class TestLs3Export(unittest.TestCase):
     aninrs_nodes = animation_node.findall("./AniNrs")
     self.assertEqual(set(ani_nrs), set([int(node.attrib["AniNr"]) for node in aninrs_nodes]))
 
+  # ---
+  # TESTS START HERE
+  # ---
+
+  # ---
+  # File structure tests
+  # ---
+
   def test_export_empty(self):
     self.clear_scene()
     root = self.export_and_parse()
@@ -162,6 +170,10 @@ class TestLs3Export(unittest.TestCase):
       self.assertEqual(6, len(lines))
     finally:
       os.linesep = oldlinesep
+
+  # ---
+  # Mesh and texture export tests
+  # ---
 
   def test_export_simple_cube(self):
     root = self.export_and_parse()
@@ -221,12 +233,98 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
+  def test_night_color(self):
+    self.open("nightcolor")
+    root = self.export_and_parse()
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(4, len(subsets))
+
+    # Subset 1 has no night color, C (diffuse) is white.
+    self.assertEqual("0FFFFFFFF", subsets[0].attrib["C"])
+    self.assertNotIn("E", subsets[0].attrib)
+
+    # Subset 2 has a night color of black and a day color of white.
+    # It will be black at night and white by day.
+    self.assertEqual("0FFFFFFFF", subsets[1].attrib["C"])
+    self.assertEqual("000000000", subsets[1].attrib["E"])
+
+    # Subset 3 has a night color of white and a day color of gray.
+    # This does not work in Zusi's lighting model (night color must be darker),
+    # so we adjust the night color accordingly (to be gray, too).
+    self.assertEqual("0FF000000", subsets[2].attrib["C"])
+    self.assertEqual("000808080", subsets[2].attrib["E"])
+
+    # Subset 4 allows overexposure and therefore has a (theoretical)
+    # day color of RGB(510, 510, 510).
+    self.assertEqual("0FFFFFFFF", subsets[3].attrib["C"])
+    self.assertEqual("000FFFFFF", subsets[3].attrib["E"])
+
+  def test_ambient_color(self):
+    self.open("ambientcolor")
+    root = self.export_and_parse()
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(4, len(subsets))
+
+    # Subset 1 has a diffuse color of white and an ambient color of gray.
+    self.assertEqual("0FFFFFFFF", subsets[0].attrib["C"])
+    self.assertEqual("0FF808080", subsets[0].attrib["CA"])
+    self.assertNotIn("E", subsets[0].attrib)
+
+    # Subset 2 has a diffuse color of white and an ambient/night color of gray.
+    self.assertEqual("0FF808080", subsets[1].attrib["C"])
+    self.assertEqual("0FF000000", subsets[1].attrib["CA"])
+    self.assertEqual("000808080", subsets[1].attrib["E"])
+
+    # Subset 3 has a night color that is lighter than the ambient color.
+    # It will be reduced to be darker than both diffuse and ambient color.
+    self.assertEqual("0FF808080", subsets[2].attrib["C"])
+    self.assertEqual("0FF000000", subsets[2].attrib["CA"])
+    self.assertEqual("000808080", subsets[2].attrib["E"])
+
+    # Subset 4 has a night color of gray, an ambient color of white
+    # and a gray ambient overexposure.
+    self.assertEqual("0FF808080", subsets[3].attrib["C"])
+    self.assertEqual("0FFFFFFFF", subsets[3].attrib["CA"])
+    self.assertEqual("000808080", subsets[3].attrib["E"])
+
+  def test_zbias(self):
+    self.open("zbias")
+    mainfile = self.export_and_parse()
+    subsets = mainfile.findall("./Landschaft/SubSet")
+    self.assertEqual('-1', subsets[0].attrib["zBias"])
+    self.assertNotIn("zBias", subsets[1].attrib)
+    self.assertEqual('1', subsets[2].attrib["zBias"])
+    self.assertEqual('1', subsets[3].attrib["zBias"])
+
+  # ---
+  # Variants tests
+  # ---
+
   def test_variants(self):
     self.open("variants")
     root = self.export_and_parse()
 
-  def test_animation_structure_with_constraint(self):
-    self.open("animation1")
+  # Animation tests - Basic
+
+  # Tests that the animation export restores the current frame number.
+  def test_animation_restore_frame_no(self):
+    self.open("animation_multiple_actions")
+    bpy.context.scene.frame_set(5)
+    self.assertEqual(5, bpy.context.scene.frame_current)
+    self.export()
+    self.assertEqual(5, bpy.context.scene.frame_current)
+
+  # ---
+  # Animation tests - File structure
+  # ---
+
+  # RadRotation (Empty, animated via keyframes)
+  # +- Kuppelstange (Mesh, animated via Limit constraint)
+  # => A separate file with the suffix "_RadRotation" is created.
+  def test_animation_structure_child_with_constraint(self):
+    self.open("animation_child_with_constraint")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
     # Test for correct linked file #1.
@@ -254,8 +352,117 @@ class TestLs3Export(unittest.TestCase):
     # No further linked file #2.
     self.assertEqual([], files["RadRotation"].findall("./Landschaft/Verknuepfte"))
 
-  def test_animation_with_constraint(self):
-    self.open("animation1")
+  # RadRotation (Empty, animated via keyframes)
+  # +- Kuppelstange (Mesh, non-animated)
+  # => everything exported into one file.
+  def test_animation_structure_nonanimated_child(self):
+    self.open("animation_nonanimated_child")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+
+    verknuepfte_nodes = mainfile.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(0, len(verknuepfte_nodes))
+
+    verkn_animation_nodes = mainfile.findall("./Landschaft/VerknAnimation")
+    self.assertEqual(0, len(verkn_animation_nodes))
+
+    mesh_animation_nodes = mainfile.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+
+  # Unterarm (Mesh, animated via keyframes)
+  # +- Oberarm (Mesh, animated via keyframes)
+  #    +- Schleifstueck (Mesh, animated via constraint)
+  def test_animation_structure_multiple_actions(self):
+    self.open("animation_multiple_actions")
+    basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm"])
+
+    # Test animation of linked file "Unterarm" in main file.
+    animation_nodes = files[""].findall(".//Animation")
+    self.assertEqual(1, len(animation_nodes))
+    self.assertAniNrs(animation_nodes[0], [2])
+
+    self.assertEqual([], files[""].findall(".//MeshAnimation"))
+    verkn_animation_nodes = files[""].findall(".//VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+    self.assertEqual("2", verkn_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
+
+    # Test animation of linked file "Oberarm" in file "Unterarm"
+    animation_nodes = files["Unterarm"].findall(".//Animation")
+    self.assertEqual(1, len(animation_nodes))
+    self.assertAniNrs(animation_nodes[0], [2])
+
+    self.assertEqual([], files["Unterarm"].findall(".//MeshAnimation"))
+    verkn_animation_nodes = files["Unterarm"].findall(".//VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+    self.assertEqual("2", verkn_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
+
+    # Test animation of subset "Schleifstueck" in file "Oberarm"
+    animation_nodes = files["Oberarm"].findall(".//Animation")
+    self.assertEqual(1, len(animation_nodes))
+    self.assertAniNrs(animation_nodes[0], [2])
+
+    self.assertEqual([], files["Oberarm"].findall(".//VerknAnimation"))
+    mesh_animation_nodes = files["Oberarm"].findall(".//MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+    self.assertEqual("2", mesh_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("1", mesh_animation_nodes[0].attrib["AniIndex"])
+
+  # No animation is exported => no additional files are created
+  def test_dont_export_animation(self):
+    self.open("animation_multiple_actions")
+    mainfile = self.export_and_parse({"exportAnimations" : False})
+    self.assertEqual([], mainfile.findall(".//Verknuepfte"))
+    self.assertEqual([], mainfile.findall(".//VerknAnimation"))
+    self.assertEqual([], mainfile.findall(".//MeshAnimation"))
+    self.assertEqual([], mainfile.findall(".//Animation"))
+    self.assertEqual(1, len(mainfile.findall("./Landschaft/SubSet")))
+
+  def test_animation_subfiles_keep_lod_suffix(self):
+    self.open("animation_multiple_actions")
+    mainfile = self.export({"ext" : ".lod1.ls3", "exportAnimations" : True})
+
+    path, name = os.path.split(mainfile.name)
+    basename, ext = name.split(os.extsep, 1)
+
+    self.assertTrue(os.path.exists(os.path.join(path, basename + "_Unterarm.lod1.ls3")))
+    self.assertTrue(os.path.exists(os.path.join(path, basename + "_Oberarm.lod1.ls3")))
+
+  def test_animation_subfiles_without_extension(self):
+    self.open("animation_multiple_actions")
+    mainfile = self.export({"ext" : "", "exportAnimations" : True})
+    self.assertTrue(os.path.exists(mainfile.name + "_Unterarm"))
+    self.assertTrue(os.path.exists(mainfile.name + "_Oberarm"))
+
+  def test_animation_names(self):
+    self.open("animation_names")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    animation_nodes = mainfile.findall("./Landschaft/Animation")
+    self.assertEqual(3, len(animation_nodes))
+
+    self.assertEqual("Hp0-Hp1", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[0], [1])
+
+    self.assertEqual("Hp0-Hp2", animation_nodes[1].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[1], [1, 2])
+
+    self.assertEqual("Track curvature at front of vehicle", animation_nodes[2].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[2], [3])
+
+  def test_animation_names_id_0(self):
+    self.open("animation_names_id0")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    animation_nodes = mainfile.findall("./Landschaft/Animation")
+    self.assertEqual(1, len(animation_nodes))
+    self.assertNotEqual("", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertAniNrs(animation_nodes[0], [1])
+
+  # ---
+  # Animation tests - Mesh and animation data
+  # ---
+
+  def test_animation_child_with_constraint(self):
+    self.open("animation_child_with_constraint")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
     # Check for correct position of linked file #1.
@@ -266,11 +473,11 @@ class TestLs3Export(unittest.TestCase):
 
     # Check for <AniNrs> node in <Animation> node.
     animation_node = files[""].find("./Landschaft/Animation")
-    self.assertAniNrs(animation_node, [1])
+    self.assertAniNrs(animation_node, [2])
 
     # Check for correct <VerknAnimation> node.
     verkn_animation_node = files[""].find("./Landschaft/VerknAnimation")
-    self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
+    self.assertEqual("2", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
     self.assertKeyframes(verkn_animation_node, [0, 0.25, 0.5, 0.75, 1.0])
@@ -317,59 +524,6 @@ class TestLs3Export(unittest.TestCase):
         places = 5, msg = "Y coordinate of vertex " + str(i))
       self.assertLess(abs(float(vertices[i].attrib["Z"])), 0.1,
         msg = "Z coordinate of vertex " + str(i))
-
-  def test_animation_structure_without_constraint(self):
-    self.open("animation2")
-    basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
-
-    verknuepfte_nodes = files[""].findall("./Landschaft/Verknuepfte")
-    self.assertEqual(1, len(verknuepfte_nodes))
-
-    verkn_animation_nodes = files[""].findall("./Landschaft/VerknAnimation")
-    self.assertEqual(1, len(verkn_animation_nodes))
-
-    # The plane should not be in a separate file, as it animates with its parent
-    # and has no constraint.
-    self.assertEqual([], files["RadRotation"].findall("./Landschaft/Verknuepfte"))
-    self.assertEqual([], files["RadRotation"].findall("./Landschaft/VerknAnimation"))
-    self.assertEqual([], files["RadRotation"].findall("./Landschaft/MeshAnimation"))
-
-  def test_animation_structure_multiple_actions(self):
-    self.open("animation3")
-    basename, ext, files = self.export_and_parse_multiple(["Unterarm", "Oberarm"])
-
-    # Test animation of linked file "Unterarm" in main file.
-    animation_nodes = files[""].findall(".//Animation")
-    self.assertEqual(1, len(animation_nodes))
-    self.assertAniNrs(animation_nodes[0], [1])
-
-    self.assertEqual([], files[""].findall(".//MeshAnimation"))
-    verkn_animation_nodes = files[""].findall(".//VerknAnimation")
-    self.assertEqual(1, len(verkn_animation_nodes))
-    self.assertEqual("1", verkn_animation_nodes[0].attrib["AniNr"])
-    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
-
-    # Test animation of linked file "Oberarm" in file "Unterarm"
-    animation_nodes = files["Unterarm"].findall(".//Animation")
-    self.assertEqual(1, len(animation_nodes))
-    self.assertAniNrs(animation_nodes[0], [1])
-
-    self.assertEqual([], files["Unterarm"].findall(".//MeshAnimation"))
-    verkn_animation_nodes = files["Unterarm"].findall(".//VerknAnimation")
-    self.assertEqual(1, len(verkn_animation_nodes))
-    self.assertEqual("1", verkn_animation_nodes[0].attrib["AniNr"])
-    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
-
-    # Test animation of subset "Schleifstueck" in file "Oberarm"
-    animation_nodes = files["Oberarm"].findall(".//Animation")
-    self.assertEqual(1, len(animation_nodes))
-    self.assertAniNrs(animation_nodes[0], [2])
-
-    self.assertEqual([], files["Oberarm"].findall(".//VerknAnimation"))
-    mesh_animation_nodes = files["Oberarm"].findall(".//MeshAnimation")
-    self.assertEqual(1, len(mesh_animation_nodes))
-    self.assertEqual("2", mesh_animation_nodes[0].attrib["AniNr"])
-    self.assertEqual("1", mesh_animation_nodes[0].attrib["AniIndex"])
 
   def test_subset_animation_rotation(self):
     self.open("animation4")
@@ -437,8 +591,8 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZW(q_nodes[3], 0, 0, 0.707107, -0.707107)
     self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
-  def test_scaled_nonanimated_subset(self):
-    self.open("animation7")
+  def test_animation_animated_child_of_scaled_object(self):
+    self.open("animation_animated_child_of_scaled_object")
     files = self.export_and_parse_multiple(["Cube"])[2]
 
     # Check that the <Verknuepfte> node has correct scaling.
@@ -447,7 +601,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZ(sk_node, 0.5, 0.5, 0.5)
 
     # Check that the animated subset in the linked file has its scaling
-    # applied (relative to the parent subset) and the non-animated subset has not
+    # applied (relative to the parent subset) and the root subset has not
     # (the scale is contained in the <Verknuepfte> node).
     mesh_animation_node = files["Cube"].find("./Landschaft/MeshAnimation")
     animated_subset_index = int(mesh_animation_node.attrib["AniIndex"])
@@ -468,8 +622,8 @@ class TestLs3Export(unittest.TestCase):
       self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Y"])), places = 5)
       self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Z"])), places = 5)
 
-  def test_scaled_nonanimated_subset_without_animation(self):
-    self.open("animation7")
+  def test_animation_animated_child_of_scaled_object_without_animation(self):
+    self.open("animation_animated_child_of_scaled_object")
     mainfile = self.export_and_parse()
 
     subsets = mainfile.findall("./Landschaft/SubSet")
@@ -490,85 +644,10 @@ class TestLs3Export(unittest.TestCase):
       self.assertAlmostEqual(0.25, abs(float(vertices[i].attrib["Y"])), places = 5)
       self.assertAlmostEqual(0.25, abs(float(vertices[i].attrib["Z"])), places = 5)
 
-  def test_animation_restore_frame_no(self):
-    self.open("animation3")
-    bpy.context.scene.frame_set(5)
-    self.assertEqual(5, bpy.context.scene.frame_current)
-    self.export()
-    self.assertEqual(5, bpy.context.scene.frame_current)
-
-  def test_night_color(self):
-    self.open("nightcolor")
-    root = self.export_and_parse()
-
-    subsets = root.findall("./Landschaft/SubSet")
-    self.assertEqual(4, len(subsets))
-
-    # Subset 1 has no night color, C (diffuse) is white.
-    self.assertEqual("0FFFFFFFF", subsets[0].attrib["C"])
-    self.assertNotIn("E", subsets[0].attrib)
-
-    # Subset 2 has a night color of black and a day color of white.
-    # It will be black at night and white by day.
-    self.assertEqual("0FFFFFFFF", subsets[1].attrib["C"])
-    self.assertEqual("000000000", subsets[1].attrib["E"])
-
-    # Subset 3 has a night color of white and a day color of gray.
-    # This does not work in Zusi's lighting model (night color must be darker),
-    # so we adjust the night color accordingly (to be gray, too).
-    self.assertEqual("0FF000000", subsets[2].attrib["C"])
-    self.assertEqual("000808080", subsets[2].attrib["E"])
-
-    # Subset 4 allows overexposure and therefore has a (theoretical)
-    # day color of RGB(510, 510, 510).
-    self.assertEqual("0FFFFFFFF", subsets[3].attrib["C"])
-    self.assertEqual("000FFFFFF", subsets[3].attrib["E"])
-
-  def test_ambient_color(self):
-    self.open("ambientcolor")
-    root = self.export_and_parse()
-
-    subsets = root.findall("./Landschaft/SubSet")
-    self.assertEqual(4, len(subsets))
-
-    # Subset 1 has a diffuse color of white and an ambient color of gray.
-    self.assertEqual("0FFFFFFFF", subsets[0].attrib["C"])
-    self.assertEqual("0FF808080", subsets[0].attrib["CA"])
-    self.assertNotIn("E", subsets[0].attrib)
-
-    # Subset 2 has a diffuse color of white and an ambient/night color of gray.
-    self.assertEqual("0FF808080", subsets[1].attrib["C"])
-    self.assertEqual("0FF000000", subsets[1].attrib["CA"])
-    self.assertEqual("000808080", subsets[1].attrib["E"])
-
-    # Subset 3 has a night color that is lighter than the ambient color.
-    # It will be reduced to be darker than both diffuse and ambient color.
-    self.assertEqual("0FF808080", subsets[2].attrib["C"])
-    self.assertEqual("0FF000000", subsets[2].attrib["CA"])
-    self.assertEqual("000808080", subsets[2].attrib["E"])
-
-    # Subset 4 has a night color of gray, an ambient color of white
-    # and a gray ambient overexposure.
-    self.assertEqual("0FF808080", subsets[3].attrib["C"])
-    self.assertEqual("0FFFFFFFF", subsets[3].attrib["CA"])
-    self.assertEqual("000808080", subsets[3].attrib["E"])
-
-  def test_lod_suffix(self):
-    self.open("animation2")
-    mainfile = self.export({"ext" : ".lod1.ls3", "exportAnimations" : True})
-
-    path, name = os.path.split(mainfile.name)
-    basename, ext = name.split(os.extsep, 1)
-
-    self.assertTrue(os.path.exists(os.path.join(path, basename + "_RadRotation.lod1.ls3")))
-
-  def test_no_extension(self):
-    self.open("animation2")
-    mainfile = self.export({"ext" : "", "exportAnimations" : True})
-    self.assertTrue(os.path.exists(mainfile.name + "_RadRotation"))
-
+  # Tests that keyframes that lie outside the start...end frame range defined in the scene
+  # are exported
   def test_animation_range_extends_scene_range(self):
-    self.open("animation6")
+    self.open("animation_keyframes_outside_scene_range")
     mainfile = self.export_and_parse({"exportAnimations" : True})
     mesh_animation_node = mainfile.find("./Landschaft/MeshAnimation")
     self.assertKeyframes(mesh_animation_node, [0, 1, 2])
@@ -613,31 +692,11 @@ class TestLs3Export(unittest.TestCase):
     action.zusi_animation_duration = 0
     self.assertAlmostEqual(0, action.zusi_animation_speed, places = 6)
 
-  def test_animation_names(self):
-    self.open("animation_names")
-    mainfile = self.export_and_parse({"exportAnimations" : True})
-    animation_nodes = mainfile.findall("./Landschaft/Animation")
-    self.assertEqual(3, len(animation_nodes))
 
-    self.assertEqual("Hp0-Hp1", animation_nodes[0].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[0], [1])
-
-    self.assertEqual("Hp0-Hp2", animation_nodes[1].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[1], [1, 2])
-
-    self.assertEqual("Track curvature at front of vehicle", animation_nodes[2].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[2], [3])
-
-  def test_animation_names_id_0(self):
-    self.open("animation_names_id0")
-    mainfile = self.export_and_parse({"exportAnimations" : True})
-    animation_nodes = mainfile.findall("./Landschaft/Animation")
-    self.assertEqual(1, len(animation_nodes))
-    self.assertNotEqual("", animation_nodes[0].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[0], [1])
-
+  # Tests that an object with constraints that is not a child of an animated object
+  # is exported as animated.
   def test_animation_with_constraints_only(self):
-    self.open("animation8")
+    self.open("animation_object_animated_only_by_constraints")
     mainfile = self.export_and_parse({"exportAnimations" : True})
 
     # The subset "Treibstange" should be animated and have the animation
@@ -688,45 +747,17 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_parenting_scale(self):
     self.open("animation_parenting_scale")
-    linkedfile = self.export_and_parse_multiple(["Cube"])[2]["Cube"]
+    mainfile = self.export_and_parse({"exportAnimations" : True})
 
     # There are two Cubes with the same material; one is the parent of the other.
     # The child cube has a scale of 0.5, but is not animated. The cubes should
     # be exported into one subset and the scale should be correctly applied.
-    subset = linkedfile.find("./Landschaft/SubSet")
-    for p_node in subset.findall("./Vertex/p"):
-      self.assertAlmostEqual(1, abs(float(p_node.attrib["Z"])))
-
-  def test_animation_parent_name(self):
-    self.open("animation_parent_name")
-    mainfile = self.export_and_parse({"exportAnimations" : True})
-    # CubeC is parent of CubeB, which is parent of CubeA.
-    # We should therefore have only one link in the main file.
-    self.assertEqual(1, len(mainfile.findall("./Landschaft/Verknuepfte")))
-
-  def test_subset_rotation_without_animation(self):
-    self.open("subset_rotation")
-    mainfile = self.export_and_parse({"exportAnimations" : True})
-    phi_node = mainfile.find("./Landschaft/Verknuepfte/phi")
-    self.assertXYZ(phi_node, -.194957, -.489116, .397863)
-
-  def test_dont_export_animation(self):
-    self.open("animation3")
-    mainfile = self.export_and_parse({"exportAnimations" : False})
-    self.assertEqual([], mainfile.findall(".//Verknuepfte"))
-    self.assertEqual([], mainfile.findall(".//VerknAnimation"))
-    self.assertEqual([], mainfile.findall(".//MeshAnimation"))
-    self.assertEqual([], mainfile.findall(".//Animation"))
-    self.assertEqual(1, len(mainfile.findall("./Landschaft/SubSet")))
-
-  def test_zbias(self):
-    self.open("zbias")
-    mainfile = self.export_and_parse()
+    linkedfiles = mainfile.findall("./Landschaft/Verknuepfte")
+    self.assertEqual([], linkedfiles)
     subsets = mainfile.findall("./Landschaft/SubSet")
-    self.assertEqual('-1', subsets[0].attrib["zBias"])
-    self.assertNotIn("zBias", subsets[1].attrib)
-    self.assertEqual('1', subsets[2].attrib["zBias"])
-    self.assertEqual('1', subsets[3].attrib["zBias"])
+    self.assertEqual(1, len(subsets))
+    for p_node in subsets[0].findall("./Vertex/p"):
+      self.assertAlmostEqual(1, abs(float(p_node.attrib["Z"])))
 
   def test_boundingr(self):
     self.open("boundingr")
@@ -746,9 +777,15 @@ class TestLs3Export(unittest.TestCase):
 
   def test_boundingr_translation(self):
     self.open("boundingr_translation")
-    mainfile = self.export_and_parse({"exportAnimations" : True})
+    basename, ext, files = self.export_and_parse_multiple(["Empty"])
+
+    mainfile = files[""]
     verknuepfte_node = mainfile.find("./Landschaft/Verknuepfte")
     self.assertEqual("9", verknuepfte_node.attrib["BoundingR"])
+
+    linkedfile = files["Empty"]
+    verknuepfte_node = linkedfile.find("./Landschaft/Verknuepfte")
+    self.assertEqual("2", verknuepfte_node.attrib["BoundingR"])
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)

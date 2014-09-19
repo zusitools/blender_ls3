@@ -36,6 +36,11 @@ default_export_settings = {
     "maxNormalAngle" : 10 / 360 * 2 * pi,
 }
 
+EXPORT_ALL_OBJECTS = "0"
+EXPORT_SELECTED_OBJECTS = "1"
+EXPORT_SUBSETS_OF_SELECTED_OBJECTS = "2"
+EXPORT_SELECTED_MATERIALS = "3"
+
 # Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py
 # or the default value specified above if an error occurs.
 def get_exporter_setting(key):
@@ -57,6 +62,14 @@ def normalize_color(color):
         min(1.0, max(0.0, color.g)),
         min(1.0, max(0.0, color.b))
     ))
+
+def get_used_materials_for_object(ob):
+    """Returns a set of all materials used (i.e. assigned to any face) in the given object."""
+    if ob.data and (len(ob.data.materials) > 0):
+        used_material_indices = set([poly.material_index for poly in ob.data.polygons])
+        return set([ob.data.materials[i] for i in used_material_indices if ob.data.materials[i].name != 'Unsichtbar'])
+    else:
+        return set([None])
 
 # Returns a list of all descendants of the given object.
 def get_children_recursive(ob):
@@ -80,6 +93,15 @@ def has_rotation_animation(action):
 def is_root_subset(subset, ls3file):
     return ls3file.root_obj in subset.objects
 
+def is_lt_name(a, b):
+    """Returns a.name < b.name, taking into account None values (which are smaller than all other values)."""
+    if b is None:
+        return False
+    if a is None:
+        return True
+    else:
+        return a.name < b.name
+
 # Stores all the things that later go into one LS3 file.
 #     file_name: The file name (without path) of this file.
 #     subsets: The subsets in this file.
@@ -101,25 +123,58 @@ class Ls3File:
         self.root_obj = None
 
 # Stores information about one subset of a LS3 file.
-#     name: The name of the subset (internal to the exporter).
-#     material: The Blender material of this subset.
+#     identifier: The internal identifier of the subset. 
 #     objects: The objects to include in this subset.
-#     animated_obj: The object that defines this subset's animation, or None.
 #     boundingr: The bounding radius of this subset.
 class Ls3Subset:
-    def __init__(self):
-        self.name = ""
-        self.material = None
+    def __init__(self, identifier):
+        self.identifier = identifier
         self.objects = []
-        self.animated_obj = None
         self.boundingr = 0
 
     def __str__(self):
-        return self.name
+        return str(self.identifier)
 
     def __repr__(self):
-        return self.name
+        return str(self.identifier)
 
+# A unique identifier for a subset of a LS3 file.
+#     name: The name of the subset (internal to the exporter).
+#     material: The Blender material of this subset.
+#     animated_obj: The object that defines this subset's animation, or None.
+class SubsetIdentifier:
+    def __init__(self, name, material, animated_obj):
+        self.name = name
+        self.material = material
+        self.animated_obj = animated_obj
+
+    def __eq__(self, other):
+        return (other is not None
+                and self.name == other.name
+                and self.material == other.material
+                and self.animated_obj == other.animated_obj)
+
+    def __str__(self):
+        return "['%s', %s, %s]" % (self.name,
+                self.material.name if self.material is not None else '-',
+                self.animated_obj.name if self.animated_obj is not None else '-')
+
+    def __hash__(self):
+        return hash(self.name) + hash(self.material) + hash(self.animated_obj)
+
+    def __repr__(self):
+        return str(self)
+
+    def __lt__(self, other):
+        if self.name < other.name:
+            return True
+        elif self.name == other.name:
+            if is_lt_name(self.material, other.material):
+                return True
+            elif self.material == other.material:
+                return is_lt_name(self.animated_obj, other.animated_obj)
+        return False
+ 
 # Container for the exporter settings
 class Ls3ExporterSettings:
     def __init__(self,
@@ -195,12 +250,11 @@ class Ls3Exporter:
             else:
                 return path.replace(os.sep, "\\")
 
-
-    # Returns whether the specified object and its children must be placed in their own file
-    # in order to be animated correctly.
     def must_start_new_file(self, ob):
-        # Objects with children start a new file.
-        return self.config.exportAnimations and len(ob.children) > 0
+        """Returns whether the specified object and its children must be placed in their own file
+        in order to be animated correctly."""
+        # Animated objects with an animated child start a new file.
+        return self.config.exportAnimations and self.is_animated(ob) and any([self.is_animated(ch) for ch in ob.children])
 
     def is_animated(self, ob):
         """Returns whether the object ob has an animation of its own (this is not the case if the object
@@ -211,8 +265,8 @@ class Ls3Exporter:
     def get_aninrs(self, animations, animated_linked_files, animated_subsets):
         """Returns the animation numbers for a list of animations. The animation number corresponds to the
         1-indexed number of the subset/linked file that has the animation."""
-        return [aninr for aninr, linked in animated_linked_files if self.animations[linked.root_obj] in animations] \
-            + [aninr for aninr, subset in animated_subsets if self.animations[subset.animated_obj] in animations]
+        return [aninr for aninr, subset in animated_subsets if self.animations[subset.identifier.animated_obj] in animations] \
+            + [aninr for aninr, linked in animated_linked_files if self.animations[linked.root_obj] in animations] \
 
     # Returns a list of the active texture slots of the given material.
     def get_active_texture_slots(self, material):
@@ -236,7 +290,7 @@ class Ls3Exporter:
     # Only the faces of the supplied objects having that particular material will be written.
     def write_subset(self, landschaftNode, subset, ls3file):
         subsetNode = self.xmldoc.createElement("SubSet")
-        material = subset.material
+        material = subset.identifier.material
         try:
             if material.zusi_landscape_type != bpy.types.Material.zusi_landscape_type[1]["default"]:
                 subsetNode.setAttribute("TypLs3", material.zusi_landscape_type)
@@ -261,7 +315,7 @@ class Ls3Exporter:
     def write_subset_mesh(self, subsetNode, subset, ls3file):
         vertexdata = []
         facedata = []
-        material = subset.material
+        material = subset.identifier.material
         active_texture_slots = self.get_active_texture_slots(material)
         active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
         
@@ -276,7 +330,7 @@ class Ls3Exporter:
             # written as part of the animation).
             if self.config.exportAnimations:
                 if ob != ls3file.root_obj:
-                    if ob == subset.animated_obj:
+                    if ob == subset.identifier.animated_obj:
                         # TODO: Warn if scaling is animated (Zusi does not support this and the export result
                         # will depend on the current frame.
                         scale = ob.matrix_local.to_scale()
@@ -287,7 +341,7 @@ class Ls3Exporter:
                     else:
                         mesh.transform(ob.matrix_local)
             else:
-                # Ignore everything when animated export is enabled and just apply the global transformation.
+                # Ignore everything when animated export is disabled and just apply the global transformation.
                 mesh.transform(ob.matrix_world)
 
             mesh.calc_normals()
@@ -648,78 +702,94 @@ class Ls3Exporter:
                 cur_file.objects -= new_file.objects
                 work_list.append(new_file)
                 result[splitobj] = new_file
-                work_list.append(cur_file) # needs more work, splitobj might not have been the only splitting object!
+                work_list.append(cur_file) # TODO: needs more work, splitobj might not have been the only splitting object!
 
         # Get subsets and create linked file relation according to parent relation.
         for root_obj, ls3file in result.items():
             ls3file.subsets = self.get_subsets(ls3file)
-            if ls3file.root_obj is not None:
-                result[ls3file.root_obj.parent].linked_files.append(ls3file)
+            if ls3file.root_obj is not None and (len(ls3file.subsets) > 0 or len(ls3file.linked_files) > 0):
+                parent_root = ls3file.root_obj.parent
+                while parent_root is not None and parent_root not in result:
+                    parent_root = parent_root.parent
+                result[parent_root].linked_files.append(ls3file)
 
         # Main file is the first item in the list.
         return [result[None]] + [ls3file for ls3file in result.values() if ls3file.root_obj is not None]
 
+    def get_exported_subsets(self):
+        """Builds a list of exported subset identifiers for every object in the scene. The export settings
+        (e.g. "export only selected objects") are taken into account."""
+
+        result = {}
+        # A set of all subset identifiers that will be exported. It is only filled when
+        # self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS.
+        all_exported_identifiers = set()
+
+        for ob in self.config.context.scene.objects:
+            # For "export subsets of selected objects" mode, only treat selected objects in the first phase.
+            if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS and ob.name not in self.config.selectedObjects:
+                continue
+
+            # If export setting is "export only selected objects", filter out unselected objects
+            # from the beginning. Also, non-mesh objects are not exported.
+            if (ob.type != 'MESH' or
+                    (self.config.exportSelected == EXPORT_SELECTED_OBJECTS and
+                            ob.name not in self.config.selectedObjects)):
+                result[ob] = []
+                continue
+
+            result[ob] = [SubsetIdentifier(ob.zusi_subset_name, mat,
+                    ob if self.is_animated(ob) else None)
+                    for mat in get_used_materials_for_object(ob)
+                    if self.config.exportSelected != EXPORT_SELECTED_MATERIALS or (mat is not None and mat.name in self.config.selectedObjects)]
+            if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS:
+                all_exported_identifiers |= set(result[ob])
+            # Selected objects that are not visible in the current variants can still influence
+            # the exported subsets.
+            if not zusicommon.is_object_visible(ob, self.config.variantIDs):
+                result[ob] = []
+
+        # For "export subsets of selected objects" mode, we need a second pass
+        # for all unselected objects which might have a subset in common with
+        # a selected object.
+        if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS:
+            for ob in self.config.context.scene.objects:
+                if ob.type != 'MESH' or not zusicommon.is_object_visible(ob, self.config.variantIDs):
+                    result[ob] = []
+                    continue
+                if ob.name in self.config.selectedObjects:
+                    continue
+                result[ob] = []
+                for mat in get_used_materials_for_object(ob):
+                    identifier = SubsetIdentifier(ob.zusi_subset_name, mat,
+                        ob if self.is_animated(ob) else None)
+                    if identifier in all_exported_identifiers:
+                        result[ob].append(identifier)
+ 
+        return result
+
     # Build list of subsets from a file's objects. The subsets are ordered by name.
     def get_subsets(self, ls3file):
-        # Dictionary that maps a subset name to a Ls3Subset object.
         subset_dict = dict()
 
-        # List of subsets that will be visible in the exported file
-        # (only for exportSelected == "2")
-        visible_subsets = set()
-        
         # Build list of subsets according to material and subset name settings.
         for ob in ls3file.objects:
-            # If export setting is "export only selected objects", filter out unselected objects
-            # from the beginning.
-            if ob.type == 'MESH' and (ob.name in self.config.selectedObjects or (self.config.exportSelected != "1")):
-
-                # If the object specifies a subset name, this name will be prepended to the material name
-                # and separated with a $ sign.
-                subset_basename = ""
-                if ob.zusi_subset_name != "":
-                    subset_basename = ob.zusi_subset_name + "$"
-
-                # Animated objects get their own subsets.
-                if self.is_animated(ob):
-                    subset_basename += ob.name + "$$"
-
-                # Build list of materials used (i.e. assigned to any face) in this object
-                used_materials = []
-
-                if len(ob.data.materials) > 0:
-                    used_material_indices = set([poly.material_index for poly in ob.data.polygons])
-                    used_materials = [ob.data.materials[i] for i in used_material_indices]
-                else:
-                    used_materials = [None]
-
-                # Add this object to every subset this object will be a part of.
-                for mat in used_materials:
-                    subset_name = subset_basename + ("no_material" if mat is None else mat.name)
-
-                    # Create new subset object and write the material.
-                    if subset_name not in subset_dict:
-                        new_subset = Ls3Subset()
-                        new_subset.name = subset_name
-                        new_subset.material = mat
-                        new_subset.animated_obj = ob if self.is_animated(ob) else None
-                        subset_dict[subset_name] = new_subset
-
-                    # A selected object that is not visible in the exported variant can still
-                    # influcence the list of exported subsets when exportSelected is "2"
-                    if ob.name in self.config.selectedObjects:
-                        visible_subsets.add(subset_name)
-
-                    # Append visible object to second entry of tuple
-                    if zusicommon.is_object_visible(ob, self.config.variantIDs):
-                        subset_dict[subset_name].objects.append(ob)
-
-        # Sort subsets by name and filter out subsets that won't be visible due to variant export settings
-        # (when exportSelected mode is "2")
-        subsets = [subset_dict[name] for name in sorted(subset_dict.keys())
-            if self.config.exportSelected != "2" or name in visible_subsets]
-
-        return subsets
+            for subset_identifier in self.exported_subset_identifiers[ob]:
+                # XXX
+                if subset_identifier.animated_obj is None:
+                    p = ob.parent
+                    while p is not None:
+                        if self.is_animated(p):
+                            subset_identifier.animated_obj = p
+                            break
+                        p = p.parent
+                if subset_identifier not in subset_dict:
+                    subset_dict[subset_identifier] = Ls3Subset(subset_identifier)
+                subset_dict[subset_identifier].objects.append(ob)
+ 
+        # Sort subsets by name and filter out empty subsets and subsets that won't be visible due
+        # to variant export settings (when exportSelected mode is "2").
+        return [subset_dict[name] for name in sorted(subset_dict.keys())]
 
     def write_ls3(self, ls3file):
         sce = self.config.context.scene
@@ -827,8 +897,8 @@ class Ls3Exporter:
         # linked animation in the parent file.
         animated_subsets = [(idx + 1, subset)
             for (idx, subset) in enumerate(ls3file.subsets)
-            if subset.animated_obj is not None and not is_root_subset(subset, ls3file)]
-        animated_linked_files = [(idx + len(animated_subsets) + 1, linked)
+            if subset.identifier.animated_obj is not None and not is_root_subset(subset, ls3file)]
+        animated_linked_files = [(len(ls3file.subsets) + idx + 1, linked)
             for (idx, linked) in enumerate(ls3file.linked_files)
             if self.is_animated(linked_file.root_obj)]
 
@@ -891,11 +961,11 @@ class Ls3Exporter:
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(subset)))
-            meshAnimationNode.setAttribute("AniGeschw", str(self.animations[subset.animated_obj].zusi_animation_speed))
+            meshAnimationNode.setAttribute("AniGeschw", str(self.animations[subset.identifier.animated_obj].zusi_animation_speed))
             landschaftNode.appendChild(meshAnimationNode)
-            translation_length = self.write_animation(subset.animated_obj, meshAnimationNode,
-                write_translation = subset.animated_obj != ls3file.root_obj,
-                write_rotation = subset.animated_obj != ls3file.root_obj)
+            translation_length = self.write_animation(subset.identifier.animated_obj, meshAnimationNode,
+                write_translation = subset.identifier.animated_obj != ls3file.root_obj,
+                write_rotation = subset.identifier.animated_obj != ls3file.root_obj)
             ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
 
         # Write linked animations.
@@ -905,9 +975,10 @@ class Ls3Exporter:
             verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
             verknAnimationNode.setAttribute("AniGeschw", str(self.animations[linked_file.root_obj].zusi_animation_speed))
             landschaftNode.appendChild(verknAnimationNode)
-            self.write_animation(linked_file.root_obj, verknAnimationNode,
+            translation_length = self.write_animation(linked_file.root_obj, verknAnimationNode,
                 write_translation = has_location_animation(self.animations[linked_file.root_obj]),
                 write_rotation = has_rotation_animation(self.animations[linked_file.root_obj]))
+            ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr)
 
         # Get path names
         filepath = os.path.join(
@@ -935,6 +1006,7 @@ class Ls3Exporter:
 
     def export_ls3(self):
         self.get_animations()
+        self.exported_subset_identifiers = self.get_exported_subsets()
         ls3files = self.get_files()
 
         # ls3files forms a tree, traverse it in postorder so that each file has all information (bounding radius)
