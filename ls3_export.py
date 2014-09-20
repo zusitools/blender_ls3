@@ -458,7 +458,7 @@ class Ls3Exporter:
             oldvertexcount = len(vertexdata)
             new_vidx = zusicommon.optimize_mesh(vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
             facedata = [[new_vidx[x] for x in entry[0:3]] for entry in facedata]
-            print("Mesh optimization: %d vertices deleted" % (oldvertexcount - len(vertexdata)))
+            print("Mesh optimization: %d of %d vertices deleted" % (oldvertexcount - len(vertexdata), oldvertexcount))
 
         if self.lsbwriter is not None:
             self.lsbwriter.add_subset_data(subsetNode, vertexdata, facedata)
