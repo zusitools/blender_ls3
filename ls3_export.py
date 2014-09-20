@@ -861,17 +861,18 @@ class Ls3Exporter:
 
         # Write linked files.
         for linked_file in ls3file.linked_files:
-            verknuepfteNode = self.xmldoc.createElement("Verknuepfte")
-            verknuepfteNode.setAttribute("BoundingR", str(int(ceil(linked_file.boundingr))))
-            dateiNode = self.xmldoc.createElement("Datei")
-            dateiNode.setAttribute("Dateiname", linked_file.filename)
-            verknuepfteNode.appendChild(dateiNode)
-            landschaftNode.appendChild(verknuepfteNode)
-
             translation = linked_file.root_obj.matrix_local.to_translation()
             rotation = linked_file.root_obj.matrix_local.to_euler('YXZ')
             scale = linked_file.root_obj.matrix_local.to_scale()
             max_scale_factor = max(scale.x, scale.y, scale.z)
+            scaled_boundingr = linked_file.boundingr * max_scale_factor
+
+            verknuepfteNode = self.xmldoc.createElement("Verknuepfte")
+            verknuepfteNode.setAttribute("BoundingR", str(int(ceil(scaled_boundingr))))
+            dateiNode = self.xmldoc.createElement("Datei")
+            dateiNode.setAttribute("Dateiname", linked_file.filename)
+            verknuepfteNode.appendChild(dateiNode)
+            landschaftNode.appendChild(verknuepfteNode)
 
             # Include location and rotation in the link information if they are
             # not animated.
@@ -881,10 +882,10 @@ class Ls3Exporter:
                 fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
                 verknuepfteNode.appendChild(pNode)
                 ls3file.boundingr = max(ls3file.boundingr,
-                    max_scale_factor * linked_file.boundingr + vector_xy_length(translation))
+                    max_scale_factor * scaled_boundingr + vector_xy_length(translation))
             elif write_translation:
                 ls3file.boundingr = max(ls3file.boundingr,
-                    max_scale_factor * linked_file.boundingr)
+                    max_scale_factor * scaled_boundingr)
 
             write_rotation = not has_rotation_animation(self.animations[linked_file.root_obj])
             if write_rotation and rotation != Vector((0.0, 0.0, 0.0)):

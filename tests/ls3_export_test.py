@@ -766,12 +766,12 @@ class TestLs3Export(unittest.TestCase):
     # Check bounding radius of file "Planet".
     verknuepfte_nodes = files[""].findall(".//Verknuepfte")
     self.assertEqual(1, len(verknuepfte_nodes))
-    self.assertEqual("12", verknuepfte_nodes[0].attrib["BoundingR"])
+    self.assertEqual("9", verknuepfte_nodes[0].attrib["BoundingR"])
 
     # Check bounding radius of file "Mond".
     verknuepfte_nodes = files["Planet"].findall(".//Verknuepfte")
     self.assertEqual(1, len(verknuepfte_nodes))
-    self.assertEqual("8", verknuepfte_nodes[0].attrib["BoundingR"])
+    self.assertEqual("4", verknuepfte_nodes[0].attrib["BoundingR"])
 
     self.assertEqual([], files["Mond"].findall(".//Verknuepfte"))
 
