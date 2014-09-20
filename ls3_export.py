@@ -877,15 +877,13 @@ class Ls3Exporter:
             # Include location and rotation in the link information if they are
             # not animated.
             write_translation = not has_location_animation(self.animations[linked_file.root_obj])
-            if write_translation and translation != Vector((0.0, 0.0, 0.0)):
-                pNode = self.xmldoc.createElement("p")
-                fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
-                verknuepfteNode.appendChild(pNode)
+            if write_translation:
+                if translation != Vector((0.0, 0.0, 0.0)):
+                    pNode = self.xmldoc.createElement("p")
+                    fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
+                    verknuepfteNode.appendChild(pNode)
                 ls3file.boundingr = max(ls3file.boundingr,
                     max_scale_factor * scaled_boundingr + vector_xy_length(translation))
-            elif write_translation:
-                ls3file.boundingr = max(ls3file.boundingr,
-                    max_scale_factor * scaled_boundingr)
 
             write_rotation = not has_rotation_animation(self.animations[linked_file.root_obj])
             if write_rotation and rotation != Vector((0.0, 0.0, 0.0)):
