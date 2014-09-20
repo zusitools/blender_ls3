@@ -16,6 +16,7 @@
 #  ***** GPL LICENSE BLOCK *****
 
 from math import sqrt, acos
+import array
 import os
 
 # Forces a value into a range
@@ -94,7 +95,12 @@ def merge_vertices(v1, v2):
         v1[10])
 
 # Merges vertices which are close to each other.
-# Returns a dictionary that contains the association of old to new vertex indices
+# Modifies the supplied list vertexdata. The length of the list will stay the same,
+# but some entries may be set to None. (This is to save the overhead of removing
+# items from the list.)
+# Returns an array that contains the association of old to new vertex indices,
+# where the vertex indices are counted from 0 and excluding deleted vertices
+# (whose entry in the vertexdata array is None).
 def optimize_mesh(vertexdata, maxCoordDelta, maxUVDelta, maxNormalAngle):
     maxCoordDeltaSquared = maxCoordDelta ** 2
     maxUVDeltaSquared = maxUVDelta ** 2
@@ -110,25 +116,34 @@ def optimize_mesh(vertexdata, maxCoordDelta, maxUVDelta, maxNormalAngle):
     # Look at all pairs of vertices whose x coordinates
     # differ by no more than the permitted vertex distance
     for vertex1_index, vertex1 in enumerate(vertexdata):
+        if vertex1 is None:
+            continue
         vertex2_index = vertex1_index + 1
-        while vertex2_index < vertex_count and vertexdata[vertex2_index][0] - vertex1[0] <= maxCoordDelta:
+        for vertex2_index in range(vertex1_index + 1, vertex_count):
             vertex2 = vertexdata[vertex2_index]
+            if vertex2 is None:
+                continue
+            if vertex2[0] - vertex1[0] > maxCoordDelta:
+                break
 
             if can_merge_vertices(vertex1, vertex2, maxCoordDeltaSquared, maxUVDeltaSquared, maxNormalAngle):
                 vertexdata[vertex1_index] = merge_vertices(vertex1, vertex2)
-                vertexdata.remove(vertex2)
-                vertex_count -= 1
-                merged[vertex2[10]] = vertex1_index
-            else:
-                # If we merged two vertices, the vertex index does not have to be incremented since we just deleted one vertex
-                vertex2_index += 1
+                vertexdata[vertex2_index] = None
+                merged[vertex2[10]] = vertex1[10]
 
-    # Build a dictionary with old -> new vertex indices
+    # Build a dictionary with old -> new vertex indices. The old vertex index is saved in vertex[10].
+    num_deleted_vertices = 0
+    new_vidx = array.array('i', (0,) * vertex_count)
+    for idx, vertex in enumerate(vertexdata):
+        if vertex is None:
+            num_deleted_vertices += 1
+        else:
+            new_vidx[vertex[10]] = idx - num_deleted_vertices
+
     # Add information about merged vertices
-    new_vidx = dict((vertex[10], idx) for idx, vertex in enumerate(vertexdata))
-    new_vidx.update(merged)
+    for old_index, new_index in merged.items():
+        new_vidx[old_index] = new_vidx[new_index]
 
-    # Return updated face list with new vertex indices
     return new_vidx
 
 # Retrieve the path name of the Zusi data directory

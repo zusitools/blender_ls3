@@ -222,11 +222,15 @@ class Ls3Importer:
 
         # Fill the mesh with verts, edges, faces
         # Can't use mesh.from_pydata because it creates ngons, not tessfaces
-        self.currentmesh.vertices.add(len(self.currentvertices))
+        self.currentmesh.vertices.add(len(self.currentvertices) - sum(v is None for v in self.currentvertices))
+        idx_without_None = 0
         for idx, v in enumerate(self.currentvertices):
+            if v is None:
+                continue
             # (x,y,z) coordinates are calculated as (y, -x, z) from Zusi coordinates to fit the Blender coordinate system.
-            self.currentmesh.vertices[idx].co = [v[1], -v[0], v[2]]
-            self.currentmesh.vertices[idx].normal = self.currentvertices[idx][3:6]
+            self.currentmesh.vertices[idx_without_None].co = [v[1], -v[0], v[2]]
+            self.currentmesh.vertices[idx_without_None].normal = self.currentvertices[idx][3:6]
+            idx_without_None += 1
 
         self.currentmesh.tessfaces.add(len(self.currentfaces))
         for idx, f in enumerate(self.currentfaces):

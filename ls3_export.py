@@ -493,7 +493,7 @@ class Ls3Exporter:
             + '<p X="' + str(entry[0]) + '" Y="' + str(entry[1]) + '" Z="' + str(entry[2]) + '"/>'
             + '<n X="' + str(entry[3]) + '" Y="' + str(entry[4]) + '" Z="' + str(entry[5]) + '"/>'
             + '</Vertex>' + os.linesep
-            for entry in vertexdata
+            for entry in vertexdata if entry is not None
         ]) + "".join([
             '<Face i="' + ";".join(map(str, entry)) + '"/>' + os.linesep
             for entry in facedata
