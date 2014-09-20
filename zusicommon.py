@@ -24,26 +24,36 @@ forcerange = lambda x, minval, maxval : min(max(x, minval), maxval)
 # Calculates the angle between two 3-dimensional vertices
 # angle = arccos(u X v / (|u| * |v|))
 # where X denotes the scalar product
-def vertexangle(v1, v2):
-    denominator = vertexlength(v1) * vertexlength(v2)
+def vertexangle_3(v1, v2):
+    denominator = vertexlength_3(v1[0], v1[1], v1[2]) * vertexlength_3(v2[0], v2[1], v2[2])
     if denominator == 0.0:
         return 0
     else:
         return acos(forcerange((v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]) / denominator, -1.0, 1.0))
 
+# Computes the square of the length (Euclidean norm) of the vertex v
+def vertexlength_squared_3(x, y, z):
+    return x*x + y*y + z*z
+def vertexlength_squared_2(x, y):
+    return x*x + y*y
+
 # Computes the length (Euclidean norm) of the vertex v
-vertexlength = lambda v : sqrt(sum([a**2 for a in v]))
+def vertexlength_3(x, y, z):
+    return sqrt(vertexlength_squared_3(x, y, z))
 
-# Calculates the distance between two vertices
-vertexdist = lambda v1, v2 : vertexlength([v2[i] - v1[i] for i in range(0, min([len(v1), len(v2)]))])
+# Calculates the square of the distance between two vertices
+def vertexdist_squared_3(v1, v2):
+    return vertexlength_squared_3(v2[0]-v1[0], v2[1]-v1[1], v2[2]-v1[2])
+def vertexdist_squared_2(v1, v2):
+    return vertexlength_squared_2(v2[0]-v1[0], v2[1]-v1[1])
 
-# Returns a vector that points in the same direction as v and has length 1
-def normalize_vector(v):
-    v_len = vertexlength(v)
+# Returns a vector that points in the same direction as (x,y,z) and has length 1
+def normalize_vector_3(x, y, z):
+    v_len = vertexlength_3(x, y, z)
     if v_len != 0:
-        return [a / v_len for a in v]
+        return (x / v_len, y / v_len, z / v_len)
     else:
-        return v
+        return (x, y, z)
 
 # Converts "True"/"False" into the equivalent boolean value
 str2bool = lambda s : {"True" : True, "False" : False}[s]
@@ -62,20 +72,20 @@ def is_object_visible(object, variantIDs):
     return (len(intersect) == 0) != visibility
 
 # Determines whether two vertices can be merged by looking at the corresponding vertexdata entries
-def can_merge_vertices(vertex1, vertex2, maxCoordDelta, maxUVDelta, maxNormalAngle):
+def can_merge_vertices(vertex1, vertex2, maxCoordDeltaSquared, maxUVDeltaSquared, maxNormalAngle):
     return (not (vertex1[11] or vertex2[11]) # no-merge flag
-        and vertexdist(vertex1[6:8], vertex2[6:8]) <= maxUVDelta
-        and vertexdist(vertex1[8:10], vertex2[8:10]) <= maxUVDelta
-        and vertexdist(vertex1[0:3], vertex2[0:3]) <= maxCoordDelta
-        and vertexangle(vertex1[3:6], vertex2[3:6]) <= maxNormalAngle)
+        and vertexdist_squared_2(vertex1[6:8], vertex2[6:8]) <= maxUVDeltaSquared
+        and vertexdist_squared_2(vertex1[8:10], vertex2[8:10]) <= maxUVDeltaSquared
+        and vertexdist_squared_3(vertex1[0:3], vertex2[0:3]) <= maxCoordDeltaSquared
+        and vertexangle_3(vertex1[3:6], vertex2[3:6]) <= maxNormalAngle)
 
 # Merges the two vertices at their center (location, normal, and UV coordinates), keeping the vertex index of the first vertex
 def merge_vertices(v1, v2):
     # Compute the angle bisector of the two normal vertices:
     # n = n1 / |n1| + n2 / |n2|
-    n1 = normalize_vector([v1[3], v1[4], v1[5]])
-    n2 = normalize_vector([v2[3], v2[4], v2[5]])
-    n = normalize_vector([n1[0] + n2[0], n1[1] + n2[1], n1[2] + n2[2]])
+    n1 = normalize_vector_3(v1[3], v1[4], v1[5])
+    n2 = normalize_vector_3(v2[3], v2[4], v2[5])
+    n = normalize_vector_3(n1[0] + n2[0], n1[1] + n2[1], n1[2] + n2[2])
 
     return ((v1[0] + v2[0]) / 2, (v1[1] + v2[1]) / 2, (v1[2] + v2[2]) / 2,
         n[0], n[1], n[2],
@@ -86,22 +96,28 @@ def merge_vertices(v1, v2):
 # Merges vertices which are close to each other.
 # Returns a dictionary that contains the association of old to new vertex indices
 def optimize_mesh(vertexdata, maxCoordDelta, maxUVDelta, maxNormalAngle):
+    maxCoordDeltaSquared = maxCoordDelta ** 2
+    maxUVDeltaSquared = maxUVDelta ** 2
+
     # Order vertices by x coordinate
     vertexdata.sort(key = lambda vdata : vdata[0])
 
     # Stores the new index of vertices that have been merged with another vertex
     merged = { }
 
+    vertex_count = len(vertexdata)
+
     # Look at all pairs of vertices whose x coordinates
     # differ by no more than the permitted vertex distance
     for vertex1_index, vertex1 in enumerate(vertexdata):
         vertex2_index = vertex1_index + 1
-        while vertex2_index < len(vertexdata) and vertexdata[vertex2_index][0] - vertex1[0] <= maxCoordDelta:
+        while vertex2_index < vertex_count and vertexdata[vertex2_index][0] - vertex1[0] <= maxCoordDelta:
             vertex2 = vertexdata[vertex2_index]
 
-            if can_merge_vertices(vertex1, vertex2, maxCoordDelta, maxUVDelta, maxNormalAngle):
+            if can_merge_vertices(vertex1, vertex2, maxCoordDeltaSquared, maxUVDeltaSquared, maxNormalAngle):
                 vertexdata[vertex1_index] = merge_vertices(vertex1, vertex2)
                 vertexdata.remove(vertex2)
+                vertex_count -= 1
                 merged[vertex2[10]] = vertex1_index
             else:
                 # If we merged two vertices, the vertex index does not have to be incremented since we just deleted one vertex
