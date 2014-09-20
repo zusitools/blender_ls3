@@ -415,26 +415,31 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
             self.report({'ERROR'}, "No batch export settings found for file %s" % bpy.data.filepath)
             return {'CANCELLED'}
 
-        for setting in bs.batch_export_settings[bpy.data.filepath]:
-            (directory, filename) = os.path.split(setting[2])
+        def runbatch():
+            for setting in bs.batch_export_settings[bpy.data.filepath]:
+                (directory, filename) = os.path.split(setting[2])
         
-            settings = ls3_export.Ls3ExporterSettings(
-                context,
-                setting[2],
-                filename,
-                directory,
-                str(setting[3]),    # exportSelected
-                ls3_export.get_exporter_setting("exportAnimations"),
-                ls3_export.get_exporter_setting("optimizeMesh"),
-                ls3_export.get_exporter_setting("maxUVDelta"),
-                ls3_export.get_exporter_setting("maxCoordDelta"),
-                ls3_export.get_exporter_setting("maxNormalAngle"),
-                variantIDs = setting[1],
-                selectedObjects = setting[0],
-            )
+                settings = ls3_export.Ls3ExporterSettings(
+                    context,
+                    setting[2],
+                    filename,
+                    directory,
+                    str(setting[3]),    # exportSelected
+                    ls3_export.get_exporter_setting("exportAnimations"),
+                    ls3_export.get_exporter_setting("optimizeMesh"),
+                    ls3_export.get_exporter_setting("maxUVDelta"),
+                    ls3_export.get_exporter_setting("maxCoordDelta"),
+                    ls3_export.get_exporter_setting("maxNormalAngle"),
+                    variantIDs = setting[1],
+                    selectedObjects = setting[0],
+                )
 
-            exporter = ls3_export.Ls3Exporter(settings)
-            exporter.export_ls3()
+                exporter = ls3_export.Ls3Exporter(settings)
+                exporter.export_ls3()
+
+        runbatch()
+        #import profile
+        #profile.runctx('runbatch()', {}, {'runbatch': runbatch}, sort = 'cumtime')
 
         self.report({'INFO'}, "Successfully exported %d files" % len(bs.batch_export_settings[bpy.data.filepath]))
         return {'FINISHED'}
