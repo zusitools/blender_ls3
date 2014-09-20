@@ -19,12 +19,15 @@ import bpy
 import os
 import xml.dom.minidom as dom
 from . import zusicommon, zusiprops
-from math import ceil, pi
+from math import ceil, pi, sqrt
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
 # to a hex string "0AABBGGRR"
 rgba_to_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.b, color.g, color.r]])
+
+# Returns the length of the projection of the specified vector projected onto the XY plane.
+vector_xy_length = lambda vec : sqrt(vec.x * vec.x + vec.y * vec.y)
 
 # The default settings for the exporter
 default_export_settings = {
@@ -432,7 +435,8 @@ class Ls3Exporter:
                     if must_flip_normals:
                         normal = list(map(lambda x : -x, normal))
 
-                    subset.boundingr = max(subset.boundingr, v.co.length)
+                    v_len = vector_xy_length(v.co)
+                    subset.boundingr = max(subset.boundingr, v_len)
 
                     # The coordinates are transformed into the Zusi coordinate system.
                     # The vertex index is appended for reordering vertices
@@ -591,7 +595,7 @@ class Ls3Exporter:
                 if translationNode is not None:
                     fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
                     aniPunktNode.appendChild(translationNode)
-                    translation_length = max(translation_length, loc.length)
+                    translation_length = max(translation_length, vector_xy_length(loc))
 
             if write_rotation:
                 # Make rotation Euler compatible with the previous frame to prevent axis flipping.
@@ -860,7 +864,7 @@ class Ls3Exporter:
                 fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
                 verknuepfteNode.appendChild(pNode)
                 ls3file.boundingr = max(ls3file.boundingr,
-                    max_scale_factor * linked_file.boundingr + translation.length)
+                    max_scale_factor * linked_file.boundingr + vector_xy_length(translation))
             elif write_translation:
                 ls3file.boundingr = max(ls3file.boundingr,
                     max_scale_factor * linked_file.boundingr)

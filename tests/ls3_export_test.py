@@ -781,7 +781,7 @@ class TestLs3Export(unittest.TestCase):
 
     mainfile = files[""]
     verknuepfte_node = mainfile.find("./Landschaft/Verknuepfte")
-    self.assertEqual("9", verknuepfte_node.attrib["BoundingR"])
+    self.assertEqual("7", verknuepfte_node.attrib["BoundingR"])
 
     linkedfile = files["Empty"]
     verknuepfte_node = linkedfile.find("./Landschaft/Verknuepfte")
