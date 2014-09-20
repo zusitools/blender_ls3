@@ -376,7 +376,8 @@ class Ls3Importer:
             # Add texture to current object
             mat = self.currentmesh.materials[0]
 
-            img = bpy.data.images.load(self.resolveFilePath(dateinode.getAttribute("Dateiname"))) # may raise RuntimeError
+            img = bpy.data.images.load(zusicommon.resolve_file_path(
+                    dateinode.getAttribute("Dateiname"), self.config.fileDirectory, self.datapath)) # may raise RuntimeError
             tex = bpy.data.textures.new(self.config.fileName + "." + str(self.subsetno),  type='IMAGE')
             tex.image = img
 
