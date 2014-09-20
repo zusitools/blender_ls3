@@ -44,6 +44,8 @@ EXPORT_SELECTED_OBJECTS = "1"
 EXPORT_SUBSETS_OF_SELECTED_OBJECTS = "2"
 EXPORT_SELECTED_MATERIALS = "3"
 
+SUBSET_XML_PLACEHOLDER = "$$ZUSI_SUBSET_PLACEHOLDER_{}$$"
+
 def debug(msg, *args, **kwargs):
     pass
     # print(msg.format(*args, **kwargs))
@@ -220,6 +222,9 @@ class Ls3Exporter:
 
         # The XML document node
         self.xmldoc = None
+
+        # The vertex and face data for each subset to export
+        self.subset_data = []
 
         try:
             from . import zusiconfig
@@ -473,31 +478,26 @@ class Ls3Exporter:
         if self.lsbwriter is not None:
             self.lsbwriter.add_subset_data(subsetNode, vertexdata, facedata)
         else:
-            self.add_subset_data(subsetNode, vertexdata, facedata)
+            # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
+            # Insert a placeholder text node instead and replace that with the manually generated
+            # XML string for the <Vertex> and <Face> nodes. Yes, this is ugly.
+            placeholder_node = self.xmldoc.createTextNode(SUBSET_XML_PLACEHOLDER.format(len(self.subset_data)))
+            subsetNode.appendChild(placeholder_node)
+            self.subset_data.append((vertexdata, facedata))
 
-    # Writes <Vertex> and <Face> nodes to the given subset node
-    def add_subset_data(self, subsetNode, vertexdata, facedata):
-        for entry in vertexdata:
-            vertexNode = self.xmldoc.createElement("Vertex")
-            vertexNode.setAttribute("U", str(entry[6]))
-            vertexNode.setAttribute("V", str(entry[7]))
-            vertexNode.setAttribute("U2", str(entry[8]))
-            vertexNode.setAttribute("V2", str(entry[9]))
-
-            posNode = self.xmldoc.createElement("p")
-            fill_node_xyz(posNode, *entry[0:3])
-
-            normalNode = self.xmldoc.createElement("n")
-            fill_node_xyz(normalNode, *entry[3:6])
-
-            vertexNode.appendChild(posNode)
-            vertexNode.appendChild(normalNode)
-            subsetNode.appendChild(vertexNode)
-
-        for entry in facedata:
-            faceNode = self.xmldoc.createElement("Face")
-            faceNode.setAttribute("i", ";".join(map(str, entry)))
-            subsetNode.appendChild(faceNode)
+    # Returns a string containing the <Vertex> and <Face> nodes for the given vertex and face data.
+    def get_subset_xml(self, vertexdata, facedata):
+        return "".join([
+            '<Vertex U="' + str(entry[6]) + '" V="' + str(entry[7])
+            + '" U2="' + str(entry[8]) + '" V2="' + str(entry[9]) + '">'
+            + '<p X="' + str(entry[0]) + '" Y="' + str(entry[1]) + '" Z="' + str(entry[2]) + '"/>'
+            + '<n X="' + str(entry[3]) + '" Y="' + str(entry[4]) + '" Z="' + str(entry[5]) + '"/>'
+            + '</Vertex>' + os.linesep
+            for entry in vertexdata
+        ]) + "".join([
+            '<Face i="' + ";".join(map(str, entry)) + '"/>' + os.linesep
+            for entry in facedata
+        ])
 
     def write_subset_material(self, subsetNode, material):
         # Set ambient, diffuse, and emit color.
@@ -824,6 +824,8 @@ class Ls3Exporter:
         # Create a new XML document
         self.xmldoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
 
+        self.subset_data = []
+
         # Write file info
         infoNode = self.xmldoc.createElement("Info")
         infoNode.setAttribute("DateiTyp", "Landschaft")
@@ -1020,7 +1022,13 @@ class Ls3Exporter:
         # Write XML document to file
         info('Exporting LS3 file {}', filepath)
         with open(filepath, 'wb') as fp:
-            fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep))
+            prettyxml = self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep)
+            if self.lsbwriter is None:
+                for index, (vertexdata, facedata) in enumerate(self.subset_data):
+                    prettyxml = prettyxml.replace(
+                            bytearray(SUBSET_XML_PLACEHOLDER.format(index), 'utf-8'),
+                            bytearray(self.get_subset_xml(vertexdata, facedata), 'utf-8'))
+            fp.write(prettyxml)
 
         info("Bounding radius: {} m", int(ceil(ls3file.boundingr)))
 
