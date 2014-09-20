@@ -44,6 +44,13 @@ EXPORT_SELECTED_OBJECTS = "1"
 EXPORT_SUBSETS_OF_SELECTED_OBJECTS = "2"
 EXPORT_SELECTED_MATERIALS = "3"
 
+def debug(msg, *args, **kwargs):
+    pass
+    # print(msg.format(*args, **kwargs))
+
+def info(msg, *args, **kwargs):
+    print(msg.format(*args, **kwargs))
+
 # Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py
 # or the default value specified above if an error occurs.
 def get_exporter_setting(key):
@@ -311,6 +318,7 @@ class Ls3Exporter:
         except (IndexError, AttributeError):
             pass
 
+        info("Exporting subset {}", str(subset.identifier))
         self.write_subset_mesh(subsetNode, subset, ls3file)
         landschaftNode.appendChild(subsetNode)
 
@@ -324,6 +332,8 @@ class Ls3Exporter:
         active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
         
         for ob in subset.objects:
+            debug("Exporting object {}", ob.name)
+
             # Apply modifiers and transform the mesh so that the vertex coordinates
             # are global coordinates. Also recalculate the vertex normals.
             mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
@@ -458,7 +468,7 @@ class Ls3Exporter:
             oldvertexcount = len(vertexdata)
             new_vidx = zusicommon.optimize_mesh(vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
             facedata = [[new_vidx[x] for x in entry[0:3]] for entry in facedata]
-            print("Mesh optimization: %d of %d vertices deleted" % (oldvertexcount - len(vertexdata), oldvertexcount))
+            info("Mesh optimization: {} of {} vertices deleted", oldvertexcount - len(vertexdata), oldvertexcount)
 
         if self.lsbwriter is not None:
             self.lsbwriter.add_subset_data(subsetNode, vertexdata, facedata)
@@ -717,6 +727,12 @@ class Ls3Exporter:
                 while parent_root is not None and parent_root not in result:
                     parent_root = parent_root.parent
                 result[parent_root].linked_files.append(ls3file)
+
+        debug("Files:")
+        for root_obj, ls3file in result.items():
+            debug(root_obj.name if root_obj is not None else "None")
+            for sub in ls3file.subsets:
+                debug("   {} - {}", str(sub.identifier), str(sub.objects))
 
         # Main file is the first item in the list.
         return [result[None]] + [ls3file for ls3file in result.values() if ls3file.root_obj is not None]
@@ -995,7 +1011,7 @@ class Ls3Exporter:
             lsbpath = basename + ".lsb"
         
             fp = open(lsbpath, 'wb')
-            print('Exporting %s' % lsbpath)
+            info('Exporting LSB file {}', lsbpath)
             self.lsbwriter.write_to_file(fp)
 
             lsbNode = self.xmldoc.createElement("lsb")
@@ -1003,15 +1019,17 @@ class Ls3Exporter:
             landschaftNode.appendChild(lsbNode)
 
         # Write XML document to file
-        print('Exporting %s' % filepath)
+        info('Exporting LS3 file {}', filepath)
         with open(filepath, 'wb') as fp:
             fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep))
 
-        print("Bounding radius: %d m" % int(ceil(ls3file.boundingr)))
+        info("Bounding radius: {} m", int(ceil(ls3file.boundingr)))
 
     def export_ls3(self):
         self.get_animations()
         self.exported_subset_identifiers = self.get_exported_subsets()
+        debug("Exported subset IDs:")
+        debug(self.exported_subset_identifiers)
         ls3files = self.get_files()
 
         # ls3files forms a tree, traverse it in postorder so that each file has all information (bounding radius)
