@@ -1181,7 +1181,7 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
 
         template_list(layout.row(), "UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
 
-        if len(bpy.data.actions):
+        if len(bpy.data.actions) > 0 and len(bpy.data.actions) > context.scene.zusi_animations_index:
             action = bpy.data.actions[context.scene.zusi_animations_index]
             ani_speed_enabled = action.zusi_animation_type in ["0", "1"]
             layout.row().prop(action, "name")

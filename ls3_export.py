@@ -280,7 +280,8 @@ class Ls3Exporter:
             # Create a list of image textures
             image_texture_slots = [material.texture_slots[texture_slot]
                 for texture_slot in material.texture_slots.keys()
-                    if material.texture_slots[texture_slot].texture.type == "IMAGE"
+                if material.texture_slots[texture_slot].texture
+                    and material.texture_slots[texture_slot].texture.type == "IMAGE"
                     and (variants_defined or material.texture_slots[texture_slot].use)]
 
             # Refine the list, including only textures that have a file source and are active in the given variant
