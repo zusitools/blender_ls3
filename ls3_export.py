@@ -470,10 +470,10 @@ class Ls3Exporter:
 
         # Optimize mesh
         if self.config.optimizeMesh:
-            oldvertexcount = len(vertexdata)
             new_vidx = zusicommon.optimize_mesh(vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
             facedata = [[new_vidx[x] for x in entry[0:3]] for entry in facedata]
-            info("Mesh optimization: {} of {} vertices deleted", oldvertexcount - len(vertexdata), oldvertexcount)
+            num_deleted_vertices = sum(v is None for v in vertexdata)
+            info("Mesh optimization: {} of {} vertices deleted", num_deleted_vertices, len(vertexdata))
 
         if self.lsbwriter is not None:
             self.lsbwriter.add_subset_data(subsetNode, vertexdata, facedata)
