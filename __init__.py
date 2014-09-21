@@ -438,8 +438,15 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
                 exporter.export_ls3()
 
         runbatch()
-        #import profile
-        #profile.runctx('runbatch()', {}, {'runbatch': runbatch}, sort = 'cumtime')
+
+        # import profile, pstats
+        # p = profile.Profile()
+        # p.runctx('runbatch()', {}, {'runbatch': runbatch})
+        # s = pstats.Stats(p)
+        # s.strip_dirs()
+        # s.sort_stats('cumtime')
+        # s.print_stats()
+        # s.print_callers()
 
         self.report({'INFO'}, "Successfully exported %d files" % len(bs.batch_export_settings[bpy.data.filepath]))
         return {'FINISHED'}
