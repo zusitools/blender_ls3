@@ -337,6 +337,7 @@ class Ls3Exporter:
         active_texture_slots = self.get_active_texture_slots(material)
         active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
         active_uvmaps_count = len(active_uvmaps)
+        max_v_len_squared = 0 # Square of the length of the longest vertex (projected onto the XY plane)
         
         for ob in subset.objects:
             debug("Exporting object {}", ob.name)
@@ -411,16 +412,16 @@ class Ls3Exporter:
                 # Write the first triangle of the face
                 # Optionally reverse order of faces to flip normals
                 if must_flip_normals:
-                    facedata.append([maxvertexindex + 2, maxvertexindex + 1, maxvertexindex])
+                    facedata.append((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
                 else:
-                    facedata.append([maxvertexindex, maxvertexindex + 1, maxvertexindex + 2])
+                    facedata.append((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
 
                 # If the face is a quad, write the second triangle too.
                 if len(face.vertices) == 4:
                     if must_flip_normals:
-                        facedata.append([maxvertexindex, maxvertexindex + 3, maxvertexindex + 2])
+                        facedata.append((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
                     else:
-                        facedata.append([maxvertexindex + 2, maxvertexindex + 3, maxvertexindex])
+                        facedata.append((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
 
                 # Compile a list of all vertices to mark as "don't merge".
                 # Those are the vertices that form a sharp edge in the current face.
@@ -430,8 +431,8 @@ class Ls3Exporter:
                 # Write vertex coordinates (location, normal, and UV coordinates)
                 for vertex_no, vertex_index in enumerate(face.vertices):
                     v = mesh.vertices[vertex_index]
-                    uvdata1 = [0.0, 1.0]
-                    uvdata2 = [0.0, 1.0]
+                    uvdata1 = (0.0, 1.0)
+                    uvdata2 = (0.0, 1.0)
 
                     for texindex in range(0, 2):
                         if texindex >= active_uvmaps_count:
@@ -442,7 +443,7 @@ class Ls3Exporter:
                             continue
 
                         uv_raw = uvlayer.data[face_index].uv_raw
-                        uvdata = [uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1]]
+                        uvdata = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
                         if texindex == 0:
                             uvdata1 = uvdata
                         else:
@@ -451,35 +452,40 @@ class Ls3Exporter:
                     # Since the vertices are exported per-face, get the vertex normal from the face normal,
                     # except when the face is set to "smooth"
                     if face.use_smooth:
-                        normal = [v.normal[1], -v.normal[0], -v.normal[2]]
+                        normal = (v.normal[1], -v.normal[0], -v.normal[2])
                     else:
-                        normal = [face.normal[1], -face.normal[0], -face.normal[2]]
+                        normal = (face.normal[1], -face.normal[0], -face.normal[2])
 
                     if must_flip_normals:
                         normal = list(map(lambda x : -x, normal))
 
-                    v_len = vector_xy_length(v.co)
-                    subset.boundingr = max(subset.boundingr, v_len)
+                    # Calculate square of vertex length (projected onto the XY plane)
+                    # for the bounding radius.
+                    v_len_squared = v.co.x * v.co.x + v.co.y * v.co.y
+                    if v_len_squared > max_v_len_squared:
+                        max_v_len_squared = v_len_squared
 
                     # The coordinates are transformed into the Zusi coordinate system.
                     # The vertex index is appended for reordering vertices
-                    vertexdata.append([
+                    vertexdata.append((
                         -v.co[1], v.co[0], v.co[2],
                         normal[0], normal[1], normal[2],
                         uvdata1[0], 1 - uvdata1[1],
                         uvdata2[0], 1 - uvdata2[1],
                         maxvertexindex,
                         vertex_index in face_no_merge_vertices
-                    ])
+                    ))
                     maxvertexindex += 1
 
             # Remove the generated preview mesh
             bpy.data.meshes.remove(mesh)
 
+        subset.boundingr = sqrt(max_v_len_squared)
+
         # Optimize mesh
         if self.config.optimizeMesh:
             new_vidx = zusicommon.optimize_mesh(vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-            facedata = [[new_vidx[x] for x in entry[0:3]] for entry in facedata]
+            facedata = [(new_vidx[entry[0]], new_vidx[entry[1]], new_vidx[entry[2]]) for entry in facedata]
             num_deleted_vertices = sum(v is None for v in vertexdata)
             info("Mesh optimization: {} of {} vertices deleted", num_deleted_vertices, len(vertexdata))
 
