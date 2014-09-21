@@ -331,10 +331,12 @@ class Ls3Exporter:
     # Only the faces having the specified material will be written.
     def write_subset_mesh(self, subsetNode, subset, ls3file):
         vertexdata = []
+        maxvertexindex = 0 # Current highest index in vertexdata, equal to len(vertexdata)
         facedata = []
         material = subset.identifier.material
         active_texture_slots = self.get_active_texture_slots(material)
         active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
+        active_uvmaps_count = len(active_uvmaps)
         
         for ob in subset.objects:
             debug("Exporting object {}", ob.name)
@@ -378,6 +380,23 @@ class Ls3Exporter:
             no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp]).union(
                 set([(e.vertices[1], e.vertices[0]) for e in mesh.edges if e.use_edge_sharp]))
 
+            # For x in {0, 1}, get the UV layers from which the UV coordinates for texture x shall
+            # be taken. Can be None.
+            uvlayers = [None for texindex in range(0, 2)]
+            for texindex in range(0, 2):
+                if texindex >= active_uvmaps_count:
+                    break
+
+                # Find UV layer with the same name as the UV map.
+                # Use active UV layer if the current UV map has no name (which is the default)
+                if active_uvmaps[texindex] != "":
+                    for uvlayer in mesh.tessface_uv_textures:
+                        if uvlayer.name == active_uvmaps[texindex]:
+                            uvlayers[texindex] = uvlayer
+                            break
+                else:
+                    uvlayers[texindex] = mesh.tessface_uv_textures.active
+
             # Write vertices, faces and UV coordinates.
             # Access faces via the tessfaces API which provides only triangles and quads.
             # A vertex that appears in two faces with different normals or different UV coordinates will
@@ -385,8 +404,6 @@ class Ls3Exporter:
             # and mesh optimization will later re-merge vertices that have the same location, normal, and
             # UV coordinates.
             for face_index, face in enumerate(mesh.tessfaces):
-                vertexindex = len(vertexdata)
-
                 # Check if the face has the right material.
                 if material is not None and ob.data.materials[face.material_index] != material:
                     continue
@@ -394,16 +411,16 @@ class Ls3Exporter:
                 # Write the first triangle of the face
                 # Optionally reverse order of faces to flip normals
                 if must_flip_normals:
-                    facedata.append([vertexindex + 2, vertexindex + 1, vertexindex])
+                    facedata.append([maxvertexindex + 2, maxvertexindex + 1, maxvertexindex])
                 else:
-                    facedata.append([vertexindex, vertexindex + 1, vertexindex + 2])
+                    facedata.append([maxvertexindex, maxvertexindex + 1, maxvertexindex + 2])
 
                 # If the face is a quad, write the second triangle too.
                 if len(face.vertices) == 4:
                     if must_flip_normals:
-                        facedata.append([vertexindex, vertexindex + 3, vertexindex + 2])
+                        facedata.append([maxvertexindex, maxvertexindex + 3, maxvertexindex + 2])
                     else:
-                        facedata.append([vertexindex + 2, vertexindex + 3, vertexindex])
+                        facedata.append([maxvertexindex + 2, maxvertexindex + 3, maxvertexindex])
 
                 # Compile a list of all vertices to mark as "don't merge".
                 # Those are the vertices that form a sharp edge in the current face.
@@ -417,20 +434,10 @@ class Ls3Exporter:
                     uvdata2 = [0.0, 1.0]
 
                     for texindex in range(0, 2):
-                        if texindex >= len(active_uvmaps):
+                        if texindex >= active_uvmaps_count:
                             continue
 
-                        # Find UV layer with matching name (use active UV layer if no name
-                        # is given.
-                        uvlayer = None
-                        if active_uvmaps[texindex] == "":
-                            uvlayer = mesh.tessface_uv_textures.active
-                        else:
-                            uvlayers = [uvlayer for uvlayer in mesh.tessface_uv_textures
-                                if uvlayer.name == active_uvmaps[texindex]]
-                            if len(uvlayers):
-                                uvlayer = uvlayers[0]
-
+                        uvlayer = uvlayers[texindex]
                         if uvlayer is None:
                             continue
 
@@ -461,9 +468,10 @@ class Ls3Exporter:
                         normal[0], normal[1], normal[2],
                         uvdata1[0], 1 - uvdata1[1],
                         uvdata2[0], 1 - uvdata2[1],
-                        len(vertexdata),
+                        maxvertexindex,
                         vertex_index in face_no_merge_vertices
                     ])
+                    maxvertexindex += 1
 
             # Remove the generated preview mesh
             bpy.data.meshes.remove(mesh)
