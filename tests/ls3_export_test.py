@@ -105,6 +105,15 @@ class TestLs3Export(unittest.TestCase):
     if expected_z != 0.0 or "Z" in node.attrib:
       self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = 5, msg = msg)
 
+  def assertVertexCoordsEqual(self, expected_coords, vertices):
+    self.assertEqual(len(expected_coords), len(vertices))
+
+    p_nodes = [v.find("p") for v in vertices]
+    coords = [
+        (round(float(p.attrib["X"]), 5), round(float(p.attrib["Y"]), 5), round(float(p.attrib["Z"]), 5))
+        for p in p_nodes]
+    self.assertEqual(set(expected_coords), set(coords))
+
   def assertKeyframes(self, node, keyframe_times):
     keyframes = node.findall("AniPunkt")
     self.assertEqual(len(keyframe_times), len(keyframes))
@@ -306,7 +315,85 @@ class TestLs3Export(unittest.TestCase):
     self.open("variants")
     root = self.export_and_parse()
 
+  # ---
+  # Mesh optimization tests
+  # ---
+
+  def test_mesh_optimization_vertex_dist(self):
+    self.open("mesh_optimization_vertex_dist")
+
+    # Max. coord delta 1.0
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 1.0,
+      "maxUVDelta" : 9999,
+      "maxNormalAngle" : 9999
+    })
+
+    vertices = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertVertexCoordsEqual([(1, 0, -1), (-1, 0, -1), (0, 0, 1)], vertices)
+
+    # Max. coord delta 0.1
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 0.1,
+      "maxUVDelta" : 9999,
+      "maxNormalAngle" : 9999
+    })
+
+    vertices = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertVertexCoordsEqual([(1, 0, -1), (-1, 0, -1), (-0.4, 0, 1), (0.4, 0, 1)], vertices)
+
+  def test_mesh_optimization_normal_angle(self):
+    self.open("mesh_optimization_smooth_cube")
+
+    # Unoptimized
+    root = self.export_and_parse({
+      "optimizeMesh" : False,
+    })
+
+    vertices = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertEqual(24, len(vertices))
+
+    # Optimized
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 9999,
+      "maxUVDelta" : 9999,
+      "maxNormalAngle" : 0.1
+    })
+
+    vertices = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertEqual(8, len(vertices))
+
+  def test_mesh_optimization_uv(self):
+    self.open("mesh_optimization_uv")
+
+    # Max. UV delta 0.0
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 9999,
+      "maxUVDelta" : 0.0,
+      "maxNormalAngle" : 9999
+    })
+
+    vertices = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertEqual(8, len(vertices))
+
+    # Max. UV delta 0.2
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 9999,
+      "maxUVDelta" : 0.2,
+      "maxNormalAngle" : 9999
+    })
+
+    vertices = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertEqual(6, len(vertices))
+
+  # ---
   # Animation tests - Basic
+  # ---
 
   # Tests that the animation export restores the current frame number.
   def test_animation_restore_frame_no(self):
