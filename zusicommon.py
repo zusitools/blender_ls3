@@ -72,21 +72,18 @@ def is_object_visible(object, variantIDs):
 
     return (len(intersect) == 0) != visibility
 
-# Determines whether two vertices can be merged by looking at the corresponding vertexdata entries
-def can_merge_vertices(vertex1, vertex2, maxCoordDeltaSquared, maxUVDeltaSquared, maxNormalAngle):
-    return (not (vertex1[11] or vertex2[11]) # no-merge flag
-        and vertexdist_squared_2(vertex1[6:8], vertex2[6:8]) <= maxUVDeltaSquared
-        and vertexdist_squared_2(vertex1[8:10], vertex2[8:10]) <= maxUVDeltaSquared
-        and vertexdist_squared_3(vertex1[0:3], vertex2[0:3]) <= maxCoordDeltaSquared
-        and vertexangle_3(vertex1[3:6], vertex2[3:6]) <= maxNormalAngle)
-
 # Merges the two vertices at their center (location, normal, and UV coordinates), keeping the vertex index of the first vertex
 def merge_vertices(v1, v2):
-    # Compute the angle bisector of the two normal vertices:
-    # n = n1 / |n1| + n2 / |n2|
-    n1 = normalize_vector_3(v1[3], v1[4], v1[5])
-    n2 = normalize_vector_3(v2[3], v2[4], v2[5])
-    n = normalize_vector_3(n1[0] + n2[0], n1[1] + n2[1], n1[2] + n2[2])
+    # If the two normal vectors are (almost) equal, take one of the vectors instead of
+    # computing the angle bisector.
+    if (abs(v2[3] - v1[3]) < 0.00001 and abs(v2[4] - v1[4]) < 0.00001 and abs(v2[5] - v1[5]) < 0.00001):
+        n = (v1[3], v1[4], v1[5])
+    else:
+        # Compute the angle bisector of the two normal vertices:
+        # n = n1 / |n1| + n2 / |n2|
+        n1 = normalize_vector_3(v1[3], v1[4], v1[5])
+        n2 = normalize_vector_3(v2[3], v2[4], v2[5])
+        n = normalize_vector_3(n1[0] + n2[0], n1[1] + n2[1], n1[2] + n2[2])
 
     return ((v1[0] + v2[0]) / 2, (v1[1] + v2[1]) / 2, (v1[2] + v2[2]) / 2,
         n[0], n[1], n[2],
@@ -126,7 +123,20 @@ def optimize_mesh(vertexdata, maxCoordDelta, maxUVDelta, maxNormalAngle):
             if vertex2[0] - vertex1[0] > maxCoordDelta:
                 break
 
-            if can_merge_vertices(vertex1, vertex2, maxCoordDeltaSquared, maxUVDeltaSquared, maxNormalAngle):
+            # Check if the two vertices can be merged
+            if (not (vertex1[11] or vertex2[11]) # no-merge flag
+                    # Early-abort checks without having to compute actual vertex distances
+                    # Explicitly write out two checks instead of using the abs() function
+                    # for performance reasons.
+                    and vertex2[1] - vertex1[1] < maxCoordDelta and vertex1[1] - vertex2[1] < maxCoordDelta
+                    and vertex2[2] - vertex1[2] < maxCoordDelta and vertex1[2] - vertex2[2] < maxCoordDelta
+                    and vertex2[6] - vertex1[6] < maxUVDelta and vertex1[6] - vertex2[6] < maxUVDelta
+                    and vertex2[7] - vertex1[7] < maxUVDelta and vertex1[7] - vertex2[7] < maxUVDelta
+                    # The actual tests
+                    and vertexdist_squared_2(vertex1[6:8], vertex2[6:8]) <= maxUVDeltaSquared
+                    and vertexdist_squared_3(vertex1[0:3], vertex2[0:3]) <= maxCoordDeltaSquared
+                    and vertexangle_3(vertex1[3:6], vertex2[3:6]) <= maxNormalAngle
+                    and vertexdist_squared_2(vertex1[8:10], vertex2[8:10]) <= maxUVDeltaSquared):
                 vertexdata[vertex1_index] = merge_vertices(vertex1, vertex2)
                 vertexdata[vertex2_index] = None
                 merged[vertex2[10]] = vertex1[10]
