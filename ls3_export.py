@@ -487,15 +487,15 @@ class Ls3Exporter:
 
     # Returns a string containing the <Vertex> and <Face> nodes for the given vertex and face data.
     def get_subset_xml(self, vertexdata, facedata):
-        return "".join([
+        return (os.linesep + "      ").join([
             '<Vertex U="' + str(entry[6]) + '" V="' + str(entry[7])
             + '" U2="' + str(entry[8]) + '" V2="' + str(entry[9]) + '">'
             + '<p X="' + str(entry[0]) + '" Y="' + str(entry[1]) + '" Z="' + str(entry[2]) + '"/>'
             + '<n X="' + str(entry[3]) + '" Y="' + str(entry[4]) + '" Z="' + str(entry[5]) + '"/>'
-            + '</Vertex>' + os.linesep
+            + '</Vertex>'
             for entry in vertexdata if entry is not None
-        ]) + "".join([
-            '<Face i="' + ";".join(map(str, entry)) + '"/>' + os.linesep
+        ] + [
+            '<Face i="' + ";".join(map(str, entry)) + '"/>'
             for entry in facedata
         ])
 

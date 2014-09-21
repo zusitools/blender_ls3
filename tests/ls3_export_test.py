@@ -180,6 +180,23 @@ class TestLs3Export(unittest.TestCase):
     finally:
       os.linesep = oldlinesep
 
+  def test_indentation(self):
+    self.open("cube")
+    content = self.export().read().decode('utf-8')
+    indent = os.linesep + 6 * " "
+
+    idx = content.find("<Vertex")
+    while idx != -1:
+      self.assertGreaterEqual(idx, len(indent))
+      self.assertEqual(content[idx - len(indent):idx + len("<Vertex")], indent + "<Vertex")
+      idx = content.find("<Vertex", idx + 1)
+
+    idx = content.find("<Face")
+    while idx != -1:
+      self.assertGreaterEqual(idx, len(indent))
+      self.assertEqual(content[idx - len(indent):idx + len("<Face")], indent + "<Face")
+      idx = content.find("<Face", idx + 1)
+
   # ---
   # Mesh and texture export tests
   # ---
