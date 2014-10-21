@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-21 23:55+0200\n"
+"POT-Creation-Date: 2014-10-22 00:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -177,67 +177,71 @@ msgstr ""
 msgid "Variants (leave empty to export all)"
 msgstr ""
 
-#: ../__init__.py:348 ../__init__.py:491 ../zusiprops.py:807
+#: ../__init__.py:348 ../__init__.py:502 ../zusiprops.py:807
 msgid "Variants can be defined in the Scene settings."
 msgstr ""
 
-#: ../__init__.py:403
+#: ../__init__.py:356
+msgid "The following files will be overwritten:"
+msgstr ""
+
+#: ../__init__.py:414
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr ""
 
-#: ../__init__.py:404
+#: ../__init__.py:415
 msgid "Batch export LS3"
 msgstr ""
 
-#: ../__init__.py:413
+#: ../__init__.py:424
 msgid "Batch export settings not found"
 msgstr ""
 
-#: ../__init__.py:417
+#: ../__init__.py:428
 msgid "Unsaved file, no file name available"
 msgstr ""
 
-#: ../__init__.py:420
+#: ../__init__.py:431
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr ""
 
-#: ../__init__.py:457
+#: ../__init__.py:468
 #, python-format
 msgid "Successfully exported %d file"
 msgid_plural "Successfully exported %d files"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../__init__.py:466
+#: ../__init__.py:477
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 
-#: ../__init__.py:467
+#: ../__init__.py:478
 msgid "Show Variants"
 msgstr ""
 
-#: ../__init__.py:471
+#: ../__init__.py:482
 msgid "Variants to show"
 msgstr ""
 
-#: ../__init__.py:472
+#: ../__init__.py:483
 msgid "Choose which variants to show"
 msgstr ""
 
-#: ../__init__.py:482
+#: ../__init__.py:493
 msgid "Variants (leave empty to show all)"
 msgstr ""
 
-#: ../__init__.py:522
+#: ../__init__.py:533
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr ""
 
-#: ../__init__.py:525 ../__init__.py:528
+#: ../__init__.py:536 ../__init__.py:539
 msgid "Zusi Scenery (.ls3) ..."
 msgstr ""
 
-#: ../__init__.py:531
+#: ../__init__.py:542
 msgid "Show variants ..."
 msgstr ""
 

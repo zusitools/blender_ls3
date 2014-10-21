@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: blender_ls 3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-21 23:55+0200\n"
+"POT-Creation-Date: 2014-10-22 00:18+0200\n"
 "PO-Revision-Date: 2014-10-21 18:23+0200\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -180,69 +180,73 @@ msgstr "Festlegen, welche Varianten exportiert werden sollen "
 msgid "Variants (leave empty to export all)"
 msgstr "Varianten (leer lassen, um alle zu exportieren)"
 
-#: ../__init__.py:348 ../__init__.py:491 ../zusiprops.py:807
+#: ../__init__.py:348 ../__init__.py:502 ../zusiprops.py:807
 msgid "Variants can be defined in the Scene settings."
 msgstr "Varianten können in den Szeneneinstellungen definiert werden."
 
-#: ../__init__.py:403
+#: ../__init__.py:356
+msgid "The following files will be overwritten:"
+msgstr "Folgende Dateien werden überschrieben:"
+
+#: ../__init__.py:414
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr "Stapelexport in Zusi-Landschaftsdateien (.ls3)"
 
-#: ../__init__.py:404
+#: ../__init__.py:415
 msgid "Batch export LS3"
 msgstr "Stapelexport LS3"
 
-#: ../__init__.py:413
+#: ../__init__.py:424
 msgid "Batch export settings not found"
 msgstr "Stapelexport-Einstellungen nicht gefunden"
 
-#: ../__init__.py:417
+#: ../__init__.py:428
 msgid "Unsaved file, no file name available"
 msgstr "Ungespeicherte Datei, kein Dateiname vorhanden"
 
-#: ../__init__.py:420
+#: ../__init__.py:431
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
-#: ../__init__.py:457
+#: ../__init__.py:468
 #, python-format
 msgid "Successfully exported %d file"
 msgid_plural "Successfully exported %d files"
 msgstr[0] "%d Datei erfolgreich exportiert"
 msgstr[1] "%d Dateien erfolgreich exportiert"
 
-#: ../__init__.py:466
+#: ../__init__.py:477
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 "Nur Objekte anzeigen, die in einer bestimmten Kombination von Varianten "
 "sichtbar sind"
 
-#: ../__init__.py:467
+#: ../__init__.py:478
 msgid "Show Variants"
 msgstr "Varianten anzeigen"
 
-#: ../__init__.py:471
+#: ../__init__.py:482
 msgid "Variants to show"
 msgstr "Anzuzeigende Varianten"
 
-#: ../__init__.py:472
+#: ../__init__.py:483
 msgid "Choose which variants to show"
 msgstr "Festlegen, welche Varianten angezeigt werden sollen "
 
-#: ../__init__.py:482
+#: ../__init__.py:493
 msgid "Variants (leave empty to show all)"
 msgstr "Varianten (leer lassen, um alle anzuzeigen)"
 
-#: ../__init__.py:522
+#: ../__init__.py:533
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr "Zusi-2-Landschaft (.ls) ..."
 
-#: ../__init__.py:525 ../__init__.py:528
+#: ../__init__.py:536 ../__init__.py:539
 msgid "Zusi Scenery (.ls3) ..."
 msgstr "Zusi-Landschaft (.ls3) ..."
 
-#: ../__init__.py:531
+#: ../__init__.py:542
 msgid "Show variants ..."
 msgstr "Varianten anzeigen ..."
 
