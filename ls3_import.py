@@ -401,8 +401,8 @@ class Ls3Importer:
         print( "Opening LS3 file " + self.config.filePath)
 
         # Open the file as bytes, else a Unicode BOM at the beginning of the file could confuse the XML parser.
-        fp = open(self.config.filePath, "rb")
-        with dom.parse(fp) as xml:
-            print("File read successfully")
-            self.visitNode(xml.firstChild);
-            print("Done")
+        with open(self.config.filePath, "rb") as fp:
+            with dom.parse(fp) as xml:
+                print("File read successfully")
+                self.visitNode(xml.firstChild);
+                print("Done")
