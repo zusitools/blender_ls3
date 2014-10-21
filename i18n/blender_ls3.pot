@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-21 20:16+0200\n"
+"POT-Creation-Date: 2014-10-21 23:55+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -203,8 +203,9 @@ msgid "No batch export settings found for file %s"
 msgstr ""
 
 #: ../__init__.py:457
-msgid "Successfully exported 1 file"
-msgid_plural "Successfully exported %n files"
+#, python-format
+msgid "Successfully exported %d file"
+msgid_plural "Successfully exported %d files"
 msgstr[0] ""
 msgstr[1] ""
 
