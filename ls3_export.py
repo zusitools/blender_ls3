@@ -91,10 +91,28 @@ def get_children_recursive(ob):
     return result
 
 def get_ani_description(ani_id):
-    for animation_type in zusiprops.animation_types:
-        if animation_type[0] == ani_id:
-            return animation_type[1]
-    return ""
+    try:
+        # Animation descriptions are always in German to increase consistency
+        # and facilitating the use of exported objects in other files.
+        return {
+            "0"  : 'Undefiniert/signalgesteuert',
+            "1"  : 'Zeitlich kontinuierlich',
+            "2"  : 'Geschwindigkeit (angetrieben, gebremst)',
+            "3"  : 'Geschwindigkeit (gebremst)',
+            "4"  : 'Geschwindigkeit (angetrieben)',
+            "5"  : 'Geschwindigkeit',
+            "6"  : 'Gleiskrümmung Fahrzeuganfang',
+            "7"  : 'Gleiskrümmung Fahrzeugende',
+            "8"  : 'Stromabnehmer A',
+            "9"  : 'Stromabnehmer B',
+            "10" : 'Stromabnehmer C',
+            "11" : 'Stromabnehmer D',
+            "12" : 'Türen rechts',
+            "13" : 'Türen links',
+            "14" : 'Neigetechnik',
+        }[ani_id]
+    except KeyError:
+        return ""
 
 def has_location_animation(action):
     return action is not None and any([fcurve.data_path == "location" for fcurve in action.fcurves])
