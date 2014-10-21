@@ -262,6 +262,9 @@ class Ls3Exporter:
         self.z_bias_map.update(dict((value, idx + 1) for idx, value in enumerate(zbiases_pos)))
         self.z_bias_map.update(dict((value, -(idx + 1)) for idx, value in enumerate(zbiases_neg)))
 
+        self.get_animations()
+        self.exported_subset_identifiers = self.get_exported_subsets()
+
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
     #  - only the file name: if the file resides in the same directory as the .ls3 file
@@ -1065,8 +1068,6 @@ class Ls3Exporter:
         info("Bounding radius: {} m", int(ceil(ls3file.boundingr)))
 
     def export_ls3(self):
-        self.get_animations()
-        self.exported_subset_identifiers = self.get_exported_subsets()
         debug("Exported subset IDs:")
         debug(self.exported_subset_identifiers)
         ls3files = self.get_files()

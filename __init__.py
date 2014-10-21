@@ -351,6 +351,15 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         row.prop(self, "exportSelected", text = "Export")
         row = layout.row()
         row.prop(self, "exportAnimations")
+        if self.properties.exportAnimations:
+            row = layout.row()
+            row.label(text=_("The following files will be overwritten:"))
+            row = layout.row()
+            box = row.box()
+            (name, ext) = os.path.splitext(self.properties.filename)
+            for file in self.get_exporter(context).get_files():
+                if file.filename != self.properties.filename:
+                    box.label(text = file.filename)
         row = layout.row()
         row.prop(self, "optimizeMesh")
         row = layout.row(align = False)
@@ -360,8 +369,8 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         col.prop(self, "maxCoordDelta")
         col.prop(self, "maxUVDelta")
         col.prop(self, "maxNormalAngle")
- 
-    def execute(self, context):
+
+    def get_exporter(self, context):
         settings = ls3_export.Ls3ExporterSettings(
             context,
             self.properties.filepath,
@@ -377,8 +386,10 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             [ob.name for ob in context.selected_objects],
         )
         
-        exporter = ls3_export.Ls3Exporter(settings)
-        exporter.export_ls3()
+        return ls3_export.Ls3Exporter(settings)
+
+    def execute(self, context):
+        self.get_exporter(context).export_ls3()
         return {'FINISHED'}
  
     def invoke(self, context, event):
