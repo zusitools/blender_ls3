@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import bpy
 import os
 import shutil
@@ -10,7 +12,9 @@ class TestLs3Export(unittest.TestCase):
   def setUpClass(cls):
     # Copy test blend files into temporary directory.
     cls._tempdir = tempfile.mkdtemp()
-    shutil.copytree("blends", os.path.join(cls._tempdir, "blends"))
+    cls._exportdir = tempfile.mkdtemp(dir=cls._tempdir)
+    cls._blendsdir = tempfile.mkdtemp(dir=cls._tempdir)
+    shutil.copytree("blends", os.path.join(cls._blendsdir, "blends"))
 
   @classmethod
   def tearDownClass(cls):
@@ -25,7 +29,7 @@ class TestLs3Export(unittest.TestCase):
       tempfile.close()
 
   def open(self, filename):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self._tempdir, "blends", filename + ".blend"))
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(self._blendsdir, "blends", filename + ".blend"))
 
   def clear_scene(self):
     for ob in bpy.context.scene.objects:
@@ -33,11 +37,15 @@ class TestLs3Export(unittest.TestCase):
       bpy.data.objects.remove(ob)
     bpy.context.scene.update()
 
-  def export(self, exportargs={}):
+  def export(self, exportargs={}, noclose=False):
     context = bpy.context.copy()
     context['selected_objects'] = []
 
-    tempfile_file = tempfile.NamedTemporaryFile(suffix=exportargs.get("ext", ".ls3"))
+    # Close the generated file right away (this requires setting delete=False, else it will be deleted)
+    # as the file cannot be open()ed a second time on Windows.
+    tempfile_file = tempfile.NamedTemporaryFile(suffix=exportargs.get("ext", ".ls3"), dir=self._exportdir, delete=False)
+    tempfile_file.close()
+
     if "ext" in exportargs:
       del exportargs["ext"]
     self.tempfiles.append(tempfile_file)
@@ -55,30 +63,29 @@ class TestLs3Export(unittest.TestCase):
       filepath=tempfile_path, filename=tempfile_name, directory=tempfile_dir,
       **exportargs)
 
-    return tempfile_file
+    return tempfile_file.name
 
   def export_and_parse(self, exportargs={}):
-    exported_file = self.export(exportargs)
+    exported_file_name = self.export(exportargs)
     # print(exported_file.read())
-    tree = ET.parse(exported_file.name)
+    tree = ET.parse(exported_file_name)
     return tree.getroot()
 
   def export_and_parse_multiple(self, additional_suffixes, exportargs={}):
     if "exportAnimations" not in exportargs:
       exportargs["exportAnimations"] = True
-    mainfile = self.export(exportargs)
-    # print(mainfile.read())
+    mainfile_name = self.export(exportargs)
 
-    (path, name) = os.path.split(mainfile.name)
+    (path, name) = os.path.split(mainfile_name)
     (basename, ext) = os.path.splitext(name)
 
-    mainfile_tree = ET.parse(mainfile.name)
+    mainfile_tree = ET.parse(mainfile_name)
     mainfile_root = mainfile_tree.getroot()
 
     result = {"" : mainfile_root}
 
     for suffix in additional_suffixes:
-      (path, name) = os.path.split(mainfile.name)
+      (path, name) = os.path.split(mainfile_name)
       split_file_name = name.split(os.extsep, 1)
       if len(split_file_name) > 1:
         basename, ext = split_file_name[0], os.extsep + split_file_name[1]
@@ -155,9 +162,9 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(0, len(root[1]))
 
   def test_xml_declaration(self):
-    mainfile = self.export()
+    mainfile_name = self.export()
     xmldecl = b'<?xml version="1.0" encoding="UTF-8"?>'
-    self.assertEqual(xmldecl, mainfile.read()[:len(xmldecl)])
+    self.assertEqual(xmldecl, open(mainfile_name, 'rb').read()[:len(xmldecl)])
 
   def test_line_endings(self):
     self.clear_scene()
@@ -166,15 +173,15 @@ class TestLs3Export(unittest.TestCase):
     oldlinesep = os.linesep
     try:
       os.linesep = '\n'
-      mainfile = self.export()
-      contents = mainfile.read()
+      mainfile_name = self.export()
+      contents = open(mainfile_name, 'rb').read()
       self.assertNotIn(b'\r', contents)
       lines = contents.decode().split('\n')
       self.assertEqual(6, len(lines))
 
       os.linesep = '\r\n'
-      mainfile = self.export()
-      contents = mainfile.read()
+      mainfile_name = self.export()
+      contents = open(mainfile_name, 'rb').read()
       lines = contents.decode().split('\r\n')
       self.assertEqual(6, len(lines))
     finally:
@@ -182,7 +189,7 @@ class TestLs3Export(unittest.TestCase):
 
   def test_indentation(self):
     self.open("cube")
-    content = self.export().read().decode('utf-8')
+    content = open(self.export(), 'rb').read().decode('utf-8')
     indent = os.linesep + 6 * " "
 
     idx = content.find("<Vertex")
@@ -524,9 +531,9 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_subfiles_keep_lod_suffix(self):
     self.open("animation_multiple_actions")
-    mainfile = self.export({"ext" : ".lod1.ls3", "exportAnimations" : True})
+    mainfile_name = self.export({"ext" : ".lod1.ls3", "exportAnimations" : True})
 
-    path, name = os.path.split(mainfile.name)
+    path, name = os.path.split(mainfile_name)
     basename, ext = name.split(os.extsep, 1)
 
     self.assertTrue(os.path.exists(os.path.join(path, basename + "_Unterarm.lod1.ls3")))
@@ -534,9 +541,9 @@ class TestLs3Export(unittest.TestCase):
 
   def test_animation_subfiles_without_extension(self):
     self.open("animation_multiple_actions")
-    mainfile = self.export({"ext" : "", "exportAnimations" : True})
-    self.assertTrue(os.path.exists(mainfile.name + "_Unterarm"))
-    self.assertTrue(os.path.exists(mainfile.name + "_Oberarm"))
+    mainfile_name = self.export({"ext" : "", "exportAnimations" : True})
+    self.assertTrue(os.path.exists(mainfile_name + "_Unterarm"))
+    self.assertTrue(os.path.exists(mainfile_name + "_Oberarm"))
 
   def test_animation_names(self):
     self.open("animation_names")
@@ -550,7 +557,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("Hp0-Hp2", animation_nodes[1].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[1], [1, 2])
 
-    self.assertEqual("Gleiskrümmung Fahrzeuganfang", animation_nodes[2].attrib["AniBeschreibung"])
+    self.assertEqual("Stromabnehmer A", animation_nodes[2].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[2], [3])
 
   def test_animation_names_id_0(self):
