@@ -135,7 +135,7 @@ class ZusiLodImportSettingList(zusiprops.CheckBoxList):
 # ---
 
 class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
-    bl_idname = "io_import_scene.ls"
+    bl_idname = "import_scene.ls"
     bl_description = _('Import from Zusi 2 Scenery file format (.ls)')
     bl_label = _("Import LS")
     bl_space_type = "PROPERTIES"
@@ -180,7 +180,7 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
         return {'RUNNING_MODAL'}
 
 class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
-    bl_idname = "io_import_scene.ls3"
+    bl_idname = "import_scene.ls3"
     bl_description = _('Import from Zusi Scenery file format (.ls3)')
     bl_label = _("Import LS3")
     bl_space_type = "PROPERTIES"
@@ -261,7 +261,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
 # ---
  
 class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
-    bl_idname = "io_export_scene.ls3"
+    bl_idname = "export_scene.ls3"
     bl_description = _('Export to Zusi Scenery file format (.ls3)')
     bl_label = _("Export LS3")
     bl_space_type = "PROPERTIES"
@@ -399,7 +399,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         return {'RUNNING_MODAL'}
 
 class EXPORT_OT_ls3_batch(bpy.types.Operator):
-    bl_idname = "io_export_scene.ls3_batch"
+    bl_idname = "export_scene.ls3_batch"
     bl_description = _('Batch export to Zusi Scenery file format (.ls3)')
     bl_label = _("Batch export LS3")
     bl_space_type = "PROPERTIES"
