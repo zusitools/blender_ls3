@@ -453,7 +453,7 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
         # s.print_stats()
         # s.print_callers()
 
-        num_files = len(bs.batch_export_settings[bpy.data.filepath]))
+        num_files = len(bs.batch_export_settings[bpy.data.filepath])
         self.report({'INFO'}, i18n.language.ngettext("Successfully exported 1 file", "Successfully exported %n files", num_files))
         return {'FINISHED'}
 

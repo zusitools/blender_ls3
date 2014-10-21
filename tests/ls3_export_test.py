@@ -442,7 +442,7 @@ class TestLs3Export(unittest.TestCase):
     animation_nodes = files[""].findall("./Landschaft/Animation")
     self.assertEqual(1, len(animation_nodes))
     self.assertEqual("2", animation_nodes[0].attrib["AniID"])
-    self.assertEqual("Speed (powered, braked)", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertEqual("Geschwindigkeit (angetrieben, gebremst)", animation_nodes[0].attrib["AniBeschreibung"])
 
     # Test for <VerknAnimation> node.
     verkn_animation_nodes = files[""].findall("./Landschaft/VerknAnimation")
@@ -550,7 +550,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("Hp0-Hp2", animation_nodes[1].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[1], [1, 2])
 
-    self.assertEqual("Track curvature at front of vehicle", animation_nodes[2].attrib["AniBeschreibung"])
+    self.assertEqual("Gleiskrümmung Fahrzeuganfang", animation_nodes[2].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[2], [3])
 
   def test_animation_names_id_0(self):
