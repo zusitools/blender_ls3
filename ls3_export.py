@@ -263,8 +263,8 @@ class Ls3Exporter:
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
     #  - only the file name: if the file resides in the same directory as the .ls3 file
-    #  - a path relative to the Zusi data directory: if "path" is in a sub-directory of the Zusi data directory
-    #  - an absolute path: otherwise
+    #  - a path relative to the Zusi data directory: if the file resides on the same drive as the Zusi data directory,
+    #  - the path, otherwise.
     # The path separator will always be a backslash, regardless of the operating system
     def relpath(self, path):
         path = os.path.realpath(bpy.path.abspath(path))
@@ -273,14 +273,12 @@ class Ls3Exporter:
         if dirname + os.sep == self.config.fileDirectory:
             return filename
         else:
-            # Check whether "path" is in a subdirectory of the Zusi data path
-            # Source: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
             datadir = os.path.realpath(zusicommon.get_zusi_data_path())
-            commonprefix = os.path.commonprefix([path, datadir])
 
-            if commonprefix == datadir:
+            try:
                 return os.path.relpath(path, datadir).replace(os.sep, "\\")
-            else:
+            except ValueError:
+                # path and datadir are not on the same drive
                 return path.replace(os.sep, "\\")
 
     def must_start_new_file(self, ob):

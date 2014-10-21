@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+from unittest.mock import patch
 
 class TestLs3Export(unittest.TestCase):
   @classmethod
@@ -330,6 +331,43 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotIn("zBias", subsets[1].attrib)
     self.assertEqual('1', subsets[2].attrib["zBias"])
     self.assertEqual('1', subsets[3].attrib["zBias"])
+
+  @unittest.skipUnless(sys.platform.startswith("win"), "only makes sense on Windows")
+  def test_path_relative_to_zusi_dir(self):
+    # Python needs winreg.OpenKey for import mechanisms, so we must
+    # exercise care to only mock the invocations we are interested in.
+    import winreg
+    realOpenKey = winreg.OpenKey
+    realEnumValue = winreg.EnumValue
+
+    class MockRegistryKey:
+      pass
+
+    def mockOpenKeyImpl(root, keyname):
+      if root == winreg.HKEY_LOCAL_MACHINE and keyname == "Software\\Zusi3":
+        return MockRegistryKey()
+      else:
+        return realOpenKey(root, keyname)
+
+    def mockEnumValueImpl(key, index):
+      if isinstance(key, MockRegistryKey):
+        if index == 0:
+          return ('DatenDir', 'Z:\\Zusi\\Daten')
+        else:
+          raise WindowsError()
+      else:
+        return realEnumValue(key, index)
+
+    with patch('winreg.OpenKey', side_effect=mockOpenKeyImpl):
+      with patch('winreg.EnumValue', side_effect=mockEnumValueImpl):
+
+        # Test that a path outside the Zusi data dir (but on the same drive)
+        # is exported as a relative path instead of an absolute one.
+        self.open('relpath_windows')
+        mainfile = self.export_and_parse()
+        textur_datei_nodes = mainfile.findall('./Landschaft/SubSet/Textur/Datei')
+        self.assertEqual(1, len(textur_datei_nodes))
+        self.assertEqual('..\\Objektbau\\textur.png', textur_datei_nodes[0].attrib['Dateiname'])
 
   # ---
   # Variants tests
