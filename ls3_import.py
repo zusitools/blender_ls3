@@ -39,6 +39,12 @@ def fill_xyz_vector(node, vector):
     if node.getAttribute("Z") != "":
         vector[2] = float(node.getAttribute("Z"))
 
+# Loads the data from a node's X, Y, Z, and W attributes into the given vector.
+def fill_xyzw_vector(node, vector):
+    fill_xyz_vector(node, vector)
+    if node.getAttribute("W") != "":
+        vector[3] = float(node.getAttribute("W"))
+
 # Loads the data from a node's U and V attributes into the given vector.
 # If suffix is specified, it is appended to the attribute name (e.g. suffix=2 → U2, V2)
 def fill_uv_vector(node, vector, suffix = ""):
@@ -87,6 +93,12 @@ class Ls3Importer:
             self.lsbreader = lsb.LsbReader()
         else:
             self.lsbreader = None
+
+        # Imported subsets indexed by their subset number.
+        self.subsets = []
+
+        # Last rotation vector for the currently animated subset.
+        self.last_rotation = None
 
         # No. of current subset and anchor point
         self.subsetno = 0
@@ -137,6 +149,10 @@ class Ls3Importer:
         self.currentobject.rotation_euler = self.config.rotation
         self.currentobject.scale = self.config.scale
         bpy.context.scene.objects.link(self.currentobject)
+
+        while len(self.subsets) <= self.subsetno:
+            self.subsets.append(None)
+        self.subsets[self.subsetno] = self.currentobject
 
         # Assign material to object
         mat = bpy.data.materials.new(self.config.fileName + "." + str(self.subsetno))
@@ -359,6 +375,86 @@ class Ls3Importer:
         empty.location = Vector((loc[1], -loc[0], loc[2]))
         empty.rotation_euler = Vector((rot[1], -rot[0], rot[2]))
         bpy.context.scene.objects.link(empty)
+
+    #
+    # Visits a <MeshAnimation> node.
+    #
+    def visitMeshAnimationNode(self, node):
+        self.last_rotation = None
+        ani_index = node.getAttribute("AniIndex")
+        if ani_index == "":
+            ani_index = 0
+        else:
+            ani_index = int(ani_index)
+
+        if ani_index < 0 or ani_index >= len(self.subsets):
+            self.animated_subset = None
+            return
+
+        self.animated_subset = self.subsets[ani_index]
+
+        for child in node.childNodes:
+            self.visitNode(child)
+
+    #
+    # Visits an <AniPunkt> node.
+    #
+    def visitAniPunktNode(self, node):
+        if self.animated_subset is None:
+            return
+
+        if self.animated_subset.animation_data is None:
+            self.animated_subset.animation_data_create()
+        if self.animated_subset.animation_data.action is None:
+            self.animated_subset.animation_data.action = bpy.data.actions.new(
+                self.animated_subset.name + "Action")
+
+        # Make sure all FCurves are present on the Action.
+        fcurves_by_datapath = dict([((curve.data_path, curve.array_index), curve)
+            for curve in self.animated_subset.animation_data.action.fcurves])
+        for datapath in ["location", "rotation_euler"]:
+            for idx in range(0, 3):
+                if (datapath, idx) not in fcurves_by_datapath:
+                    fcurves_by_datapath[(datapath, idx)] = \
+                        self.animated_subset.animation_data.action.fcurves.new(datapath, idx)
+
+        # Get X coordinate of control point.
+        ani_zeit = node.getAttribute("AniZeit")
+        if ani_zeit == "":
+            ani_zeit = 0
+        else:
+            ani_zeit = float(ani_zeit)
+
+        controlpoint_x = self.config.context.scene.frame_start + \
+            (ani_zeit * (self.config.context.scene.frame_end - self.config.context.scene.frame_start))
+
+        # Get location and rotation information.
+        loc_vector = mathutils.Vector((0.0, 0.0, 0.0))
+        rot_quaternion = mathutils.Quaternion((0.0, 0.0, 0.0, 0.0))
+
+        loc_nodes = [x for x in node.childNodes if x.nodeName == "p"]
+        rot_nodes = [x for x in node.childNodes if x.nodeName == "q"]
+
+        if len(loc_nodes):
+            fill_xyz_vector(loc_nodes[0], loc_vector)
+        if len(rot_nodes):
+            fill_xyzw_vector(rot_nodes[0], rot_quaternion)
+
+        if self.last_rotation is None:
+            rot_euler = rot_quaternion.to_euler('XYZ')
+        else:
+            rot_euler = rot_quaternion.to_euler('XYZ', self.last_rotation)
+        self.last_rotation = rot_euler
+        print(ani_zeit, rot_euler)
+
+        # Write keyframe control points.
+        fcurves_by_datapath[("location", 0)].keyframe_points.insert(controlpoint_x, loc_vector.y).interpolation = "LINEAR"
+        fcurves_by_datapath[("location", 1)].keyframe_points.insert(controlpoint_x, -loc_vector.x).interpolation = "LINEAR"
+        fcurves_by_datapath[("location", 2)].keyframe_points.insert(controlpoint_x, loc_vector.z).interpolation = "LINEAR"
+
+        fcurves_by_datapath[("rotation_euler", 0)].keyframe_points.insert(controlpoint_x, rot_euler.x).interpolation = "LINEAR"
+        fcurves_by_datapath[("rotation_euler", 1)].keyframe_points.insert(controlpoint_x, rot_euler.y).interpolation = "LINEAR"
+        fcurves_by_datapath[("rotation_euler", 2)].keyframe_points.insert(controlpoint_x, rot_euler.z).interpolation = "LINEAR"
 
     #
     # Visits a <Landschaft> node.

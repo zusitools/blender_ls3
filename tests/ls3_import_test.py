@@ -1,4 +1,5 @@
 import bpy
+from math import radians
 import os
 import shutil
 import tempfile
@@ -41,6 +42,15 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(expected[0], actual[0], 5)
     self.assertAlmostEqual(expected[1], actual[1], 5)
     self.assertAlmostEqual(expected[2], actual[2], 5)
+
+  def assertKeyframes(self, fcurve, keyframes):
+    start = bpy.context.scene.frame_start
+    end = bpy.context.scene.frame_end
+    self.assertEqual(len(fcurve.keyframe_points), len(keyframes))
+    for idx, point in enumerate(fcurve.keyframe_points):
+      self.assertEqual("LINEAR", point.interpolation)
+      self.assertAlmostEqual(start + keyframes[idx][0] * (end - start), point.co.x, places = 5)
+      self.assertAlmostEqual(keyframes[idx][1], point.co.y, places = 5)
 
   def test_night_color(self):
     self.ls3_import("nightcolor1.ls3")
@@ -137,6 +147,34 @@ class TestLs3Import(unittest.TestCase):
     mat = ob.data.materials[0]
 
     self.assertEqual(mat.texture_slots[0].texture.image, mat.texture_slots[1].texture.image)
+
+  def test_import_animated_subset(self):
+    self.ls3_import("animated_subset.ls3")
+
+    ob = bpy.data.objects["animated_subset.ls3.0"]
+    anim_data = ob.animation_data
+    action = ob.animation_data.action
+
+    fcurves = action.fcurves
+    self.assertEqual(6, len(fcurves))
+
+    fcurves_by_datapath = dict([((curve.data_path, curve.array_index), curve) for curve in fcurves])
+
+    locX = fcurves_by_datapath[("location", 0)]
+    locY = fcurves_by_datapath[("location", 1)]
+    locZ = fcurves_by_datapath[("location", 2)]
+
+    rotX = fcurves_by_datapath[("rotation_euler", 0)]
+    rotY = fcurves_by_datapath[("rotation_euler", 1)]
+    rotZ = fcurves_by_datapath[("rotation_euler", 2)]
+
+    self.assertKeyframes(locX, [(0, 0), (1, 0)])
+    self.assertKeyframes(locY, [(0, 3), (1, -3)])
+    self.assertKeyframes(locZ, [(0, -3), (1, -3)])
+
+    self.assertKeyframes(rotX, [(0, radians(45)), (1, radians(45))])
+    self.assertKeyframes(rotY, [(0, radians(0)), (1, radians(0))])
+    self.assertKeyframes(rotZ, [(0, radians(0)), (1, radians(-45))])
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
