@@ -1,3 +1,5 @@
+# coding=utf-8
+
 #  ***** GPL LICENSE BLOCK *****
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -16,11 +18,14 @@
 #  ***** GPL LICENSE BLOCK *****
  
 import bpy
+import gettext
 import mathutils
 from . import zusicommon
 from math import pi
 
 # This file defines Zusi specific custom properties and the corresponding UI.
+
+gettext.install('', 'messages')
 
 # Defines a list with check boxes. In Blender <= 2.65 bpy.types.UIList does not exist
 # and we do not need CheckBoxList there anyway, so define it as empty
@@ -40,16 +45,16 @@ else:
 # (Name is defined in PropertyGroup)
 class ZusiFileVariant(bpy.types.PropertyGroup):
     id = bpy.props.IntProperty(
-        name = "ID",
-        description = "Unique ID of this variant",
+        name = _("ID"),
+        description = _("Unique ID of this variant"),
     )
 
 bpy.utils.register_class(ZusiFileVariant)
 
 class ZusiAnimationName(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(
-        name = "Name",
-        description = "Animation name"
+        name = _("Name"),
+        description = _("Animation name")
     )
 
 bpy.utils.register_class(ZusiAnimationName)
@@ -62,8 +67,8 @@ if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
 # Defines a visibility of an object/material/texture/whatever in a certain variant
 class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
     variant_id = bpy.props.IntProperty(
-        name = "Variant ID",
-        description = "ID of the variant this object is visible in"
+        name = _("Variant ID"),
+        description = _("ID of the variant this object is visible in")
     )
 
 bpy.utils.register_class(ZusiFileVariantVisibility)
@@ -81,33 +86,33 @@ class ZusiFileVariantVisibilityList(CheckBoxList):
 # Contains information about a file's author
 class ZusiAuthor(bpy.types.PropertyGroup):
     id = bpy.props.IntProperty(
-        name = "ID",
-        description = "The ID of the author",
+        name = _("ID"),
+        description = _("The ID of the author"),
         min = 0
     )
 
     name = bpy.props.StringProperty(
-        name = "Name",
-        description = "The name of the author",
+        name = _("Name"),
+        description = _("The name of the author"),
         default = ""
     )
 
     email = bpy.props.StringProperty(
-        name = "E-mail",
-        description = "The e-mail address of the author",
+        name = _("E-mail"),
+        description = _("The e-mail address of the author"),
         default = ""
     )
 
     effort = bpy.props.FloatProperty(
-        name = "Effort",
-        description = "The effort of the author (unit: one house)",
+        name = _("Effort"),
+        description = _("The effort of the author (unit: one house)"),
         min = 0,
         default = 0.0
     )
 
     remarks = bpy.props.StringProperty(
-        name = "Remarks",
-        description = "Remarks about the author",
+        name = _("Remarks"),
+        description = _("Remarks about the author"),
         default = ""
     )
 
@@ -197,67 +202,67 @@ d3d_shademodes = [
 class ZusiTexturePresetTextureStageSettings(bpy.types.PropertyGroup):
     D3DSAMP_MINFILTER = bpy.props.EnumProperty(
         name = "D3DSAMP_MINFILTER",
-        description = "Value for D3DSAMP_MINFILTER",
+        description = _("Value for D3DSAMP_MINFILTER"),
         items = d3d_texture_filters,
     )
     
     D3DSAMP_MAGFILTER = bpy.props.EnumProperty(
         name = "D3DSAMP_MAGFILTER",
-        description = "Value for D3DSAMP_MAGFILTER",
+        description = _("Value for D3DSAMP_MAGFILTER"),
         items = d3d_texture_filters,
     )
     
     D3DTSS_COLOROP = bpy.props.EnumProperty(
         name = "D3DTSS_COLOROP",
-        description = "Value for D3DTSS_COLOROP",
+        description = _("Value for D3DTSS_COLOROP"),
         items = d3d_texture_ops,
     )
     
     D3DTSS_COLORARG1 = bpy.props.EnumProperty(
         name = "D3DTSS_COLORARG1",
-        description = "Value for D3DTSS_COLORARG1",
+        description = _("Value for D3DTSS_COLORARG1"),
         items = d3d_texture_args,
     )
     
     D3DTSS_COLORARG2 = bpy.props.EnumProperty(
         name = "D3DTSS_COLORARG2",
-        description = "Value for D3DTSS_COLORARG2",
+        description = _("Value for D3DTSS_COLORARG2"),
         items = d3d_texture_args,
     )
     
     D3DTSS_COLORARG0 = bpy.props.EnumProperty(
         name = "D3DTSS_COLORARG2",
-        description = "Value for D3DTSS_COLORARG0",
+        description = _("Value for D3DTSS_COLORARG0"),
         items = d3d_texture_args,
     )
     
     D3DSAMP_ALPHAOP = bpy.props.EnumProperty(
         name = "D3DSAMP_ALPHAOP",
-        description = "Value for D3DSAMP_ALPHAOP",
+        description = _("Value for D3DSAMP_ALPHAOP"),
         items = d3d_texture_ops,
     )
     
     D3DTSS_ALPHAARG1 = bpy.props.EnumProperty(
         name = "D3DTSS_ALPHAARG1",
-        description = "Value for D3DTSS_ALPHAARG1",
+        description = _("Value for D3DTSS_ALPHAARG1"),
         items = d3d_texture_args,
     )
     
     D3DTSS_ALPHAARG2 = bpy.props.EnumProperty(
         name = "D3DTSS_ALPHAARG2",
-        description = "Value for D3DTSS_ALPHAARG2",
+        description = _("Value for D3DTSS_ALPHAARG2"),
         items = d3d_texture_args,
     )
     
     D3DTSS_ALPHAARG0 = bpy.props.EnumProperty(
-        name = "D3DTSS_ALPHAARG2",
-        description = "Value for D3DTSS_ALPHAARG0",
+        name = "D3DTSS_ALPHAARG0",
+        description = _("Value for D3DTSS_ALPHAARG0"),
         items = d3d_texture_args,
     )
     
     D3DTSS_RESULTARG = bpy.props.EnumProperty(
         name = "D3DTSS_RESULTARG",
-        description = "Value for D3DTSS_RESULTARG",
+        description = _("Value for D3DTSS_RESULTARG"),
         items = d3d_texture_args,
     )
 
@@ -266,28 +271,28 @@ bpy.utils.register_class(ZusiTexturePresetTextureStageSettings)
 class ZusiTexturePresetResultStageSettings(bpy.types.PropertyGroup):
     D3DRS_DESTBLEND = bpy.props.EnumProperty(
         name = "D3DRS_DESTBLEND",
-        description = "Value for D3DRS_DESTBLEND",
+        description = _("Value for D3DRS_DESTBLEND"),
         items = d3d_blend_params,
     )
 
     D3DRS_SRCBLEND = bpy.props.EnumProperty(
         name = "D3DRS_SRCBLEND",
-        description = "Value for D3DRS_SRCBLEND",
+        description = _("Value for D3DRS_SRCBLEND"),
         items = d3d_blend_params,
     )
     
     D3DRS_ALPHABLENDENABLE = bpy.props.BoolProperty(
         name = "D3DRS_ALPHABLENDENABLE",
-        description = "Value for D3DRS_ALPHABLENDENABLE",
+        description = _("Value for D3DRS_ALPHABLENDENABLE"),
     )
     
     D3DRS_ALPHATESTENABLE = bpy.props.BoolProperty(
         name = "D3DRS_ALPHATESTENABLE",
-        description = "Value for D3DRS_ALPHATESTENABLE",
+        description = _("Value for D3DRS_ALPHATESTENABLE"),
     )
     
     alpha_ref = bpy.props.IntProperty(
-        name = "Alpha REF value",
+        name = _("Alpha REF value"),
         min = 0,
         max = 255,
     )
@@ -417,85 +422,85 @@ def template_list(layout, listtype_name, list_id, dataptr, propname, active_data
 # ---
 
 scenery_types = [
-    ("0", "Unspecified", ""),
-    ("1", "Grundplatte", ""),
-    ("2", "Bahndamm", ""),
-    ("3", "Stützmauer", ""),
-    ("4", "Gleisbett", ""),
-    ("5", "Schulter", ""),
-    ("6", "Randweg", ""),
-    ("7", "Gleiszwischenraum", ""),
-    ("8", "Schiene", ""),
-    ("9", "Radlenker", ""),
-    ("10", "Bahnsteig", ""),
-    ("11", "Straße", ""),
-    ("12", "Wasser", ""),
-    ("13", "Tunnel", ""),
-    ("14", "Fahrleitung", ""),
-    ("15", "Wald", ""),
-    ("16", "Dummy (invisible in simulator)", ""),
-    ("17", "Spitzenlicht vorne", ""),
-    ("18", "Schlusslicht vorne", ""),
-    ("19", "Spitzenlicht hinten", ""),
-    ("20", "Schlusslicht hinten", ""),
-    ("21", "Schiene 2D", ""),
-    ("22", "Radlenker 2D", ""),
+    ("0", _("Unspecified"), ""),
+    ("1", _("Grundplatte"), ""),
+    ("2", _("Bahndamm"), ""),
+    ("3", _("Stützmauer"), ""),
+    ("4", _("Gleisbett"), ""),
+    ("5", _("Schulter"), ""),
+    ("6", _("Randweg"), ""),
+    ("7", _("Gleiszwischenraum"), ""),
+    ("8", _("Schiene"), ""),
+    ("9", _("Radlenker"), ""),
+    ("10", _("Bahnsteig"), ""),
+    ("11", _("Straße"), ""),
+    ("12", _("Wasser"), ""),
+    ("13", _("Tunnel"), ""),
+    ("14", _("Fahrleitung"), ""),
+    ("15", _("Wald"), ""),
+    ("16", _("Dummy (invisible in simulator)"), ""),
+    ("17", _("Spitzenlicht vorne"), ""),
+    ("18", _("Schlusslicht vorne"), ""),
+    ("19", _("Spitzenlicht hinten"), ""),
+    ("20", _("Schlusslicht hinten"), ""),
+    ("21", _("Schiene 2D"), ""),
+    ("22", _("Radlenker 2D"), ""),
 ]
 
 gf_types = [
-    ("0", "Ignore", ""),
-    ("1", "Default", ""),
-    ("2", "Tunnel", ""),
-    ("3", "Permanent way", ""),
-    ("4", "Edge of a forest", ""),
-    ("5", "Forest area, GF generated", ""),
-    ("6", "Ground plane, GF generated", ""),
-    ("7", "Background, GF generated", ""),
+    ("0", _("Ignore"), ""),
+    ("1", _("Default"), ""),
+    ("2", _("Tunnel"), ""),
+    ("3", _("Permanent way"), ""),
+    ("4", _("Edge of a forest"), ""),
+    ("5", _("Forest area, GF generated"), ""),
+    ("6", _("Ground plane, GF generated"), ""),
+    ("7", _("Background, GF generated"), ""),
 ]
 
 texture_presets = [
-    ("0", "Custom", ""),
-    ("1", "Default, single texture", ""),
-    ("2", "Default, single texture, full transparency", ""),
-    ("3", "Tex. 1 default, tex. 2 semi-transparent", ""),
-    ("4", "Default, single texture, semi-transparency", ""),
-    ("5", "Tex. 1 default, tex. 2 transparent/illuminated", ""),
-    ("6", "Signalblende (durchleuchtet)", ""),
-    ("7", "Signal lamp, fading (semi-transparent)", ""),
-    ("8", "Semi-transparency for leaves and similar structures", ""),
-    ("9", "Overlaying window, fading off during daytime", ""),
-    ("10", "Overlaying window, turned off during daytime", ""),
+    ("0", _("Custom"), ""),
+    ("1", _("Default, single texture"), ""),
+    ("2", _("Default, single texture, full transparency"), ""),
+    ("3", _("Tex. 1 default, tex. 2 semi-transparent"), ""),
+    ("4", _("Default, single texture, semi-transparency"), ""),
+    ("5", _("Tex. 1 default, tex. 2 transparent/illuminated"), ""),
+    ("6", _("Signalblende (durchleuchtet)"), ""),
+    ("7", _("Signal lamp, fading (semi-transparent)"), ""),
+    ("8", _("Semi-transparency for leaves and similar structures"), ""),
+    ("9", _("Overlaying window, fading off during daytime"), ""),
+    ("10", _("Overlaying window, turned off during daytime"), ""),
 ]
 
 licenses = [
-    ("0", "Zusi default license (freeware for non-commercial use)", ""),
-    ("1", "Public Domain", ""),
-    ("2", "Commercial", ""),
-    ("3", "Non-commercial", "")
+    ("0", _("Zusi default license (freeware for non-commercial use)"), ""),
+    ("1", _("Public Domain"), ""),
+    ("2", _("Commercial"), ""),
+    ("3", _("Non-commercial"), "")
 ]
 
 variant_visibility_modes = [
-    ("None", "Visible in all variants", ""),
-    ("True", "Visible only in the selected variants", ""),
-    ("False", "Visible in all but the selected variants", ""),
+    ("None", _("Visible in all variants"), ""),
+    ("True", _("Visible only in the selected variants"), ""),
+    ("False", _("Visible in all but the selected variants"), ""),
 ]
 
 animation_types = [
-    ("0", "Undefined/signal controlled", ""),
-    ("1", "Continuous over time", ""),
-    ("2", "Speed (powered, braked)", ""),
-    ("3", "Speed (braked)", ""),
-    ("4", "Speed (powered)", ""),
-    ("5", "Speed", ""),
-    ("6", "Track curvature at front of vehicle", ""),
-    ("7", "Track curvature at rear of vehicle", ""),
-    ("8", "Pantograph A", ""),
-    ("9", "Pantograph B", ""),
-    ("10", "Pantograph C", ""),
-    ("11", "Pantograph D", ""),
-    ("12", "Doors left", ""),
-    ("13", "Doors right", ""),
-    ("14", "Tilt technology", ""),
+    ("0", _("Undefined/signal controlled"), ""),
+    ("1", _("Continuous over time"), ""),
+    ("2", _("Speed (powered, braked)"), ""),
+    ("3", _("Speed (braked)"), ""),
+    ("4", _("Speed (powered)"), ""),
+    ("5", _("Speed"), ""),
+    ("6", _("Track curvature at front of vehicle"), ""),
+    ("7", _("Track curvature at rear of vehicle"), ""),
+    ("8", _("Stromabnehmer A"), ""),
+    ("9", _("Stromabnehmer B"), ""),
+    ("10", _("Stromabnehmer C"), ""),
+    ("11", _("Stromabnehmer D"), ""),
+    ("12", _("Doors left"), ""),
+    ("13", _("Doors right"), ""),
+    ("14", _("Neigetechnik"), ""),
 ]
 
 
@@ -504,8 +509,8 @@ animation_types = [
 #
 
 bpy.types.Material.zusi_emit_color = bpy.props.FloatVectorProperty(
-    name = "Night color",
-    description = "The night color aka emissive color of the material",
+    name = _("Night color"),
+    description = _("The night color aka emissive color of the material"),
     subtype = 'COLOR',
     min = 0.0,
     max = 1.0,
@@ -515,20 +520,20 @@ bpy.types.Material.zusi_emit_color = bpy.props.FloatVectorProperty(
 )
 
 bpy.types.Material.zusi_use_emit = bpy.props.BoolProperty(
-    name = "Use night color",
-    description = "Use a specific night color for this material",
+    name = _("Use night color"),
+    description = _("Use a specific night color for this material"),
     default = False
 )
 
 bpy.types.Material.zusi_allow_overexposure = bpy.props.BoolProperty(
-    name = "Allow overexposure",
-    description = "Allow the day color for this material to be overexposed",
+    name = _("Allow overexposure"),
+    description = _("Allow the day color for this material to be overexposed"),
     default = False
 )
 
 bpy.types.Material.zusi_overexposure_addition = bpy.props.FloatVectorProperty(
-    name = 'Overexposure addition (Diffuse)',
-    description = 'Color to add to the diffuse day color in order to create overexposure',
+    name = _('Overexposure addition (Diffuse)'),
+    description = _('Color to add to the diffuse day color in order to create overexposure'),
     subtype = 'COLOR',
     min = 0.0,
     max = 1.0,
@@ -538,8 +543,8 @@ bpy.types.Material.zusi_overexposure_addition = bpy.props.FloatVectorProperty(
 )
 
 bpy.types.Material.zusi_overexposure_addition_ambient = bpy.props.FloatVectorProperty(
-    name = 'Overexposure addition (Ambient)',
-    description = 'Color to add to the ambient day color in order to create overexposure',
+    name = _('Overexposure addition (Ambient)'),
+    description = _('Color to add to the ambient day color in order to create overexposure'),
     subtype = 'COLOR',
     min = 0.0,
     max = 1.0,
@@ -549,8 +554,8 @@ bpy.types.Material.zusi_overexposure_addition_ambient = bpy.props.FloatVectorPro
 )
 
 bpy.types.Material.zusi_ambient_color = bpy.props.FloatVectorProperty(
-    name = "Ambient color",
-    description = "The ambient color of the material",
+    name = _("Ambient color"),
+    description = _("The ambient color of the material"),
     subtype = 'COLOR',
     min = 0.0,
     max = 1.0,
@@ -560,8 +565,8 @@ bpy.types.Material.zusi_ambient_color = bpy.props.FloatVectorProperty(
 )
 
 bpy.types.Material.zusi_ambient_alpha = bpy.props.FloatProperty(
-    name = "Ambient color alpha",
-    description = "The alpha value of the ambient color",
+    name = _("Ambient color alpha"),
+    description = _("The alpha value of the ambient color"),
     precision = 3,
     min = 0.0,
     max = 1.0,
@@ -571,14 +576,14 @@ bpy.types.Material.zusi_ambient_alpha = bpy.props.FloatProperty(
 )
 
 bpy.types.Material.zusi_use_ambient = bpy.props.BoolProperty(
-    name = "Use ambient color",
-    description = "Use a specific ambient color for this material",
+    name = _("Use ambient color"),
+    description = _("Use a specific ambient color for this material"),
     default = False
 )
 
 bpy.types.Material.zusi_texture_preset = bpy.props.EnumProperty(
-    name = "Texture preset",
-    description = "The texture preset to assign to this material",
+    name = _("Texture preset"),
+    description = _("The texture preset to assign to this material"),
     items = texture_presets,
     default = "1",
     update = on_zusi_texture_preset_update,
@@ -586,56 +591,56 @@ bpy.types.Material.zusi_texture_preset = bpy.props.EnumProperty(
 
 # This cannot be renamed to zusi_scenery_type because of existing files.
 bpy.types.Material.zusi_landscape_type = bpy.props.EnumProperty(
-    name = "Scenery type",
-    description = "The scenery type to assign to this subset",
+    name = _("Scenery type"),
+    description = _("The scenery type to assign to this subset"),
     items = scenery_types,
     default = "0"
 )
 
 bpy.types.Material.zusi_gf_type = bpy.props.EnumProperty(
-    name = "GF type",
-    description = "The GF (Geländeformer) type to assign to this subset",
+    name = _("GF type"),
+    description = _("The GF (Geländeformer) type to assign to this subset"),
     items = gf_types,
     default = "0"
 )
 
 bpy.types.Material.zusi_force_brightness = bpy.props.FloatProperty(
-    name = "Force brightness",
-    description = "Force this material to have a specific brightness",
+    name = _("Force brightness"),
+    description = _("Force this material to have a specific brightness"),
     min = 0.0,
     max = 1.0,
     default = 0.0
 )
 
 bpy.types.Material.zusi_signal_magnification = bpy.props.FloatProperty(
-    name = "Signal magnification",
-    description = "Enlarge this object when it is far away from the viewpoint",
+    name = _("Signal magnification"),
+    description = _("Enlarge this object when it is far away from the viewpoint"),
     min = 0.0,
     max = 10.0,
     default = 0.0
 )
 
 bpy.types.Material.texture_stage_1 = bpy.props.PointerProperty(
-    name = "Texture stage 1",
-    description = "Settings for the first texture stage",
+    name = _("Texture stage 1"),
+    description = _("Settings for the first texture stage"),
     type = ZusiTexturePresetTextureStageSettings,
 )
 
 bpy.types.Material.texture_stage_2 = bpy.props.PointerProperty(
-    name = "Texture stage 2",
-    description = "Settings for the second texture stage",
+    name = _("Texture stage 2"),
+    description = _("Settings for the second texture stage"),
     type = ZusiTexturePresetTextureStageSettings,
 )
 
 bpy.types.Material.texture_stage_3 = bpy.props.PointerProperty(
-    name = "Texture stage 3",
-    description = "Settings for the third texture stage",
+    name = _("Texture stage 3"),
+    description = _("Settings for the third texture stage"),
     type = ZusiTexturePresetTextureStageSettings,
 )
 
 bpy.types.Material.result_stage = bpy.props.PointerProperty(
-    name = "Result stage",
-    description = "Settings for the result stage",
+    name = _("Result stage"),
+    description = _("Settings for the result stage"),
     type = ZusiTexturePresetResultStageSettings,
 )
 
@@ -649,8 +654,8 @@ bpy.types.Texture.zusi_variants_visibility_mode = bpy.props.EnumProperty(
 )
 
 bpy.types.Texture.zusi_variants_visibility = bpy.props.CollectionProperty(
-    name = "Variant visibility",
-    description = "Choose which variants this object is visible in when exporting",
+    name = _("Variant visibility"),
+    description = _("Choose which variants this object is visible in when exporting"),
     type = ZusiFileVariantVisibility
 )
 
@@ -659,20 +664,20 @@ bpy.types.Texture.zusi_variants_visibility = bpy.props.CollectionProperty(
 #
 
 bpy.types.Object.zusi_subset_name = bpy.props.StringProperty(
-    name = "Subset name",
-    description = "Name of the subset in which to export this object. If empty, this object will be exported into a subset with the object's material's name",
+    name = _("Subset name"),
+    description = _("Name of the subset in which to export this object. If empty, this object will be exported into a subset with the object's material's name"),
     default = ""
 )
 
 bpy.types.Object.zusi_variants_visibility_mode = bpy.props.EnumProperty(
-    name = "Variant visibility mode",
+    name = _("Variant visibility mode"),
     items = variant_visibility_modes,
     default = "None"
 )
 
 bpy.types.Object.zusi_variants_visibility = bpy.props.CollectionProperty(
-    name = "Variant visibility",
-    description = "Choose which variants this object is visible in when exporting",
+    name = _("Variant visibility"),
+    description = _("Choose which variants this object is visible in when exporting"),
     type = ZusiFileVariantVisibility
 )
 
@@ -681,38 +686,38 @@ bpy.types.Object.zusi_variants_visibility = bpy.props.CollectionProperty(
 #
 
 bpy.types.Scene.zusi_variants = bpy.props.CollectionProperty(
-    name = "Variants",
-    description = "Variants contained in this file",
+    name = _("Variants"),
+    description = _("Variants contained in this file"),
     type = ZusiFileVariant
 )
 
 bpy.types.Scene.zusi_variants_index = bpy.props.IntProperty()
 
 bpy.types.Scene.zusi_authors = bpy.props.CollectionProperty(
-    name = "Authors",
-    description = "Information about this file's author(s)",
+    name = _("Authors"),
+    description = _("Information about this file's author(s)"),
     type = ZusiAuthor
 )
 
 bpy.types.Scene.zusi_authors_index = bpy.props.IntProperty()
 
 bpy.types.Scene.zusi_object_id = bpy.props.IntProperty(
-    name = "Object ID",
-    description = "A unique ID of this object",
+    name = _("Object ID"),
+    description = _("A unique ID of this object"),
     default = 0,
     min = 0
 )
 
 bpy.types.Scene.zusi_license = bpy.props.EnumProperty(
-    name = "License",
-    description = "The license under which this object is published",
+    name = _("License"),
+    description = _("The license under which this object is published"),
     items = licenses,
     default = "0"
 )
 
 bpy.types.Scene.zusi_description = bpy.props.StringProperty(
-    name = "Description",
-    description = "A short description of this object",
+    name = _("Description"),
+    description = _("A short description of this object"),
     default = ""
 )
 
@@ -723,15 +728,15 @@ bpy.types.Scene.zusi_animations_index= bpy.props.IntProperty()
 #
 
 bpy.types.Action.zusi_animation_type = bpy.props.EnumProperty(
-    name = "Animation type",
-    description = "Defines how the animation is triggered in the simulator",
+    name = _("Animation type"),
+    description = _("Defines how the animation is triggered in the simulator"),
     items = animation_types,
     default = "0"
 )
 
 bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
-    name = "Animation speed",
-    description = "Speed of the animation, meaning depends on animation type",
+    name = _("Animation speed"),
+    description = _("Speed of the animation, meaning depends on animation type"),
     default = 0.0,
     min = 0.0
 )
@@ -744,8 +749,8 @@ if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
         get_zusi_animation_duration, set_zusi_animation_duration)
 else:
     bpy.types.Action.zusi_animation_wheel_diameter = bpy.props.FloatProperty(
-        name = "Wheel diameter",
-        description = "The animation speed converted into a wheel diameter for wheel animations",
+        name = _("Wheel diameter"),
+        description = _("The animation speed converted into a wheel diameter for wheel animations"),
         subtype = "DISTANCE",
         default = 0.0,
         min = 0.0,
@@ -754,8 +759,8 @@ else:
     )
 
     bpy.types.Action.zusi_animation_duration = bpy.props.FloatProperty(
-        name = "Animation duration",
-        description = "The animation speed converted into an animation duration (in seconds) for door animations",
+        name = _("Animation duration"),
+        description = _("The animation speed converted into an animation duration (in seconds) for door animations"),
         subtype = "TIME",
         default = 0.0,
         min = 0.0,
@@ -764,8 +769,8 @@ else:
     )
 
 bpy.types.Action.zusi_animation_names = bpy.props.CollectionProperty(
-    name = "Animation names",
-    description = "Animation names this action belongs to, if animation type is 'Undefined/signal controlled'",
+    name = _("Animation names"),
+    description = _("Animation names this action belongs to, if animation type is 'Undefined/signal controlled'"),
     type = ZusiAnimationName,
 )
 
@@ -798,10 +803,10 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
     else:
         layout.label("Variants:")
         box = layout.box()
-        box.label("Variants can be defined in the Scene settings.")
+        box.label(_("Variants can be defined in the Scene settings."))
 
 class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
-    bl_label = "Zusi specific properties"
+    bl_label = _("Zusi specific properties")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -855,7 +860,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                 ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else mathutils.Color((1, 1, 1))
                 if emit_color.r > diffuse_color.r or emit_color.g > diffuse_color.g or emit_color.b > diffuse_color.b \
                         or emit_color.r > ambient_color.r or emit_color.g > ambient_color.g or emit_color.b > ambient_color.b:
-                    layout.row().label(text = "Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components."
+                    layout.row().label(text = _("Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components.")
                         % (diffuse_color.r, diffuse_color.g, diffuse_color.b), icon = "ERROR")
 
             row = layout.row()
@@ -870,7 +875,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                 resulting_diffuse = diffuse_color - emit_color + mat.zusi_overexposure_addition
                 if (resulting_diffuse.r > 1.0 or resulting_diffuse.g > 1.0 or resulting_diffuse.b > 1.0):
                     # Intentionally cryptic error message, as only pros should use this feature :)
-                    layout.row().label(text = "Must have Diffuse - Night + Overexposure <= 1.0 in all components",
+                    layout.row().label(text = _("Must have Diffuse - Night + Overexposure <= 1.0 in all components"),
                         icon = "ERROR")
 
             row = layout.row()
@@ -882,13 +887,13 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                 resulting_ambient = mat.zusi_ambient_color - emit_color + mat.zusi_overexposure_addition_ambient
                 if (resulting_ambient.r > 1.0 or resulting_ambient.g > 1.0 or resulting_ambient.b > 1.0):
                     # Intentionally cryptic error message, as only pros should use this feature :)
-                    layout.row().label(text = "Must have Ambient - Night + Overexposure <= 1.0 in all components",
+                    layout.row().label(text = _("Must have Ambient - Night + Overexposure <= 1.0 in all components"),
                         icon = "ERROR")
 
 class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     bl_idname = 'zusi_texture_preset.edit'
-    bl_label = "Edit custom texture preset"
-    bl_description = "Edit the custom texture preset"
+    bl_label = _("Edit custom texture preset")
+    bl_description = _("Edit the custom texture preset")
     bl_options = {'INTERNAL', 'UNDO'}
     
     @classmethod
@@ -906,8 +911,8 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
 
         if mat:
             for (texstage, description) in [
-                    (mat.texture_stage_1, "First texture stage"),
-                    (mat.texture_stage_2, "Second texture stage")]:
+                    (mat.texture_stage_1, _("First texture stage")),
+                    (mat.texture_stage_2, _("Second texture stage"))]:
                 col = layout.column()
                 col.label(description)
                 col.prop(texstage, "D3DSAMP_MINFILTER")
@@ -923,12 +928,12 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
                 col.prop(texstage, "D3DTSS_RESULTARG")
             
             col = layout.column()
-            col.label("Third texture stage")
+            col.label(_("Third texture stage"))
             col.prop(mat.texture_stage_3, "D3DTSS_COLOROP")
             col.prop(mat.texture_stage_3, "D3DTSS_COLORARG1")
             col.prop(mat.texture_stage_3, "D3DTSS_COLORARG2")
             
-            col.label("Result stage")
+            col.label(_("Result stage"))
             col.prop(mat.result_stage, "D3DRS_DESTBLEND")
             col.prop(mat.result_stage, "D3DRS_SRCBLEND")
             col.prop(mat.result_stage, "D3DRS_ALPHABLENDENABLE")
@@ -943,7 +948,7 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
 
 class OBJECT_OT_zusi_toggle_variant_visibility(bpy.types.Operator):
     bl_idname = "zusi.toggle_variant_visibility"
-    bl_label = "Toggle visibility"
+    bl_label = _("Toggle visibility")
     bl_options = {'INTERNAL'}
 
     variant_id = bpy.props.IntProperty()
@@ -967,7 +972,7 @@ class OBJECT_OT_zusi_toggle_variant_visibility(bpy.types.Operator):
         return{'FINISHED'}
 
 class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
-    bl_label = "Subset (for LS3 export)"
+    bl_label = _("Subset (for LS3 export)")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -983,7 +988,7 @@ class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
         draw_variants_visibility_box(context, self.layout, context.object)
 
 class TEXTURE_PT_variant_visibility(bpy.types.Panel):
-    bl_label = "Variant visibility"
+    bl_label = _("Variant visibility")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "texture"
@@ -996,7 +1001,7 @@ class TEXTURE_PT_variant_visibility(bpy.types.Panel):
         draw_variants_visibility_box(context, self.layout, context.texture, object_type = "Texture")
 
 class SCENE_PT_zusi_properties(bpy.types.Panel):
-    bl_label = "Zusi file properties"
+    bl_label = _("Zusi file properties")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
@@ -1020,8 +1025,8 @@ class SCENE_PT_zusi_properties(bpy.types.Panel):
 
 class ZUSI_VARIANTS_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_variants.add'
-    bl_label = "Add variant"
-    bl_description = "Add a variant to the scene"
+    bl_label = _("Add variant")
+    bl_description = _("Add a variant to the scene")
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
@@ -1030,14 +1035,14 @@ class ZUSI_VARIANTS_OT_add(bpy.types.Operator):
             max_id = max([v.id for v in context.scene.zusi_variants])
     
         new_variant = context.scene.zusi_variants.add()
-        new_variant.name = "Variant"
+        new_variant.name = _("Variant")
         new_variant.id = max_id + 1
         return{'FINISHED'}
 
 class ZUSI_VARIANTS_OT_del(bpy.types.Operator):
     bl_idname = 'zusi_variants.remove'
-    bl_label = "Remove variant"
-    bl_description = "Remove the selected variant from the scene"
+    bl_label = _("Remove variant")
+    bl_description = _("Remove the selected variant from the scene")
     bl_options = {'INTERNAL'}
     
     @classmethod
@@ -1064,7 +1069,7 @@ class ZUSI_VARIANTS_OT_del(bpy.types.Operator):
         return{'FINISHED'}
 
 class SCENE_PT_zusi_variants(bpy.types.Panel):
-    bl_label = "Variants"
+    bl_label = _("Variants")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
@@ -1095,15 +1100,15 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
 
 class ACTION_OT_set_zusi_animation_wheel_diameter(bpy.types.Operator):
     bl_idname = 'action.set_zusi_animation_wheel_diameter'
-    bl_label = "Set wheel diameter"
-    bl_description = "Set the animation speed of a wheel animation action to conform to the specified wheel diameter"
+    bl_label = _("Set wheel diameter")
+    bl_description = _("Set the animation speed of a wheel animation action to conform to the specified wheel diameter")
     bl_options = {'INTERNAL'}
 
     action_name = bpy.props.StringProperty(options = {'HIDDEN'})
 
     wheel_diameter = bpy.props.FloatProperty(
-        name = "Wheel diameter",
-        description = "Wheel diameter",
+        name = _("Wheel diameter"),
+        description = _("Wheel diameter"),
         subtype = 'DISTANCE',
         min = 0.0,
     )
@@ -1119,15 +1124,15 @@ class ACTION_OT_set_zusi_animation_wheel_diameter(bpy.types.Operator):
 
 class ACTION_OT_set_zusi_animation_duration(bpy.types.Operator):
     bl_idname = 'action.set_zusi_animation_duration'
-    bl_label = "Set duration"
-    bl_description = "Set the animation speed of a door animation action to conform to the specified animation duration"
+    bl_label = _("Set duration")
+    bl_description = _("Set the animation speed of a door animation action to conform to the specified animation duration")
     bl_options = {'INTERNAL'}
 
     action_name = bpy.props.StringProperty(options = {'HIDDEN'})
 
     duration = bpy.props.FloatProperty(
-        name = "Duration [s]",
-        description = "Duration in seconds",
+        name = _("Duration [s]"),
+        description = _("Duration in seconds"),
         subtype = 'TIME',
         min = 0.0,
     )
@@ -1143,8 +1148,8 @@ class ACTION_OT_set_zusi_animation_duration(bpy.types.Operator):
 
 class ACTION_OT_add_zusi_animation_name(bpy.types.Operator):
     bl_idname = 'action.add_zusi_animation_name'
-    bl_label = "Add animation name"
-    bl_description = "Add the name of an animation this action belongs to"
+    bl_label = _("Add animation name")
+    bl_description = _("Add the name of an animation this action belongs to")
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
@@ -1153,8 +1158,8 @@ class ACTION_OT_add_zusi_animation_name(bpy.types.Operator):
 
 class ACTION_OT_del_zusi_animation_name(bpy.types.Operator):
     bl_idname = 'action.del_zusi_animation_name'
-    bl_label = "Remove animation name"
-    bl_description = "Remove the selected animation name from the list of animations this action belongs to"
+    bl_label = _("Remove animation name")
+    bl_description = _("Remove the selected animation name from the list of animations this action belongs to")
 
     @classmethod
     def poll(self, context):
@@ -1170,7 +1175,7 @@ class ACTION_OT_del_zusi_animation_name(bpy.types.Operator):
         return{'FINISHED'}
 
 class SCENE_PT_zusi_animations(bpy.types.Panel):
-    bl_label = "Zusi animations"
+    bl_label = _("Zusi animations")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
@@ -1192,20 +1197,20 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             if action.zusi_animation_type in ["2", "3", "4", "5"]:
                 row = layout.row()
                 if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
-                    row.label("Wheel diameter: %.2f m" % action.zusi_animation_wheel_diameter)
+                    row.label(_("Wheel diameter: %.2f m") % action.zusi_animation_wheel_diameter)
                     row.operator("action.set_zusi_animation_wheel_diameter", text = "Set").action_name = action.name
                 else:
                     row.prop(action, "zusi_animation_wheel_diameter")
             elif action.zusi_animation_type in ["12", "13"]:
                 row = layout.row()
                 if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
-                    row.label("Duration: %.2f s" % action.zusi_animation_duration)
+                    row.label(_("Duration: %.2f s") % action.zusi_animation_duration)
                     row.operator("action.set_zusi_animation_duration", text = "Set").action_name = action.name
                 else:
                     row.prop(action, "zusi_animation_duration")
             elif action.zusi_animation_type == "0":
                 box = layout.box()
-                box.row().label(text = "Part of the following animations:")
+                box.row().label(text = _("Part of the following animations:"))
                 row = box.row()
                 template_list(row, "UI_UL_list", "zusi_animation_name_list", action, "zusi_animation_names", action, "zusi_animation_names_index", rows = 3)
                 # Show add/remove operators.
@@ -1222,18 +1227,18 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
 
 class ZUSI_AUTHORS_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_authors.add'
-    bl_label = "Add author"
-    bl_description = "Add an author to the scene"
+    bl_label = _("Add author")
+    bl_description = _("Add an author to the scene")
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        context.scene.zusi_authors.add().name = "Author"
+        context.scene.zusi_authors.add().name = _("Author")
         return{'FINISHED'}
 
 class ZUSI_AUTHORS_OT_del(bpy.types.Operator):
     bl_idname = 'zusi_authors.remove'
-    bl_label = "Remove author"
-    bl_description = "Remove the selected author from the scene"
+    bl_label = _("Remove author")
+    bl_description = _("Remove the selected author from the scene")
     
     @classmethod
     def poll(self, context):
@@ -1252,8 +1257,8 @@ class ZUSI_AUTHORS_OT_del(bpy.types.Operator):
 
 class ZUSI_AUTHORS_OT_add_default(bpy.types.Operator):
     bl_idname = 'zusi_authors.add_default'
-    bl_label = "Add default author information"
-    bl_description = "Add author information entered in Zusi-Dateiverwaltung (Windows) or the configuration file (Linux)"
+    bl_label = _("Add default author information")
+    bl_description = _("Add author information entered in Zusi-Dateiverwaltung (Windows) or the configuration file (Linux)")
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
@@ -1265,7 +1270,7 @@ class ZUSI_AUTHORS_OT_add_default(bpy.types.Operator):
         return{'FINISHED'}
 
 class SCENE_PT_zusi_authors(bpy.types.Panel):
-    bl_label = "Author information"
+    bl_label = _("Author information")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
