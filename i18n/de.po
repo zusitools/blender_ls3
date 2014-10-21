@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: blender_ls 3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-21 20:16+0200\n"
+"POT-Creation-Date: 2014-10-21 23:55+0200\n"
 "PO-Revision-Date: 2014-10-21 18:23+0200\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -206,10 +206,11 @@ msgid "No batch export settings found for file %s"
 msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
 #: ../__init__.py:457
-msgid "Successfully exported 1 file"
-msgid_plural "Successfully exported %n files"
-msgstr[0] "1 Datei erfolgreich exportiert"
-msgstr[1] "%n Dateien erfolgreich exportiert"
+#, python-format
+msgid "Successfully exported %d file"
+msgid_plural "Successfully exported %d files"
+msgstr[0] "%d Datei erfolgreich exportiert"
+msgstr[1] "%d Dateien erfolgreich exportiert"
 
 #: ../__init__.py:466
 msgid "Show only objects that are visible in a given set of variants"
