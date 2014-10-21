@@ -24,7 +24,7 @@ class TestLs3Import(unittest.TestCase):
     bpy.context.scene.update()
 
   def ls3_import(self, filename, importargs={}):
-    bpy.ops.io_import_scene.ls3(bpy.context.copy(),
+    bpy.ops.import_scene.ls3(bpy.context.copy(),
       filepath=os.path.join(self._tempdir, "ls3s", filename),
       filename=filename,
       directory=os.path.join(self._tempdir, "ls3s"),

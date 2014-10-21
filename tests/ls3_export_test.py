@@ -3,6 +3,7 @@
 import bpy
 import os
 import shutil
+import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -60,7 +61,7 @@ class TestLs3Export(unittest.TestCase):
     if "optimizeMesh" not in exportargs:
       exportargs["optimizeMesh"] = False
 
-    bpy.ops.io_export_scene.ls3(context,
+    bpy.ops.export_scene.ls3(context,
       filepath=tempfile_path, filename=tempfile_name, directory=tempfile_dir,
       **exportargs)
 
