@@ -23,8 +23,8 @@ pip-log.txt
 .coverage
 .tox
 
-#Translations
-*.mo
+# Translation backups
+*.po~
 
 #Mr Developer
 .mr.developer.cfg

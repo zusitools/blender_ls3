@@ -18,14 +18,13 @@
 #  ***** GPL LICENSE BLOCK *****
  
 import bpy
-import gettext
 import mathutils
-from . import zusicommon
+from . import zusicommon, i18n
 from math import pi
 
-# This file defines Zusi specific custom properties and the corresponding UI.
+_ = i18n.language.gettext
 
-gettext.install('', 'messages')
+# This file defines Zusi specific custom properties and the corresponding UI.
 
 # Defines a list with check boxes. In Blender <= 2.65 bpy.types.UIList does not exist
 # and we do not need CheckBoxList there anyway, so define it as empty
@@ -600,7 +599,7 @@ bpy.types.Material.zusi_landscape_type = bpy.props.EnumProperty(
 )
 
 bpy.types.Material.zusi_gf_type = bpy.props.EnumProperty(
-    name = _("GF type"),
+    name = _("TF type"),
     description = _("The Terrain Former type to assign to this subset"),
     items = gf_types,
     default = "0"
@@ -786,7 +785,7 @@ bpy.types.Action.zusi_animation_names_index = bpy.props.IntProperty()
 def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
     if len(context.scene.zusi_variants) > 0:
         row = layout.row()
-        row.prop(ob, "zusi_variants_visibility_mode", text = "Variants")
+        row.prop(ob, "zusi_variants_visibility_mode", text = _("Variants"))
 
         selected_variants = [vis.variant_id for vis in ob.zusi_variants_visibility]
         box = layout.box()
@@ -803,7 +802,7 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
             op.variant_id = variant.id
             op.object_type = object_type
     else:
-        layout.label("Variants:")
+        layout.label(_("Variants:"))
         box = layout.box()
         box.label(_("Variants can be defined in the Scene settings."))
 
@@ -843,14 +842,14 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             row.prop(mat, "zusi_signal_magnification")
 
             row = layout.row()
-            row.prop(mat, "zusi_use_ambient", text = "Ambient color:")
+            row.prop(mat, "zusi_use_ambient", text = _("Ambient color:"))
             row = layout.row()
             row.enabled = mat.zusi_use_ambient
             row.prop(mat, "zusi_ambient_color", text="")
             row.prop(mat, "zusi_ambient_alpha", slider=True, text="Alpha")
             
             row = layout.row()
-            row.prop(mat, "zusi_use_emit", text = "Night color:")
+            row.prop(mat, "zusi_use_emit", text = _("Night color:"))
             row = layout.row()
             row.enabled = mat.zusi_use_emit
             row.prop(mat, "zusi_emit_color", text="")
@@ -866,10 +865,10 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                         % (diffuse_color.r, diffuse_color.g, diffuse_color.b), icon = "ERROR")
 
             row = layout.row()
-            row.prop(mat, "zusi_allow_overexposure", text = "Overexposure")
+            row.prop(mat, "zusi_allow_overexposure", text = _("Overexposure"))
             row = layout.row()
             row.enabled = mat.zusi_allow_overexposure
-            row.prop(mat, "zusi_overexposure_addition", text = "Add to diffuse")
+            row.prop(mat, "zusi_overexposure_addition", text = _("Add to diffuse"))
 
             # Warn the user when overexposure is not exportable.
             if row.enabled:
@@ -882,7 +881,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 
             row = layout.row()
             row.enabled = mat.zusi_allow_overexposure and mat.zusi_use_ambient
-            row.prop(mat, "zusi_overexposure_addition_ambient", text = "Add to ambient")
+            row.prop(mat, "zusi_overexposure_addition_ambient", text = _("Add to ambient"))
 
             if row.enabled:
                 emit_color = mat.zusi_emit_color if mat.zusi_use_emit else mathutils.Color((0, 0, 0))
@@ -1200,14 +1199,14 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
                 row = layout.row()
                 if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
                     row.label(_("Wheel diameter: %.2f m") % action.zusi_animation_wheel_diameter)
-                    row.operator("action.set_zusi_animation_wheel_diameter", text = "Set").action_name = action.name
+                    row.operator("action.set_zusi_animation_wheel_diameter", text = _("Set")).action_name = action.name
                 else:
                     row.prop(action, "zusi_animation_wheel_diameter")
             elif action.zusi_animation_type in ["12", "13"]:
                 row = layout.row()
                 if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
                     row.label(_("Duration: %.2f s") % action.zusi_animation_duration)
-                    row.operator("action.set_zusi_animation_duration", text = "Set").action_name = action.name
+                    row.operator("action.set_zusi_animation_duration", text = _("Set")).action_name = action.name
                 else:
                     row.prop(action, "zusi_animation_duration")
             elif action.zusi_animation_type == "0":
