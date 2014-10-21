@@ -85,7 +85,6 @@ class TestLs3Import(unittest.TestCase):
     self.assertColorEqual((0, 0, 0), mat.zusi_overexposure_addition)
     self.assertColorEqual(gray, mat.zusi_overexposure_addition_ambient)
 
-
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
   unittest.TextTestRunner(verbosity=2).run(suite)
