@@ -352,14 +352,16 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         row = layout.row()
         row.prop(self, "exportAnimations")
         if self.properties.exportAnimations:
-            row = layout.row()
-            row.label(text=_("The following files will be overwritten:"))
-            row = layout.row()
-            box = row.box()
-            (name, ext) = os.path.splitext(self.properties.filename)
-            for file in self.get_exporter(context).get_files():
-                if file.filename != self.properties.filename:
-                    box.label(text = file.filename)
+            files = self.get_exporter(context).get_files()
+            if len(files) > 1:
+                row = layout.row()
+                row.label(text=_("The following files will be overwritten:"))
+                row = layout.row()
+                box = row.box()
+                (name, ext) = os.path.splitext(self.properties.filename)
+                for file in files:
+                    if file.filename != self.properties.filename:
+                        box.label(text = file.filename)
         row = layout.row()
         row.prop(self, "optimizeMesh")
         row = layout.row(align = False)
