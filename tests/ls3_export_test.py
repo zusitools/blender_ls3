@@ -909,6 +909,32 @@ class TestLs3Export(unittest.TestCase):
     for p_node in subsets[0].findall("./Vertex/p"):
       self.assertAlmostEqual(1, abs(float(p_node.attrib["Z"])))
 
+  def test_nonanimated_parenting_scale(self):
+    self.open("parenting_scale")
+    root = self.export_and_parse({"exportAnimations" : True})
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(1, len(subsets))
+
+    vertex_nodes = [n for n in subsets[0] if n.tag == "Vertex"]
+    self.assertEqual(48, len(vertex_nodes))
+
+    vertices = set()
+    for vertex_node in vertex_nodes:
+      p_node = vertex_node.find("./p")
+      (x, y, z) = [round(float(p_node.attrib[c]), 1) for c in "XYZ"]
+      vertices.add((x, y, z))
+    vertices = sorted(list(vertices))
+
+    expected_vertices = []
+    for x in [1.0, 2.0, 3.0, 4.0]:
+      expected_vertices.append((x, -.5, -.5))
+      expected_vertices.append((x, -.5,  .5))
+      expected_vertices.append((x,  .5, -.5))
+      expected_vertices.append((x,  .5,  .5))
+
+    self.assertListEqual(expected_vertices, vertices)
+
   def test_boundingr(self):
     self.open("boundingr")
     basename, ext, files = self.export_and_parse_multiple(["Planet", "Mond"])
