@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: blender_ls 3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-22 00:18+0200\n"
+"POT-Creation-Date: 2014-10-25 18:33+0200\n"
 "PO-Revision-Date: 2014-10-21 18:23+0200\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -94,31 +94,31 @@ msgstr "Zusi-Landschaftsdatei (.ls3) exportieren"
 msgid "Export LS3"
 msgstr "LS3 exportieren"
 
-#: ../__init__.py:280
+#: ../__init__.py:282
 msgid "Export mode"
 msgstr "Exportmodus"
 
-#: ../__init__.py:281
+#: ../__init__.py:283
 msgid "Choose which objects to export"
 msgstr "Festlegen, welche Objekte exportiert werden sollen "
 
-#: ../__init__.py:283
+#: ../__init__.py:285
 msgid "All objects"
 msgstr "Alle Objekte"
 
-#: ../__init__.py:284
+#: ../__init__.py:286
 msgid "Selected objects"
 msgstr "Ausgewählte Objekte"
 
-#: ../__init__.py:285
+#: ../__init__.py:287
 msgid "Subsets containing selected objects"
 msgstr "Subsets der ausgewählten Objekte"
 
-#: ../__init__.py:291
+#: ../__init__.py:293
 msgid "Export animations"
 msgstr "Animationen exportieren"
 
-#: ../__init__.py:292
+#: ../__init__.py:294
 msgid ""
 "Export animations from keyframes (this might create/overwrite additional "
 "files)"
@@ -126,11 +126,11 @@ msgstr ""
 "Keyframes als Animationen exportieren (hierdurch werden evtl. zusätzliche "
 "Dateien erzeugt/überschrieben) "
 
-#: ../__init__.py:297
+#: ../__init__.py:299
 msgid "Optimize mesh"
 msgstr "Mesh optimieren"
 
-#: ../__init__.py:298
+#: ../__init__.py:300
 msgid ""
 "Optimize meshes in the exported file (this will not modify any meshes in the "
 "Blender file)"
@@ -138,29 +138,29 @@ msgstr ""
 "Meshes in der exportierten Datei optimieren (Meshes in der Blender-Datei "
 "werden hierbei nicht verändert)"
 
-#: ../__init__.py:303
+#: ../__init__.py:305
 msgid "Max. distance"
 msgstr "Max. Abstand"
 
-#: ../__init__.py:304
+#: ../__init__.py:306
 msgid "Maximum distance between two vertices to be merged"
 msgstr "Maximaler Abstand zweier zusammenzuführender Punkte"
 
-#: ../__init__.py:310
+#: ../__init__.py:312
 msgid "Max. UV distance"
 msgstr "Max. UV-Abstand"
 
-#: ../__init__.py:311
+#: ../__init__.py:313
 msgid "Maximum UV coordinate distance between two vertices to be merged"
 msgstr ""
 "Maximaler Abstand zwischen den UV-Koordinaten zweier zusammenzuführender "
 "Punkte"
 
-#: ../__init__.py:318
+#: ../__init__.py:320
 msgid "Max. normal angle"
 msgstr "Max. Winkel Normalen"
 
-#: ../__init__.py:319
+#: ../__init__.py:321
 msgid ""
 "Maximum angle (degrees) between the normal vectors of two vertices to be "
 "merged"
@@ -168,85 +168,103 @@ msgstr ""
 "Maximaler Winkel (in Grad) zwischen den Normalenvektoren zweier "
 "zusammenzuführender Punkte"
 
-#: ../__init__.py:326
+#: ../__init__.py:328
 msgid "Variants to export"
 msgstr "Zu exportierende Varianten"
 
-#: ../__init__.py:327
+#: ../__init__.py:329
 msgid "Choose which variants to export"
 msgstr "Festlegen, welche Varianten exportiert werden sollen "
 
-#: ../__init__.py:337
+#: ../__init__.py:340
+msgid "No author information entered"
+msgstr "Keine Autorenangabe"
+
+#: ../__init__.py:343
+msgid "Author information added"
+msgstr "Autorenangabe hinzugefügt"
+
+#: ../__init__.py:345
+#, python-format
+msgid "Name: %s"
+msgstr "Name: %s"
+
+#: ../__init__.py:346
+#, python-format
+msgid "E-mail: %s"
+msgstr "E-Mail: %s"
+
+#: ../__init__.py:349
 msgid "Variants (leave empty to export all)"
 msgstr "Varianten (leer lassen, um alle zu exportieren)"
 
-#: ../__init__.py:348 ../__init__.py:502 ../zusiprops.py:807
+#: ../__init__.py:360 ../__init__.py:516 ../zusiprops.py:807
 msgid "Variants can be defined in the Scene settings."
 msgstr "Varianten können in den Szeneneinstellungen definiert werden."
 
-#: ../__init__.py:356
+#: ../__init__.py:370
 msgid "The following files will be overwritten:"
 msgstr "Folgende Dateien werden überschrieben:"
 
-#: ../__init__.py:414
+#: ../__init__.py:428
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr "Stapelexport in Zusi-Landschaftsdateien (.ls3)"
 
-#: ../__init__.py:415
+#: ../__init__.py:429
 msgid "Batch export LS3"
 msgstr "Stapelexport LS3"
 
-#: ../__init__.py:424
+#: ../__init__.py:438
 msgid "Batch export settings not found"
 msgstr "Stapelexport-Einstellungen nicht gefunden"
 
-#: ../__init__.py:428
+#: ../__init__.py:442
 msgid "Unsaved file, no file name available"
 msgstr "Ungespeicherte Datei, kein Dateiname vorhanden"
 
-#: ../__init__.py:431
+#: ../__init__.py:445
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
-#: ../__init__.py:468
+#: ../__init__.py:482
 #, python-format
 msgid "Successfully exported %d file"
 msgid_plural "Successfully exported %d files"
 msgstr[0] "%d Datei erfolgreich exportiert"
 msgstr[1] "%d Dateien erfolgreich exportiert"
 
-#: ../__init__.py:477
+#: ../__init__.py:491
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 "Nur Objekte anzeigen, die in einer bestimmten Kombination von Varianten "
 "sichtbar sind"
 
-#: ../__init__.py:478
+#: ../__init__.py:492
 msgid "Show Variants"
 msgstr "Varianten anzeigen"
 
-#: ../__init__.py:482
+#: ../__init__.py:496
 msgid "Variants to show"
 msgstr "Anzuzeigende Varianten"
 
-#: ../__init__.py:483
+#: ../__init__.py:497
 msgid "Choose which variants to show"
 msgstr "Festlegen, welche Varianten angezeigt werden sollen "
 
-#: ../__init__.py:493
+#: ../__init__.py:507
 msgid "Variants (leave empty to show all)"
 msgstr "Varianten (leer lassen, um alle anzuzeigen)"
 
-#: ../__init__.py:533
+#: ../__init__.py:547
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr "Zusi-2-Landschaft (.ls) ..."
 
-#: ../__init__.py:536 ../__init__.py:539
+#: ../__init__.py:550 ../__init__.py:553
 msgid "Zusi Scenery (.ls3) ..."
 msgstr "Zusi-Landschaft (.ls3) ..."
 
-#: ../__init__.py:542
+#: ../__init__.py:556
 msgid "Show variants ..."
 msgstr "Varianten anzeigen ..."
 
