@@ -271,6 +271,8 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
     filename_ext = ".ls3"
     filter_glob = StringProperty(default="*.ls3", options={'HIDDEN'})
 
+    had_no_author_info = BoolProperty(default=False, options={'HIDDEN'})
+
     # These properties have to be all lowercase and are assigned by the file selector
     filepath = bpy.props.StringProperty()
     filename = bpy.props.StringProperty()
@@ -332,6 +334,16 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
     def draw(self, context):
         layout = self.layout
+
+        if not context.scene.zusi_authors or len(context.scene.zusi_authors) == 0:
+            self.had_no_author_info = True
+            layout.row().label(_("No author information entered"), icon='ERROR')
+            layout.row().operator("zusi_authors.add_default")
+        elif self.had_no_author_info:
+            layout.row().label(_("Author information added"), icon='INFO')
+            box = layout.box()
+            box.row().label(_("Name: %s" % context.scene.zusi_authors[0].name))
+            box.row().label(_("E-mail: %s" % context.scene.zusi_authors[0].email))
 
         row = layout.row()
         row.label(_("Variants (leave empty to export all)"))
