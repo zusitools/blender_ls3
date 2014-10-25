@@ -19,7 +19,7 @@ Ein Blender-Plugin für den Im- und Export von .ls3-Dateien. Dieses XML-basierte
 
 Der Import ist erreichbar über File → Import → Zusi-Landschaft (.ls3) oder über *Leertaste* → LS3 importieren.
 
-Der Import ist erreichbar über File → Export → Zusi-Landschaft (.ls3) oder über *Leertaste* → LS3 exportieren.
+Der Export ist erreichbar über File → Export → Zusi-Landschaft (.ls3) oder über *Leertaste* → LS3 exportieren.
 
 **Hinweis:** In der öffentlich verfügbaren Version wird das binäre Format von Zusi 3 (.lsb) nicht gelesen oder geschrieben und es werden keine Texturkoordinaten importiert.
 
