@@ -85,6 +85,11 @@ class TestLs3Import(unittest.TestCase):
     self.assertColorEqual((0, 0, 0), mat.zusi_overexposure_addition)
     self.assertColorEqual(gray, mat.zusi_overexposure_addition_ambient)
 
+  def test_zbias(self):
+    self.ls3_import("zbias.ls3")
+    mat = bpy.data.objects["zbias.ls3.1"].data.materials[0]
+    self.assertEqual(-1, mat.offset_z)
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
   unittest.TextTestRunner(verbosity=2).run(suite)

@@ -201,6 +201,8 @@ class Ls3Importer:
             mat.zusi_force_brightness = float(node.getAttribute("Zwangshelligkeit"))
         if node.getAttribute("zZoom") != "":
             mat.zusi_signal_magnification = float(node.getAttribute("zZoom"))
+        if node.getAttribute("zBias") != "":
+            mat.offset_z = float(node.getAttribute("zBias"))
 
         # Visit child nodes (such as texture and vertices/faces)
         for child in node.childNodes:
