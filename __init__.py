@@ -145,8 +145,7 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
     filter_glob = StringProperty(default="*.ls", options={'HIDDEN'})
 
     # These properties have to be all lowercase and are assigned by the file selector
-    filepath = bpy.props.StringProperty()
-    filename = bpy.props.StringProperty()
+    files = bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
     directory = bpy.props.StringProperty()
 
     loadLinked = bpy.props.BoolProperty(
@@ -163,16 +162,17 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import ls_import
-        settings = ls_import.LsImporterSettings(
-            context,
-            self.properties.filepath,
-            self.properties.filename,
-            self.properties.directory,
-            self.properties.loadLinked,
-        )
+        for f in self.files:
+            settings = ls_import.LsImporterSettings(
+                context,
+                os.path.join(self.properties.directory, f.name),
+                f.name,
+                self.properties.directory,
+                self.properties.loadLinked,
+            )
 
-        importer = ls_import.LsImporter(settings)
-        importer.import_ls()
+            importer = ls_import.LsImporter(settings)
+            importer.import_ls()
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -190,8 +190,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     filter_glob = StringProperty(default="*.ls3", options={'HIDDEN'})
  
     # These properties have to be all lowercase and are assigned by the file selector
-    filepath = bpy.props.StringProperty()
-    filename = bpy.props.StringProperty()
+    files = bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
     directory = bpy.props.StringProperty()
 
     loadAuthorInformation = bpy.props.BoolProperty(
@@ -233,18 +232,19 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import ls3_import
-        settings = ls3_import.Ls3ImporterSettings(
-            context,
-            self.properties.filepath,
-            self.properties.filename,
-            self.properties.directory,
-            self.properties.loadAuthorInformation,
-            self.properties.loadLinked,
-            lod_bit = sum([s.lod_bit for s in self.properties.lod_import_setting if s.imp])
-        )
+        for f in self.files:
+            settings = ls3_import.Ls3ImporterSettings(
+                context,
+                os.path.join(self.properties.directory, f.name),
+                f.name,
+                self.properties.directory,
+                self.properties.loadAuthorInformation,
+                self.properties.loadLinked,
+                lod_bit = sum([s.lod_bit for s in self.properties.lod_import_setting if s.imp])
+            )
 
-        importer = ls3_import.Ls3Importer(settings)
-        importer.import_ls3()
+            importer = ls3_import.Ls3Importer(settings)
+            importer.import_ls3()
         return {'FINISHED'}
  
     def invoke(self, context, event):

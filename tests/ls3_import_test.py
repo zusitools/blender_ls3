@@ -25,8 +25,7 @@ class TestLs3Import(unittest.TestCase):
 
   def ls3_import(self, filename, importargs={}):
     bpy.ops.import_scene.ls3(bpy.context.copy(),
-      filepath=os.path.join(self._tempdir, "ls3s", filename),
-      filename=filename,
+      files=[{"name":filename}],
       directory=os.path.join(self._tempdir, "ls3s"),
       **importargs)
 
@@ -89,6 +88,13 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("zbias.ls3")
     mat = bpy.data.objects["zbias.ls3.1"].data.materials[0]
     self.assertEqual(-1, mat.offset_z)
+
+  def test_import_multiple_files(self):
+    bpy.ops.import_scene.ls3(bpy.context.copy(),
+      files=[{"name":"nightcolor1.ls3"}, {"name":"zbias.ls3"}],
+      directory=os.path.join(self._tempdir, "ls3s"))
+    self.assertIn("nightcolor1.ls3.1", bpy.data.objects)
+    self.assertIn("zbias.ls3.1", bpy.data.objects)
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
