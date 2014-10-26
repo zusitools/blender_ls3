@@ -714,7 +714,7 @@ msgstr "Eine Ambient-Farbe für dieses Material festlegen"
 
 #: ../zusiprops.py:586
 msgid "Texture preset"
-msgstr "Textur-Voreinstllung"
+msgstr "Textur-Voreinstellung"
 
 #: ../zusiprops.py:587
 msgid "The texture preset to assign to this material"
