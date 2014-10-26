@@ -888,7 +888,7 @@ class Ls3Exporter:
             if author.email != zusiprops.ZusiAuthor.email[1]["default"]:
                 autorEintragNode.setAttribute("AutorEmail", author.email)
             if ls3file.is_main_file and author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
-                autorEintragNode.setAttribute("AutorAufwand", str(author.effort))
+                autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
             if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
                 autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
 
