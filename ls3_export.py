@@ -275,7 +275,7 @@ class Ls3Exporter:
         path = os.path.realpath(bpy.path.abspath(path))
         (dirname, filename) = os.path.split(path)
 
-        if dirname + os.sep == self.config.fileDirectory:
+        if os.path.normpath(dirname) == os.path.normpath(self.config.fileDirectory):
             return filename
         else:
             datadir = os.path.realpath(zusicommon.get_zusi_data_path())
