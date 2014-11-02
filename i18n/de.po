@@ -514,11 +514,11 @@ msgstr "Standard, eine Textur"
 
 #: ../zusiprops.py:463
 msgid "Default, one texture, full transparency"
-msgstr "Tex. 1 Standard, Tex. 2 transparent"
+msgstr "Standard, eine Textur, Volltransparenz"
 
 #: ../zusiprops.py:464
 msgid "Tex. 1 default, tex. 2 transparent"
-msgstr "Standard, eine Textur, Volltransparenz"
+msgstr "Tex. 1 Standard, Tex. 2 transparent"
 
 #: ../zusiprops.py:465
 msgid "Default, one texture, semi-transparency"
