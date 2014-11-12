@@ -19,6 +19,10 @@ default_export_settings = {
 
 datapath = ""
 
+# In the same way, you can set the Zusi 2 data directory here.
+
+z2datapath = ""
+
 # Linux users can optionally set author defaults here.
 # Uncomment the selected lines by removing the "#" at the beginning of the line,
 # then change the defaults and rename this file to zusiconfig.py

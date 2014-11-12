@@ -68,9 +68,7 @@ class LsImporter:
         self.currentmesh = None
 
         # Path to Zusi data dir
-        # self.datapath = zusicommon.get_zusi_data_path()
-        # TODO
-        self.datapath = "/mnt/zusi/Zusi"
+        self.datapath = zusicommon.get_zusi2_data_path()
 
     def resolveFilePath(self, filePath):
         """Tries to locate a file by its path, interpreting the path as relative to the Zusi base path"""

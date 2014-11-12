@@ -196,6 +196,17 @@ def get_zusi_data_path():
 
     return basepath
 
+# Retrieve the path name of the Zusi 2 data directory
+def get_zusi2_data_path():
+    try:
+        from . import zusiconfig
+        basepath = zusiconfig.z2datapath
+    except ImportError:
+        basepath = ""
+
+    # TODO read from registry
+    return basepath
+
 # Retrieve the default author information from the registry (Windows) or the config file (Linux)
 def get_default_author_info():
     default_author = { 'name' : "", 'id' : 0, 'email' : "" }
