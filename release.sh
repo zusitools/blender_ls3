@@ -23,7 +23,10 @@ read tag_name
 echo -n "Version name (Version 2014-04-23): "
 read version_name
 
-curl -u "zusitools" https://api.github.com/repos/zusitools/blender_ls3/releases -d "{\"tag_name\":\"$tag_name\",\"name\":\"$version_name\"}"
+echo -n "Description (in German?): "
+read descr
+
+curl -u "zusitools" https://api.github.com/repos/zusitools/blender_ls3/releases -d "{\"tag_name\":\"$tag_name\",\"name\":\"$version_name\",\"body\":\"$descr\"}"
 
 echo -n "Release ID: "
 read release_id
