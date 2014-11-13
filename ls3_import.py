@@ -25,6 +25,7 @@ import mathutils
 import xml.dom.minidom as dom
 from . import zusicommon
 from math import pi
+from mathutils import *
 
 # Converts a hex string "0AABBGGRR" into a tuple of a Color object and an alpha value
 hex_string_to_rgba = lambda str : (mathutils.Color((int(str[7:9], 16) / 255, int(str[5:7], 16) / 255, int(str[3:5], 16) / 255)), int(str[1:3], 16) / 255)
@@ -87,8 +88,9 @@ class Ls3Importer:
         else:
             self.lsbreader = None
 
-        # No. of current subset
+        # No. of current subset and anchor point
         self.subsetno = 0
+        self.anchor_point_no = 0
 
         # Currently edited object
         self.currentobject = None
@@ -323,6 +325,40 @@ class Ls3Importer:
             importer.import_ls3()
         except(IndexError):
             pass
+
+    #
+    # Visits an <Ankerpunkt> node.
+    #
+    def visitAnkerpunktNode(self, node):
+        self.anchor_point_no += 1
+        empty = bpy.data.objects.new("%s_AnchorPoint.%03d" % (self.config.fileName, self.anchor_point_no), None)
+        empty.empty_draw_type = 'ARROWS'
+        empty.zusi_is_anchor_point = True
+
+        if node.getAttribute("AnkerKat"):
+            empty.zusi_anchor_point_category = node.getAttribute("AnkerKat")
+        if node.getAttribute("AnkerTyp"):
+            empty.zusi_anchor_point_type = node.getAttribute("AnkerTyp")
+        if node.getAttribute("Beschreibung"):
+            empty.zusi_anchor_point_description = node.getAttribute("Beschreibung")
+
+        loc = [0.0]*3
+        rot = [0.0]*3
+
+        for n in node.childNodes:
+            if n.nodeName == "Datei":
+                if n.getAttribute("Dateiname"):
+                    entry = empty.zusi_anchor_point_files.add()
+                    entry.name = zusicommon.resolve_file_path(n.getAttribute("Dateiname"), self.config.fileDirectory,
+                        self.datapath)
+            elif n.nodeName == "p":
+                fill_xyz_vector(n, loc)
+            elif n.nodeName == "phi":
+                fill_xyz_vector(n, rot)
+
+        empty.location = Vector((loc[1], -loc[0], loc[2]))
+        empty.rotation_euler = Vector((rot[1], -rot[0], rot[2]))
+        bpy.context.scene.objects.link(empty)
 
     #
     # Visits a <Landschaft> node.

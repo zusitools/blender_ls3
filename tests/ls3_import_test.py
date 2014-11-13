@@ -3,6 +3,8 @@ import os
 import shutil
 import tempfile
 import unittest
+from math import radians
+from mathutils import *
 
 class TestLs3Import(unittest.TestCase):
   @classmethod
@@ -33,6 +35,12 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(expected[0], actual.r)
     self.assertAlmostEqual(expected[1], actual.g)
     self.assertAlmostEqual(expected[2], actual.b)
+
+  def assertVectorEqual(self, expected, actual):
+    expected = Vector(expected)
+    self.assertAlmostEqual(expected[0], actual[0], 5)
+    self.assertAlmostEqual(expected[1], actual[1], 5)
+    self.assertAlmostEqual(expected[2], actual[2], 5)
 
   def test_night_color(self):
     self.ls3_import("nightcolor1.ls3")
@@ -95,6 +103,33 @@ class TestLs3Import(unittest.TestCase):
       directory=os.path.join(self._tempdir, "ls3s"))
     self.assertIn("nightcolor1.ls3.1", bpy.data.objects)
     self.assertIn("zbias.ls3.1", bpy.data.objects)
+
+  def test_anchor_points(self):
+    self.ls3_import("anchor_points.ls3")
+    a1 = bpy.data.objects["anchor_points.ls3_AnchorPoint.001"]
+    a2 = bpy.data.objects["anchor_points.ls3_AnchorPoint.002"]
+
+    self.assertEqual('EMPTY', a1.type)
+    self.assertEqual('ARROWS', a1.empty_draw_type)
+    self.assertEqual(True, a1.zusi_is_anchor_point)
+    self.assertEqual("1", a1.zusi_anchor_point_category)
+    self.assertEqual("2", a1.zusi_anchor_point_type)
+    self.assertEqual("Anchor point 1 description", a1.zusi_anchor_point_description)
+    self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_translation())
+    self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_euler())
+
+    self.assertEqual(2, len(a1.zusi_anchor_point_files))
+    self.assertEqual("file.ls3", a1.zusi_anchor_point_files[0].name[-len("file.ls3"):])
+    self.assertEqual("folder", a1.zusi_anchor_point_files[1].name[-len("folder"):])
+
+    self.assertEqual('EMPTY', a2.type)
+    self.assertEqual('ARROWS', a1.empty_draw_type)
+    self.assertEqual(True, a2.zusi_is_anchor_point)
+    self.assertEqual("0", a2.zusi_anchor_point_category)
+    self.assertEqual("0", a2.zusi_anchor_point_type)
+    self.assertEqual("Anchor point 2 description", a2.zusi_anchor_point_description)
+    self.assertVectorEqual((1.0, 2.0, 3.0), a2.matrix_world.to_translation())
+    self.assertVectorEqual((radians(10), radians(20), radians(30)), a2.matrix_world.to_euler())
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
