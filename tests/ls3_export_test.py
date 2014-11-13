@@ -224,6 +224,21 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
+  def test_rail_normals(self):
+    self.open("rail_normals")
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 0.1,
+      "maxUVDelta" : 1.0,
+      "maxNormalAngle" : 1,
+    })
+    subset_node = root.find("./Landschaft/SubSet")
+    vertex_nodes = [n for n in subset_node if n.tag == "Vertex"]
+    self.assertEqual(8, len(vertex_nodes)) # should have been optimized
+    for n in vertex_nodes:
+      n_node = n.find("./n")
+      self.assertXYZ(n_node, 0, 0, 1)
+
   def test_multitexturing(self):
     self.open("multitexturing")
     self.assert_exported_cube_multitexturing()

@@ -504,6 +504,15 @@ animation_types = [
     ("14", _("Tilt technology"), ""),
 ]
 
+#
+# Mesh
+#
+
+bpy.types.Mesh.zusi_is_rail = bpy.props.BoolProperty(
+    name = _("Calculate normals for rail"),
+    description = _("Make the normals always point upwards, for use in rail depictions"),
+    default = False
+)
 
 #
 # Material
@@ -805,6 +814,26 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
         layout.label(_("Variants:"))
         box = layout.box()
         box.label(_("Variants can be defined in the Scene settings."))
+
+class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
+    bl_label = _("Zusi specific properties")
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+
+    @classmethod
+    def poll(self, context):
+        return context.mesh
+
+    def draw(self, context):
+        mesh = context.mesh
+        if not mesh:
+            return
+
+        layout = self.layout
+
+        row = layout.row()
+        row.prop(mesh, "zusi_is_rail")
 
 class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
     bl_label = _("Zusi specific properties")

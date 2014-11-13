@@ -474,13 +474,16 @@ class Ls3Exporter:
 
                     # Since the vertices are exported per-face, get the vertex normal from the face normal,
                     # except when the face is set to "smooth"
-                    if face.use_smooth:
-                        normal = (v.normal[1], -v.normal[0], -v.normal[2])
+                    if ob.data and ob.data.zusi_is_rail:
+                        normal = (0, 0, 1)
                     else:
-                        normal = (face.normal[1], -face.normal[0], -face.normal[2])
+                        if face.use_smooth:
+                            normal = (v.normal[1], -v.normal[0], -v.normal[2])
+                        else:
+                            normal = (face.normal[1], -face.normal[0], -face.normal[2])
 
-                    if must_flip_normals:
-                        normal = list(map(lambda x : -x, normal))
+                        if must_flip_normals:
+                            normal = list(map(lambda x : -x, normal))
 
                     # Calculate square of vertex length (projected onto the XY plane)
                     # for the bounding radius.
