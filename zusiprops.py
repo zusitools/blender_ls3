@@ -770,7 +770,7 @@ bpy.types.Object.zusi_anchor_point_description = bpy.props.StringProperty(
 )
 
 bpy.types.Object.zusi_anchor_point_files = bpy.props.CollectionProperty(
-    name = _("Suggested files/folders"),
+    name = _("Suggested files/folders to be attached here"),
     description = _("List of files and folders of files that can be attached here"),
     type = ZusiAnchorPointFile
 )
@@ -931,7 +931,7 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
             box.row().prop(ob, "zusi_anchor_point_type")
             box.row().prop(ob, "zusi_anchor_point_description")
 
-            box.row().label(_("Suggested files/folders:"))
+            box.row().label(_("Suggested files/folders to be attached here:"))
             row = box.row()
             template_list(row, "ZusiAnchorPointFileList", "", ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index", rows = 3)
 
