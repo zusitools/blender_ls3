@@ -504,6 +504,36 @@ animation_types = [
     ("14", _("Tilt technology"), ""),
 ]
 
+anchor_point_categories = [
+    ("0", _("General"), ""),
+    ("1", _("Overhead line equipment"), ""),
+    ("2", _("Marker flags"), ""),
+    ("3", _("Invisible"), ""),
+]
+
+anchor_point_types = [
+    ("0", _("General"), ""),
+    ("1", _("Contact wire"), ""),
+    ("2", _("Catenary wire"), ""),
+    ("3", _("Attachment point of stitch wire"), ""),
+    ("4", _("Lower cross span wire"), ""),
+    ("5", _("Upper cross span wire"), ""),
+    ("6", _("Headspan wire"), ""),
+    ("7", _("Out-of-running contact wire"), ""),
+    ("8", _("Out-of-running catenary wire"), ""),
+    ("9", _("Anchor wire for contact wire"), ""),
+    ("10", _("Anchor wire for catenary wire"), ""),
+    ("11", _("Balance weight anchor attachment pointer"), ""),
+    ("12", _("Cantilever attachment point"), ""),
+    ("13", _("Mid point anchor attachment point"), ""),
+    ("14", _("Hectometer board attachment point"), ""),
+    ("15", _("Feeder line attachment point"), ""),
+    ("16", _("Control wire attachment point"), ""),
+    ("17", _("Telegraph line attachment point"), ""),
+    ("18", _("Power supply line attachment point"), ""),
+    ("19", _("Signal"), ""),
+]
+
 #
 # Mesh
 #
@@ -691,6 +721,35 @@ bpy.types.Object.zusi_variants_visibility = bpy.props.CollectionProperty(
     type = ZusiFileVariantVisibility
 )
 
+# Anchor points
+
+
+bpy.types.Object.zusi_is_anchor_point = bpy.props.BoolProperty(
+    name = _("Anchor point"),
+    description = _("Export this object as an anchor point"),
+    default = False
+)
+
+bpy.types.Object.zusi_anchor_point_category = bpy.props.EnumProperty(
+    name = _("Category"),
+    description = _("Anchor point category"),
+    items = anchor_point_categories,
+    default = "0"
+)
+
+bpy.types.Object.zusi_anchor_point_type = bpy.props.EnumProperty(
+    name = _("Type"),
+    description = _("Anchor point type"),
+    items = anchor_point_types,
+    default = "0"
+)
+
+bpy.types.Object.zusi_anchor_point_description = bpy.props.StringProperty(
+    name = _("Description"),
+    description = _("Anchor point description"),
+    default = ""
+)
+
 #
 # Scene
 #
@@ -823,17 +882,23 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return context.mesh
+        return context.mesh or (context.object and context.object.type == 'EMPTY')
 
     def draw(self, context):
-        mesh = context.mesh
-        if not mesh:
-            return
-
         layout = self.layout
+        if context.mesh:
+            mesh = context.mesh
+            layout.row().prop(mesh, "zusi_is_rail")
+        elif context.object and context.object.type == 'EMPTY':
+            ob = context.object
+            layout.row().prop(ob, "zusi_is_anchor_point")
 
-        row = layout.row()
-        row.prop(mesh, "zusi_is_rail")
+            box = layout.row().box()
+            box.active = ob.zusi_is_anchor_point
+
+            box.row().prop(ob, "zusi_anchor_point_category")
+            box.row().prop(ob, "zusi_anchor_point_type")
+            box.row().prop(ob, "zusi_anchor_point_description")
 
 class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
     bl_label = _("Zusi specific properties")
