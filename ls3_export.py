@@ -69,11 +69,6 @@ def fill_node_xyz(node, x, y, z):
     node.setAttribute("Y", str(y))
     node.setAttribute("Z", str(z))
 
-def fill_node_xyz_vector(node, vector):
-    node.setAttribute("X", str(vector[0]))
-    node.setAttribute("Y", str(vector[1]))
-    node.setAttribute("Z", str(vector[2]))
-
 def normalize_color(color):
     """Returns a normalized version (RGB components between 0.0 and 1.0) of a color."""
     return Color((
@@ -345,13 +340,13 @@ class Ls3Exporter:
                 translation = ob.matrix_world.to_translation()
                 if translation != Vector((0.0, 0.0, 0.0)):
                     pNode = self.xmldoc.createElement("p")
-                    fill_node_xyz_vector(pNode, translation)
+                    fill_node_xyz(pNode, -translation[1], translation[0], translation[2])
                     ankerpunktNode.appendChild(pNode)
 
                 rotation = ob.matrix_world.to_euler()
                 if rotation != Vector((0.0, 0.0, 0.0)):
                     phiNode = self.xmldoc.createElement("phi")
-                    fill_node_xyz_vector(phiNode, rotation)
+                    fill_node_xyz(phiNode, -rotation[1], rotation[0], rotation[2])
                     ankerpunktNode.appendChild(phiNode)
 
                 for entry in ob.zusi_anchor_point_files:

@@ -1003,8 +1003,8 @@ class TestLs3Export(unittest.TestCase):
 
     a2 = anchor_point_nodes[1]
     self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
-    self.assertXYZ(a2.find("./p"), 1, 2, 3)
-    self.assertXYZ(a2.find("./phi"), radians(10), radians(20), radians(30))
+    self.assertXYZ(a2.find("./p"), -2, 1, 3)
+    self.assertXYZ(a2.find("./phi"), radians(-20), radians(10), radians(30))
 
     a2files = a2.findall("./Datei")
     self.assertEqual(0, len(a2files))
