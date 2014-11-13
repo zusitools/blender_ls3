@@ -19,6 +19,7 @@
  
 import bpy
 import mathutils
+import os
 from . import zusicommon, i18n
 from math import pi
 
@@ -122,6 +123,24 @@ if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
             layout.label(item.name)
 
+class ZusiAnchorPointFile(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(
+        name = _("File or folder name"),
+        subtype = 'FILE_PATH',
+        default = ""
+    )
+
+bpy.utils.register_class(ZusiAnchorPointFile)
+
+if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
+    class ZusiAnchorPointFileList(bpy.types.UIList):
+        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+            if os.path.exists(item.name):
+                icon = 'FILE_FOLDER' if os.path.isdir(item.name) else 'FILE'
+            else:
+                icon = 'ERROR'
+            # TODO: display path relative to Zusi dir
+            layout.label(item.name, icon = icon)
 
 # Custom texture preset properties
 
@@ -750,6 +769,14 @@ bpy.types.Object.zusi_anchor_point_description = bpy.props.StringProperty(
     default = ""
 )
 
+bpy.types.Object.zusi_anchor_point_files = bpy.props.CollectionProperty(
+    name = _("Suggested files/folders"),
+    description = _("List of files and folders of files that can be attached here"),
+    type = ZusiAnchorPointFile
+)
+
+bpy.types.Object.zusi_anchor_point_files_index = bpy.props.IntProperty()
+
 #
 # Scene
 #
@@ -874,6 +901,10 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
         box = layout.box()
         box.label(_("Variants can be defined in the Scene settings."))
 
+# ---
+# Data panel (Mesh and anchor point properties)
+# ---
+
 class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
     bl_label = _("Zusi specific properties")
     bl_space_type = "PROPERTIES"
@@ -899,6 +930,53 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
             box.row().prop(ob, "zusi_anchor_point_category")
             box.row().prop(ob, "zusi_anchor_point_type")
             box.row().prop(ob, "zusi_anchor_point_description")
+
+            box.row().label(_("Suggested files/folders:"))
+            row = box.row()
+            template_list(row, "ZusiAnchorPointFileList", "", ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index", rows = 3)
+
+            col = row.column(align = True)
+            col.operator("zusi_anchor_point_files.add", icon = "ZOOMIN", text = "")
+            col.operator("zusi_anchor_point_files.remove", icon = "ZOOMOUT", text = "")
+
+            if ob.zusi_anchor_point_files and ob.zusi_anchor_point_files_index >= 0 and ob.zusi_anchor_point_files_index < len(ob.zusi_anchor_point_files):
+                box.row().prop(ob.zusi_anchor_point_files[ob.zusi_anchor_point_files_index], "name")
+
+class ZUSI_ANCHOR_POINT_FILES_OT_add(bpy.types.Operator):
+    bl_idname = 'zusi_anchor_point_files.add'
+    bl_label = _("Add file/folder")
+    bl_description = _("Add a suggested file or folder")
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object is not None and context.object.type == 'EMPTY'
+
+    def invoke(self, context, event):
+        context.object.zusi_anchor_point_files.add()
+        return{'FINISHED'}
+
+class ZUSI_ANCHOR_POINT_FILES_OT_del(bpy.types.Operator):
+    bl_idname = 'zusi_anchor_point_files.remove'
+    bl_label = _("Remove file/folder")
+    bl_description = _("Remove the selected file or folder from the list of files")
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object is not None and len(context.object.zusi_anchor_point_files) > 0
+
+    def invoke(self, context, event):
+        ob = context.object
+        if ob.zusi_anchor_point_files_index >= 0 and len(ob.zusi_anchor_point_files) > 0:
+            ob.zusi_anchor_point_files.remove(ob.zusi_anchor_point_files_index)
+            ob.zusi_anchor_point_files_index = max(ob.zusi_anchor_point_files_index - 1, 0)
+
+        return{'FINISHED'}
+
+# ---
+# Material panel
+# ---
 
 class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
     bl_label = _("Zusi specific properties")
