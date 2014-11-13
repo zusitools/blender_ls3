@@ -8,6 +8,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
+from math import radians
 
 class TestLs3Export(unittest.TestCase):
   @classmethod
@@ -977,6 +978,37 @@ class TestLs3Export(unittest.TestCase):
     linkedfile = files["Empty"]
     verknuepfte_node = linkedfile.find("./Landschaft/Verknuepfte")
     self.assertEqual("2", verknuepfte_node.attrib["BoundingR"])
+
+  # ---
+  # Anchor point tests
+  # ---
+
+  def test_anchor_point_export(self):
+    self.open("anchor_points")
+    root = self.export_and_parse()
+
+    anchor_point_nodes = root.findall("./Landschaft/Ankerpunkt")
+    self.assertEqual(2, len(anchor_point_nodes))
+
+    a1 = anchor_point_nodes[0]
+    self.assertEqual("1", a1.attrib["AnkerKat"])
+    self.assertEqual("2", a1.attrib["AnkerTyp"])
+    self.assertEqual("Anchor point 1 description", a1.attrib["Beschreibung"])
+
+    a1files = a1.findall("./Datei")
+    self.assertEqual(2, len(a1files))
+    # TODO: Test that the path is relative to the Zusi data directory
+    self.assertEqual("file.ls3", a1files[0].attrib["Dateiname"][-len("file.ls3"):])
+    self.assertEqual("folder", a1files[1].attrib["Dateiname"][-len("folder"):])
+
+    a2 = anchor_point_nodes[1]
+    self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
+    self.assertXYZ(a2.find("./p"), 1, 2, 3)
+    self.assertXYZ(a2.find("./phi"), radians(10), radians(20), radians(30))
+
+    a2files = a2.findall("./Datei")
+    self.assertEqual(0, len(a2files))
+
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)

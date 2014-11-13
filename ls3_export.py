@@ -69,6 +69,11 @@ def fill_node_xyz(node, x, y, z):
     node.setAttribute("Y", str(y))
     node.setAttribute("Z", str(z))
 
+def fill_node_xyz_vector(node, vector):
+    node.setAttribute("X", str(vector[0]))
+    node.setAttribute("Y", str(vector[1]))
+    node.setAttribute("Z", str(vector[2]))
+
 def normalize_color(color):
     """Returns a normalized version (RGB components between 0.0 and 1.0) of a color."""
     return Color((
@@ -321,6 +326,37 @@ class Ls3Exporter:
             return [texture_slot for texture_slot in image_texture_slots
                     if getattr(texture_slot.texture.image, "source", "") == "FILE" and zusicommon.is_object_visible(texture_slot.texture, self.config.variantIDs)]
         return []
+
+    # Writes all objects that have the "Is anchor point" property set to true.
+    def write_anchor_points(self, landschaftNode):
+        for ob in self.config.context.scene.objects:
+            if ob.zusi_is_anchor_point:
+                ankerpunktNode = self.xmldoc.createElement("Ankerpunkt")
+                landschaftNode.appendChild(ankerpunktNode)
+
+                if ob.zusi_anchor_point_category != bpy.types.Object.zusi_anchor_point_category[1]["default"]:
+                    ankerpunktNode.setAttribute("AnkerKat", ob.zusi_anchor_point_category)
+                if ob.zusi_anchor_point_type != bpy.types.Object.zusi_anchor_point_type[1]["default"]:
+                    ankerpunktNode.setAttribute("AnkerTyp", ob.zusi_anchor_point_type)
+                if ob.zusi_anchor_point_description != bpy.types.Object.zusi_anchor_point_description[1]["default"]:
+                    ankerpunktNode.setAttribute("Beschreibung", ob.zusi_anchor_point_description)
+
+                translation = ob.matrix_world.to_translation()
+                if translation != Vector((0.0, 0.0, 0.0)):
+                    pNode = self.xmldoc.createElement("p")
+                    fill_node_xyz_vector(pNode, translation)
+                    ankerpunktNode.appendChild(pNode)
+
+                rotation = ob.matrix_world.to_euler()
+                if rotation != Vector((0.0, 0.0, 0.0)):
+                    phiNode = self.xmldoc.createElement("phi")
+                    fill_node_xyz_vector(phiNode, rotation)
+                    ankerpunktNode.appendChild(phiNode)
+
+                for entry in ob.zusi_anchor_point_files:
+                    dateiNode = self.xmldoc.createElement("Datei")
+                    dateiNode.setAttribute("Dateiname", self.relpath(entry.name))
+                    ankerpunktNode.appendChild(dateiNode)
 
     # Adds a new subset node to the specified <Landschaft> node. The subset is given by a Ls3Subset object
     # containing the objects and the material to export.
@@ -938,6 +974,10 @@ class Ls3Exporter:
                 skNode = self.xmldoc.createElement("sk")
                 fill_node_xyz(skNode, scale.y, scale.x, scale.z)
                 verknuepfteNode.appendChild(skNode)
+
+        # Write anchor points (into the main file)
+        if ls3file.is_main_file:
+            self.write_anchor_points(landschaftNode)
 
         # Write subsets.
         for subset in ls3file.subsets:
