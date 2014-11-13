@@ -329,10 +329,11 @@ class Ls3Exporter:
 
     # Writes all objects that have the "Is anchor point" property set to true.
     def write_anchor_points(self, landschaftNode):
+        anchor_points = {}
         for ob in self.config.context.scene.objects:
             if ob.zusi_is_anchor_point:
                 ankerpunktNode = self.xmldoc.createElement("Ankerpunkt")
-                landschaftNode.appendChild(ankerpunktNode)
+                anchor_points[ob.name] = ankerpunktNode
 
                 if ob.zusi_anchor_point_category != bpy.types.Object.zusi_anchor_point_category[1]["default"]:
                     ankerpunktNode.setAttribute("AnkerKat", ob.zusi_anchor_point_category)
@@ -357,6 +358,9 @@ class Ls3Exporter:
                     dateiNode = self.xmldoc.createElement("Datei")
                     dateiNode.setAttribute("Dateiname", self.relpath(entry.name))
                     ankerpunktNode.appendChild(dateiNode)
+
+        for name in sorted(anchor_points.keys()):
+            landschaftNode.appendChild(anchor_points[name])
 
     # Adds a new subset node to the specified <Landschaft> node. The subset is given by a Ls3Subset object
     # containing the objects and the material to export.
