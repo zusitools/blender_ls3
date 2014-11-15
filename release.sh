@@ -6,11 +6,6 @@ if [ "$branch" != "master" ]; then
   exit
 fi
 
-if [ `git rev-parse master` != `git rev-parse origin/master` ]; then
-  echo "Branch master is behind origin/master, please push first. Exiting"
-  exit
-fi
-
 rm release/release.zip
 mkdir io_scene_ls3
 cp -r README.md batchexport_settings.py.default __init__.py ls3_export.py ls3_import.py ls_import.py zusicommon.py zusiconfig.py.default zusiprops.py i18n.py l10n io_scene_ls3
@@ -19,6 +14,11 @@ rm -rf io_scene_ls3
 
 if [ "$1" != "upload" ]; then
   echo "Not uploading, call with 'upload' parameter to upload"
+  exit
+fi
+
+if [ `git rev-parse master` != `git rev-parse origin/master` ]; then
+  echo "Branch master is behind origin/master, please push first. Exiting"
   exit
 fi
 
