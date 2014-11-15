@@ -428,12 +428,19 @@ def set_zusi_animation_duration(self, duration):
     self.zusi_animation_speed = 0 if duration == 0 else 1 / duration
 
 # Unified wrapper for template lists both in Blender <= 2.65 and above.
-def template_list(layout, listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = 5):
+def template_list(layout, listtype_name, list_id, dataptr, propname, active_dataptr, active_propname,
+        add_operator_name = "", remove_operator_name = "", rows = 5):
     if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
-        layout.template_list(dataptr, propname, active_dataptr, active_propname, rows = rows, prop_list = "template_list_controls")
+        layout.template_list(dataptr, propname, dataptr, active_propname, rows = rows, prop_list = "template_list_controls")
     else:
         layout.template_list(listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = rows)
-    pass
+
+    if len(add_operator_name) or len(remove_operator_name):
+        col = layout.column(align = True)
+        if len(add_operator_name):
+            col.operator(add_operator_name, icon = "ZOOMIN", text = "")
+        if len(remove_operator_name):
+            col.operator(remove_operator_name, icon = "ZOOMOUT", text = "")
 
 # ---
 # Custom properties
@@ -932,12 +939,9 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
             box.row().prop(ob, "zusi_anchor_point_description")
 
             box.row().label(_("Suggested files/folders to be attached here:"))
-            row = box.row()
-            template_list(row, "ZusiAnchorPointFileList", "", ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index", rows = 3)
-
-            col = row.column(align = True)
-            col.operator("zusi_anchor_point_files.add", icon = "ZOOMIN", text = "")
-            col.operator("zusi_anchor_point_files.remove", icon = "ZOOMOUT", text = "")
+            template_list(box.row(), "ZusiAnchorPointFileList", "",
+                    ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index",
+                    "zusi_anchor_point_files.add", "zusi_anchor_point_files.remove", rows = 3)
 
             if ob.zusi_anchor_point_files and ob.zusi_anchor_point_files_index >= 0 and ob.zusi_anchor_point_files_index < len(ob.zusi_anchor_point_files):
                 box.row().prop(ob.zusi_anchor_point_files[ob.zusi_anchor_point_files_index], "name")
@@ -1251,15 +1255,9 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
-        row = layout.row()
-
-        # Show list of variants
-        template_list(row, "ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index", rows = 3)
-
-        # Show add/remove operator
-        col = row.column(align = True)
-        col.operator("zusi_variants.add", icon = "ZOOMIN", text = "")
-        col.operator("zusi_variants.remove", icon = "ZOOMOUT", text = "")
+        # Show list of variants with add/remove button
+        template_list(layout.row(), "ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index",
+                "zusi_variants.add", "zusi_variants.remove", rows = 3)
 
         # Show input field to change variant name
         if sce.zusi_variants:
@@ -1384,13 +1382,9 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             elif action.zusi_animation_type == "0":
                 box = layout.box()
                 box.row().label(text = _("Part of the following animations:"))
-                row = box.row()
-                template_list(row, "UI_UL_list", "zusi_animation_name_list", action, "zusi_animation_names", action, "zusi_animation_names_index", rows = 3)
-                # Show add/remove operators.
-                col = row.column(align = True)
-                col.operator("action.add_zusi_animation_name", icon = "ZOOMIN", text = "")
-                col.operator("action.del_zusi_animation_name", icon = "ZOOMOUT", text = "")
-
+                template_list(box.row(), "UI_UL_list", "zusi_animation_name_list",
+                        action, "zusi_animation_names", action, "zusi_animation_names_index",
+                        "action.add_zusi_animation_name", "action.del_zusi_animation_name", rows = 3)
                 if len(action.zusi_animation_names):
                     box.row().prop(action.zusi_animation_names[action.zusi_animation_names_index], "name")
 
@@ -1455,14 +1449,9 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
         row = layout.row()
         row.operator("zusi_authors.add_default")
 
-        # Show list of authors
-        row = layout.row()
-        template_list(row, "ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index", rows = 3)
-
-        # Show add/remove operator
-        col = row.column(align = True)
-        col.operator("zusi_authors.add", icon = "ZOOMIN", text = "")
-        col.operator("zusi_authors.remove", icon = "ZOOMOUT", text = "")
+        # Show list of authors with add/remove buttons.
+        template_list(layout.row(), "ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index",
+                "zusi_authors.add", "zusi_authors.remove", rows = 3)
 
         # Show input field to change author name
         if sce.zusi_authors:
