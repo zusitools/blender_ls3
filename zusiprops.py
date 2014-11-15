@@ -886,8 +886,7 @@ bpy.types.Action.zusi_animation_names_index = bpy.props.IntProperty()
 # Draws a UI part to select the visibility of the object ob in file variants
 def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
     if len(context.scene.zusi_variants) > 0:
-        row = layout.row()
-        row.prop(ob, "zusi_variants_visibility_mode", text = _("Variants"))
+        layout.row().prop(ob, "zusi_variants_visibility_mode", text = _("Variants"))
 
         selected_variants = [vis.variant_id for vis in ob.zusi_variants_visibility]
         box = layout.box()
@@ -999,33 +998,20 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
         mat = context.object.data.materials[context.object.active_material_index]
 
         if mat:
-            row = layout.row()
-            row.prop(mat, "zusi_landscape_type")
+            layout.row().prop(mat, "zusi_landscape_type")
+            layout.row().prop(mat, "zusi_gf_type")
+            layout.row().prop(mat, "zusi_texture_preset")
+            layout.row().operator("zusi_texture_preset.edit")
+            layout.row().prop(mat, "zusi_force_brightness")
+            layout.row().prop(mat, "zusi_signal_magnification")
+            layout.row().prop(mat, "zusi_use_ambient", text = _("Ambient color:"))
 
-            row = layout.row()
-            row.prop(mat, "zusi_gf_type")
-            
-            row = layout.row()
-            row.prop(mat, "zusi_texture_preset")
-            
-            row = layout.row()
-            row.operator("zusi_texture_preset.edit")
-
-            row = layout.row()
-            row.prop(mat, "zusi_force_brightness")
-
-            row = layout.row()
-            row.prop(mat, "zusi_signal_magnification")
-
-            row = layout.row()
-            row.prop(mat, "zusi_use_ambient", text = _("Ambient color:"))
             row = layout.row()
             row.enabled = mat.zusi_use_ambient
             row.prop(mat, "zusi_ambient_color", text="")
             row.prop(mat, "zusi_ambient_alpha", slider=True, text="Alpha")
-            
-            row = layout.row()
-            row.prop(mat, "zusi_use_emit", text = _("Night color:"))
+
+            layout.row().prop(mat, "zusi_use_emit", text = _("Night color:"))
             row = layout.row()
             row.enabled = mat.zusi_use_emit
             row.prop(mat, "zusi_emit_color", text="")
@@ -1040,8 +1026,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                     layout.row().label(text = _("Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components.")
                         % (diffuse_color.r, diffuse_color.g, diffuse_color.b), icon = "ERROR")
 
-            row = layout.row()
-            row.prop(mat, "zusi_allow_overexposure", text = _("Overexposure"))
+            layout.row().prop(mat, "zusi_allow_overexposure", text = _("Overexposure"))
             row = layout.row()
             row.enabled = mat.zusi_allow_overexposure
             row.prop(mat, "zusi_overexposure_addition", text = _("Add to diffuse"))
@@ -1159,9 +1144,7 @@ class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
         return context.object is not None and context.object.type == 'MESH'
 
     def draw(self, context):
-        row = self.layout.row()
-        row.prop(context.object, "zusi_subset_name")
-
+        self.layout.row().prop(context.object, "zusi_subset_name")
         draw_variants_visibility_box(context, self.layout, context.object)
 
 class TEXTURE_PT_variant_visibility(bpy.types.Panel):
@@ -1187,14 +1170,9 @@ class SCENE_PT_zusi_properties(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
-        row = layout.row()
-        row.prop(sce, "zusi_object_id")
-
-        row = layout.row()
-        row.prop(sce, "zusi_license")
-
-        row = layout.row()
-        row.prop(sce, "zusi_description")
+        layout.row().prop(sce, "zusi_object_id")
+        layout.row().prop(sce, "zusi_license")
+        layout.row().prop(sce, "zusi_description")
 
 # ---
 # Scene variant info UI
@@ -1262,8 +1240,7 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         # Show input field to change variant name
         if sce.zusi_variants:
             entry = sce.zusi_variants[sce.zusi_variants_index]
-            row = layout.row()
-            row.prop(entry, "name")
+            layout.row().prop(entry, "name")
 
 # ---
 # Animation info UI
@@ -1446,8 +1423,7 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
-        row = layout.row()
-        row.operator("zusi_authors.add_default")
+        layout.row().operator("zusi_authors.add_default")
 
         # Show list of authors with add/remove buttons.
         template_list(layout.row(), "ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index",
@@ -1459,9 +1435,6 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
             row = layout.row()
             row.prop(entry, "name")
             row.prop(entry, "id")
-            row = layout.row()
-            row.prop(entry, "email")
-            row = layout.row()
-            row.prop(entry, "effort")
-            row = layout.row()
-            row.prop(entry, "remarks")
+            layout.row().prop(entry, "email")
+            layout.row().prop(entry, "effort")
+            layout.row().prop(entry, "remarks")
