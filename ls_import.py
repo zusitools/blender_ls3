@@ -150,18 +150,21 @@ class LsImporter:
                 rot = read3floats(fp)
                 
                 if self.config.loadLinked:
-                    settings = LsImporterSettings(
-                        self.config.context,
-                        path,
-                        filename,
-                        directory,
-                        self.config.loadLinked,
-                        [loc[i] + self.config.location[i] for i in [0,1,2]],
-                        [rot[i] + self.config.rotation[i] for i in [0,1,2]],
-                    )
-                    
-                    importer = LsImporter(settings)
-                    importer.import_ls()
+                    if os.path.exists(path):
+                        settings = LsImporterSettings(
+                            self.config.context,
+                            path,
+                            filename,
+                            directory,
+                            self.config.loadLinked,
+                            [loc[i] + self.config.location[i] for i in [0,1,2]],
+                            [rot[i] + self.config.rotation[i] for i in [0,1,2]],
+                        )
+
+                        importer = LsImporter(settings)
+                        importer.import_ls()
+                    else:
+                        print("Warning: Linked file %s not found" % path)
 
                 line = fp.readline()
 
