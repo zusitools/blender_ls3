@@ -41,9 +41,14 @@ def fill_xyz_vector(node, vector):
 
 # Loads the data from a node's X, Y, Z, and W attributes into the given vector.
 def fill_xyzw_vector(node, vector):
-    fill_xyz_vector(node, vector)
     if node.getAttribute("W") != "":
-        vector[3] = float(node.getAttribute("W"))
+        vector[0] = float(node.getAttribute("W"))
+    if node.getAttribute("X") != "":
+        vector[1] = float(node.getAttribute("X"))
+    if node.getAttribute("Y") != "":
+        vector[2] = float(node.getAttribute("Y"))
+    if node.getAttribute("Z") != "":
+        vector[3] = float(node.getAttribute("Z"))
 
 # Loads the data from a node's U and V attributes into the given vector.
 # If suffix is specified, it is appended to the attribute name (e.g. suffix=2 → U2, V2)
@@ -52,6 +57,15 @@ def fill_uv_vector(node, vector, suffix = ""):
         vector[0] = float(node.getAttribute("U" + suffix))
     if node.getAttribute("V" + suffix) != "":
         vector[1] = float(node.getAttribute("V" + suffix))
+
+def blender_to_zusi(vector):
+    return Vector((-vector[1], vector[0], vector[2]))
+
+def zusi_to_blender(vector):
+    return Vector((vector[1], -vector[0], vector[2]))
+
+def zusi_to_blender_euler(euler):
+    return Euler((euler[1], -euler[0], euler[2]))
 
 class Ls3ImporterSettings:
     def __init__(self,
@@ -64,7 +78,8 @@ class Ls3ImporterSettings:
                 location = [0.0, 0.0, 0.0],
                 rotation = [0.0, 0.0, 0.0],
                 scale = [1.0, 1.0, 1.0],
-                lod_bit = 15
+                lod_bit = 15,
+                parent = None,
                 ):
         self.context = context
         self.filePath = filePath
@@ -76,6 +91,7 @@ class Ls3ImporterSettings:
         self.rotation = rotation
         self.scale = scale
         self.lod_bit = lod_bit
+        self.parent = parent
 
 class Ls3Importer:
     def __init__(self, config):
@@ -94,8 +110,11 @@ class Ls3Importer:
         else:
             self.lsbreader = None
 
-        # Imported subsets indexed by their subset number.
+        # Imported subsets (= Blender objects) indexed by their subset number.
+        # Imported linked files (= Blender objects) indexed by the order they occur in the LS3 file.
         self.subsets = []
+        self.linked_files = []
+        self.object_to_animate = None
 
         # Last rotation vector for the currently animated subset.
         self.last_rotation = None
@@ -121,6 +140,20 @@ class Ls3Importer:
         # Path to Zusi data dir
         self.datapath = zusicommon.get_zusi_data_path()
 
+        # Some nodes have to be visited in a certain order. Nodes with a level specified here
+        # are visited only after all other nodes with lower or unspecified levels have been visited.
+        self.work_list_level = 0
+        self.work_list_levels = {
+            "lsb": 0,
+
+            "SubSet": 1,
+
+            "Verknuepfte": 2,
+
+            "MeshAnimation": 3,
+            "VerknAnimation": 3,
+        }
+
     def visitNode(self, node):
         name = "visit" + node.nodeName + "Node"
 
@@ -128,6 +161,16 @@ class Ls3Importer:
         # Normally we would just try to call it and catch an AttributeError, but this makes it really hard to
         # debug if an AttributeError is thrown *inside* the called function
         if name in dir(self):
+            # If the call is due in a later work list iteration, don't call the visitX method immediately.
+            if node.nodeName in self.work_list_levels:
+                level = self.work_list_levels[node.nodeName]
+                assert(level >= self.work_list_level)
+                if level > self.work_list_level:
+                    if level not in self.work_list:
+                        self.work_list[level] = []
+                    self.work_list[level].append(node)
+                    return
+
             getattr(self, name)(node)
         else:
             for child in node.childNodes:
@@ -145,14 +188,14 @@ class Ls3Importer:
 
         # Create new object
         self.currentobject = bpy.data.objects.new(self.config.fileName + "." + str(self.subsetno), self.currentmesh)
-        self.currentobject.location = self.config.location
-        self.currentobject.rotation_euler = self.config.rotation
-        self.currentobject.scale = self.config.scale
+        # TODO: only when not animated
+        #self.currentobject.location = self.config.location
+        #self.currentobject.rotation_euler = self.config.rotation
+        #self.currentobject.scale = self.config.scale
+        self.currentobject.parent = self.config.parent
         bpy.context.scene.objects.link(self.currentobject)
 
-        while len(self.subsets) <= self.subsetno:
-            self.subsets.append(None)
-        self.subsets[self.subsetno] = self.currentobject
+        self.subsets.append(self.currentobject)
 
         # Assign material to object
         mat = bpy.data.materials.new(self.config.fileName + "." + str(self.subsetno))
@@ -319,10 +362,20 @@ class Ls3Importer:
             if len(scale_node) > 0:
                 fill_xyz_vector(scale_node[0], scale)
 
-            # Transform location into Zusi coordinates
+            # Transform location and rotation into Blender coordinates
             loc = [loc[1], -loc[0], loc[2]]
+            rot = [rot[1], -rot[0], rot[2]]
+            scale = [scale[1], scale[0], scale[2]]
 
             (directory, filename) = os.path.split(dateiname)
+
+            empty = bpy.data.objects.new("%s_LinkedFile.%03d_%s" % (self.config.fileName, len(self.linked_files) + 1, filename), None)
+            empty.location = loc
+            empty.rotation_euler = rot
+            empty.scale = scale
+            empty.parent = self.config.parent
+            self.config.context.scene.objects.link(empty)
+            self.linked_files.append(empty)
 
             settings = Ls3ImporterSettings(
                 self.config.context,
@@ -334,7 +387,8 @@ class Ls3Importer:
                 [loc[x] + self.config.location[x] for x in [0,1,2]],
                 [rot[x] + self.config.rotation[x] for x in [0,1,2]],
                 [scale[x] * self.config.scale[x] for x in [0,1,2]],
-                self.config.lod_bit
+                self.config.lod_bit,
+                empty,
             )
 
             importer = Ls3Importer(settings)
@@ -388,10 +442,30 @@ class Ls3Importer:
             ani_index = int(ani_index)
 
         if ani_index < 0 or ani_index >= len(self.subsets):
-            self.animated_subset = None
+            self.object_to_animate = None
             return
 
-        self.animated_subset = self.subsets[ani_index]
+        self.object_to_animate = self.subsets[ani_index]
+
+        for child in node.childNodes:
+            self.visitNode(child)
+
+    #
+    # Visits a <VerknAnimation> node.
+    #
+    def visitVerknAnimationNode(self, node):
+        self.last_rotation = None
+        ani_index = node.getAttribute("AniIndex")
+        if ani_index == "":
+            ani_index = 0
+        else:
+            ani_index = int(ani_index)
+
+        if ani_index < 0 or ani_index >= len(self.linked_files):
+            self.object_to_animate = None
+            return
+
+        self.object_to_animate = self.linked_files[ani_index]
 
         for child in node.childNodes:
             self.visitNode(child)
@@ -400,23 +474,24 @@ class Ls3Importer:
     # Visits an <AniPunkt> node.
     #
     def visitAniPunktNode(self, node):
-        if self.animated_subset is None:
+        ob = self.object_to_animate
+        if ob is None:
             return
 
-        if self.animated_subset.animation_data is None:
-            self.animated_subset.animation_data_create()
-        if self.animated_subset.animation_data.action is None:
-            self.animated_subset.animation_data.action = bpy.data.actions.new(
-                self.animated_subset.name + "Action")
+        if ob.animation_data is None:
+            ob.animation_data_create()
+        if ob.animation_data.action is None:
+            ob.animation_data.action = bpy.data.actions.new(
+                ob.name + "Action")
 
         # Make sure all FCurves are present on the Action.
         fcurves_by_datapath = dict([((curve.data_path, curve.array_index), curve)
-            for curve in self.animated_subset.animation_data.action.fcurves])
+            for curve in ob.animation_data.action.fcurves])
         for datapath in ["location", "rotation_euler"]:
             for idx in range(0, 3):
                 if (datapath, idx) not in fcurves_by_datapath:
                     fcurves_by_datapath[(datapath, idx)] = \
-                        self.animated_subset.animation_data.action.fcurves.new(datapath, idx)
+                        ob.animation_data.action.fcurves.new(datapath, idx)
 
         # Get X coordinate of control point.
         ani_zeit = node.getAttribute("AniZeit")
@@ -437,6 +512,7 @@ class Ls3Importer:
 
         if len(loc_nodes):
             fill_xyz_vector(loc_nodes[0], loc_vector)
+            loc_vector = zusi_to_blender(loc_vector)
         if len(rot_nodes):
             fill_xyzw_vector(rot_nodes[0], rot_quaternion)
 
@@ -444,34 +520,26 @@ class Ls3Importer:
             rot_euler = rot_quaternion.to_euler('XYZ')
         else:
             rot_euler = rot_quaternion.to_euler('XYZ', self.last_rotation)
+        rot_euler = zusi_to_blender_euler(rot_euler)
         self.last_rotation = rot_euler
-        print(ani_zeit, rot_euler)
 
         # Write keyframe control points.
-        fcurves_by_datapath[("location", 0)].keyframe_points.insert(controlpoint_x, loc_vector.y).interpolation = "LINEAR"
-        fcurves_by_datapath[("location", 1)].keyframe_points.insert(controlpoint_x, -loc_vector.x).interpolation = "LINEAR"
-        fcurves_by_datapath[("location", 2)].keyframe_points.insert(controlpoint_x, loc_vector.z).interpolation = "LINEAR"
+        fcurves_by_datapath[("location", 0)].keyframe_points.insert(controlpoint_x, loc_vector.x + ob.location[0]).interpolation = "LINEAR"
+        fcurves_by_datapath[("location", 1)].keyframe_points.insert(controlpoint_x, loc_vector.y + ob.location[1]).interpolation = "LINEAR"
+        fcurves_by_datapath[("location", 2)].keyframe_points.insert(controlpoint_x, loc_vector.z + ob.location[2]).interpolation = "LINEAR"
 
-        fcurves_by_datapath[("rotation_euler", 0)].keyframe_points.insert(controlpoint_x, rot_euler.x).interpolation = "LINEAR"
-        fcurves_by_datapath[("rotation_euler", 1)].keyframe_points.insert(controlpoint_x, rot_euler.y).interpolation = "LINEAR"
-        fcurves_by_datapath[("rotation_euler", 2)].keyframe_points.insert(controlpoint_x, rot_euler.z).interpolation = "LINEAR"
+        fcurves_by_datapath[("rotation_euler", 0)].keyframe_points.insert(controlpoint_x, rot_euler.x + ob.rotation_euler[0]).interpolation = "LINEAR"
+        fcurves_by_datapath[("rotation_euler", 1)].keyframe_points.insert(controlpoint_x, rot_euler.y + ob.rotation_euler[1]).interpolation = "LINEAR"
+        fcurves_by_datapath[("rotation_euler", 2)].keyframe_points.insert(controlpoint_x, rot_euler.z + ob.rotation_euler[2]).interpolation = "LINEAR"
 
     #
-    # Visits a <Landschaft> node.
+    # Visits a <lsb> node.
     #
-    # The lsb file has to be known before any subset, therefore explicitly look for the <lsb> node
-    def visitLandschaftNode(self, node):
+    def visitlsbNode(self, node):
         if self.lsbreader is not None:
-            try:
-                lsbnode = [x for x in node.childNodes if x.nodeName == "lsb"][0] #may raise IndexError
-                lsbname = zusicommon.resolve_file_path(lsbnode.getAttribute("Dateiname"),
-                    self.config.fileDirectory, self.datapath)
-                self.lsbreader.set_lsb_file(lsbname)
-            except(IndexError):
-                pass
-
-        for child in node.childNodes:
-            self.visitNode(child)
+            lsbname = zusicommon.resolve_file_path(node.getAttribute("Dateiname"),
+                self.config.fileDirectory, self.datapath)
+            self.lsbreader.set_lsb_file(lsbname)
 
     #
     # Visits a <Vertex> node.
@@ -531,14 +599,31 @@ class Ls3Importer:
         except(IndexError,  RuntimeError):
             pass
 
+    def work_list_insert(level, node):
+        assert level >= self.work_list_level
+        if level == self.work_list_level:
+            return True
+        else:
+            self.work_list.get(level, []).append(node)
+            return False
+
     def import_ls3(self):
         self.subsetno = 0
         (shortName, ext) = os.path.splitext(self.config.fileName)
-        print( "Opening LS3 file " + self.config.filePath)
+        print("Opening LS3 file " + self.config.filePath)
 
         # Open the file as bytes, else a Unicode BOM at the beginning of the file could confuse the XML parser.
         with open(self.config.filePath, "rb") as fp:
             with dom.parse(fp) as xml:
                 print("File read successfully")
-                self.visitNode(xml.firstChild);
+
+                self.work_list = { 0: [xml.firstChild] }
+                while len(self.work_list.keys()):
+                    least_key = min(self.work_list.keys())
+                    self.work_list_level = least_key
+                    for node in self.work_list[least_key]:
+                        self.visitNode(node)
+                    del self.work_list[least_key]
                 print("Done")
+
+        return self.subsets[0] if len(self.subsets) else None
