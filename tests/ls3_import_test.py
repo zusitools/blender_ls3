@@ -43,7 +43,11 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(expected[1], actual[1], 5)
     self.assertAlmostEqual(expected[2], actual[2], 5)
 
-  def assertKeyframes(self, fcurve, keyframes):
+  def assertKeyframes(self, action, curve_data_path, curve_array_index, keyframes):
+    fcurves = [c for c in action.fcurves if c.data_path == curve_data_path and c.array_index == curve_array_index]
+    self.assertEqual(1, len(fcurves), "No unique FCurve with datapath %s, index %d exists" % (curve_data_path, curve_array_index))
+    fcurve = fcurves[0]
+
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
     self.assertEqual(len(fcurve.keyframe_points), len(keyframes))
@@ -158,23 +162,13 @@ class TestLs3Import(unittest.TestCase):
     fcurves = action.fcurves
     self.assertEqual(6, len(fcurves))
 
-    fcurves_by_datapath = dict([((curve.data_path, curve.array_index), curve) for curve in fcurves])
+    self.assertKeyframes(action, "location", 0, [(0, 0), (1, 0)])
+    self.assertKeyframes(action, "location", 1, [(0, 3), (1, -3)])
+    self.assertKeyframes(action, "location", 2, [(0, -3), (1, -3)])
 
-    locX = fcurves_by_datapath[("location", 0)]
-    locY = fcurves_by_datapath[("location", 1)]
-    locZ = fcurves_by_datapath[("location", 2)]
-
-    rotX = fcurves_by_datapath[("rotation_euler", 0)]
-    rotY = fcurves_by_datapath[("rotation_euler", 1)]
-    rotZ = fcurves_by_datapath[("rotation_euler", 2)]
-
-    self.assertKeyframes(locX, [(0, 0), (1, 0)])
-    self.assertKeyframes(locY, [(0, 3), (1, -3)])
-    self.assertKeyframes(locZ, [(0, -3), (1, -3)])
-
-    self.assertKeyframes(rotX, [(0, radians(45)), (1, radians(45))])
-    self.assertKeyframes(rotY, [(0, radians(0)), (1, radians(0))])
-    self.assertKeyframes(rotZ, [(0, radians(0)), (1, radians(-45))])
+    self.assertKeyframes(action, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
+    self.assertKeyframes(action, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
+    self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
