@@ -170,6 +170,31 @@ class TestLs3Import(unittest.TestCase):
     self.assertKeyframes(action, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
     self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
 
+  def test_import_animated_linked_file(self):
+    self.ls3_import("animated_linked_file.ls3")
+
+    ob = bpy.data.objects["animated_linked_file.ls3_animated_linked_file_1.ls3.001"]
+    self.assertEqual('EMPTY', ob.type)
+
+    subset = bpy.data.objects["animated_linked_file_1.ls3.0"]
+    self.assertEqual('MESH', subset.type)
+    self.assertEqual(ob, subset.parent)
+    self.assertEqual(None, subset.animation_data)
+
+    anim_data = ob.animation_data
+    action = ob.animation_data.action
+
+    fcurves = action.fcurves
+    self.assertEqual(6, len(fcurves))
+
+    self.assertKeyframes(action, "location", 0, [(0, 0), (1, 0)])
+    self.assertKeyframes(action, "location", 1, [(0, 3), (1, -3)])
+    self.assertKeyframes(action, "location", 2, [(0, -3), (1, -3)])
+
+    self.assertKeyframes(action, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
+    self.assertKeyframes(action, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
+    self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
   unittest.TextTestRunner(verbosity=2).run(suite)

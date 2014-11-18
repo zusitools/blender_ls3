@@ -369,7 +369,7 @@ class Ls3Importer:
 
             (directory, filename) = os.path.split(dateiname)
 
-            empty = bpy.data.objects.new("%s_LinkedFile.%03d_%s" % (self.config.fileName, len(self.linked_files) + 1, filename), None)
+            empty = bpy.data.objects.new("%s_%s.%03d" % (self.config.fileName, filename, len(self.linked_files) + 1), None)
             empty.location = loc
             empty.rotation_euler = rot
             empty.scale = scale
