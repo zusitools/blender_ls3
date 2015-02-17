@@ -125,7 +125,6 @@ class Ls3Importer:
     # Visits a <SubSet> node.
     #
     def visitSubSetNode(self, node):
-        self.subsetno += 1
         self.currentvertices = []
         self.currentfaces = []
 
@@ -243,6 +242,7 @@ class Ls3Importer:
             self.currentmesh.tessfaces[idx].vertices = list(map(lambda x : new_vidx[x], self.currentfaces[idx]))
 
         self.currentmesh.update(calc_edges = True)
+        self.subsetno += 1
 
     # Visits a <RenderFlags> node
     def visitRenderFlagsNode(self, node):

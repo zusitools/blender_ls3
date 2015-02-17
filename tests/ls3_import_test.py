@@ -44,7 +44,7 @@ class TestLs3Import(unittest.TestCase):
 
   def test_night_color(self):
     self.ls3_import("nightcolor1.ls3")
-    mat = bpy.data.objects["nightcolor1.ls3.1"].data.materials[0]
+    mat = bpy.data.objects["nightcolor1.ls3.0"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
 
     self.assertEqual(True, mat.zusi_use_emit)
@@ -55,7 +55,7 @@ class TestLs3Import(unittest.TestCase):
   def test_overexposure(self):
     self.ls3_import("overexposure.ls3")
 
-    mat = bpy.data.objects["overexposure.ls3.1"].data.materials[0]
+    mat = bpy.data.objects["overexposure.ls3.0"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
 
     self.assertEqual(True, mat.zusi_use_emit)
@@ -68,13 +68,13 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("ambientcolor.ls3")
     gray = (128.0/255, 128.0/255, 128.0/255)
 
-    mat = bpy.data.objects["ambientcolor.ls3.1"].data.materials[0]
+    mat = bpy.data.objects["ambientcolor.ls3.0"].data.materials[0]
     self.assertEqual(False, mat.zusi_use_emit)
     self.assertEqual(True, mat.zusi_use_ambient)
     self.assertColorEqual(gray, mat.zusi_ambient_color)
     self.assertEqual(False, mat.zusi_allow_overexposure)
 
-    mat = bpy.data.objects["ambientcolor.ls3.2"].data.materials[0]
+    mat = bpy.data.objects["ambientcolor.ls3.1"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
     self.assertEqual(True, mat.zusi_use_emit)
     self.assertColorEqual((0, 0, 0), mat.zusi_emit_color)
@@ -82,7 +82,7 @@ class TestLs3Import(unittest.TestCase):
     self.assertColorEqual((0, 0, 0), mat.zusi_ambient_color)
     self.assertEqual(False, mat.zusi_allow_overexposure)
 
-    mat = bpy.data.objects["ambientcolor.ls3.3"].data.materials[0]
+    mat = bpy.data.objects["ambientcolor.ls3.2"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
     self.assertEqual(True, mat.zusi_use_emit)
     self.assertColorEqual(gray, mat.zusi_emit_color)
@@ -94,15 +94,15 @@ class TestLs3Import(unittest.TestCase):
 
   def test_zbias(self):
     self.ls3_import("zbias.ls3")
-    mat = bpy.data.objects["zbias.ls3.1"].data.materials[0]
+    mat = bpy.data.objects["zbias.ls3.0"].data.materials[0]
     self.assertEqual(-1, mat.offset_z)
 
   def test_import_multiple_files(self):
     bpy.ops.import_scene.ls3(bpy.context.copy(),
       files=[{"name":"nightcolor1.ls3"}, {"name":"zbias.ls3"}],
       directory=os.path.join(self._tempdir, "ls3s"))
-    self.assertIn("nightcolor1.ls3.1", bpy.data.objects)
-    self.assertIn("zbias.ls3.1", bpy.data.objects)
+    self.assertIn("nightcolor1.ls3.0", bpy.data.objects)
+    self.assertIn("zbias.ls3.0", bpy.data.objects)
 
   def test_anchor_points(self):
     self.ls3_import("anchor_points.ls3")
