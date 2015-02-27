@@ -334,6 +334,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
     def draw(self, context):
         layout = self.layout
+        files = self.get_exporter(context).get_files()
 
         if not context.scene.zusi_authors or len(context.scene.zusi_authors) == 0:
             self.had_no_author_info = True
@@ -344,6 +345,14 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             box = layout.box()
             box.row().label(_("Name: %s" % context.scene.zusi_authors[0].name))
             box.row().label(_("E-mail: %s" % context.scene.zusi_authors[0].email))
+
+        materials_with_intensity_less_1 = [s.identifier.material for f in files for s in f.subsets
+            if s.identifier.material is not None and s.identifier.material.diffuse_intensity < 1.]
+        if len(materials_with_intensity_less_1):
+            layout.row().label(_("Materials with diffuse intensity < 1"), icon='ERROR')
+            box = layout.row().box()
+            for m in materials_with_intensity_less_1:
+                box.label(text = m.name)
 
         row = layout.row()
         row.label(_("Variants (leave empty to export all)"))
@@ -364,7 +373,6 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         row = layout.row()
         row.prop(self, "exportAnimations")
         if self.properties.exportAnimations:
-            files = self.get_exporter(context).get_files()
             if len(files) > 1:
                 row = layout.row()
                 row.label(text=_("The following files will be overwritten:"))
