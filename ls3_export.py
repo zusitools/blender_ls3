@@ -397,6 +397,9 @@ class Ls3Exporter:
         
         for ob in subset.objects:
             debug("Exporting object {}", ob.name)
+            vgroup_xy = -1 if "Normal constraint XY" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XY"].index
+            vgroup_yz = -1 if "Normal constraint YZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint YZ"].index
+            vgroup_xz = -1 if "Normal constraint XZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XZ"].index
 
             # Apply modifiers and transform the mesh so that the vertex coordinates
             # are global coordinates. Also recalculate the vertex normals.
@@ -513,7 +516,17 @@ class Ls3Exporter:
                         normal = (0, 0, 1)
                     else:
                         if face.use_smooth:
-                            normal = (v.normal[1], -v.normal[0], -v.normal[2])
+                            normal = Vector((v.normal[1], -v.normal[0], -v.normal[2]))
+                            for g in v.groups:
+                                if g.weight == 0.0:
+                                    continue
+                                if g.group == vgroup_xy:
+                                    normal[2] = 0
+                                elif g.group == vgroup_yz:
+                                    normal[1] = 0
+                                elif g.group == vgroup_xz:
+                                    normal[0] = 0
+                            normal.normalize()
                         else:
                             normal = (face.normal[1], -face.normal[0], -face.normal[2])
 

@@ -240,6 +240,20 @@ class TestLs3Export(unittest.TestCase):
       n_node = n.find("./n")
       self.assertXYZ(n_node, 0, 0, 1)
 
+  def test_normal_constraints(self):
+    self.open("normal_constraints")
+    root = self.export_and_parse()
+    subsets = root.findall("./Landschaft/SubSet")
+    xy = subsets[0]
+    xz = subsets[1]
+    yz = subsets[2]
+
+    for idx, (subset, normal) in enumerate([(xy, (0, 1, 0)), (xz, (0, 0, -1)), (yz, (0, 0, 1))]):
+      for n in subset.findall("./Vertex/n"):
+        self.assertAlmostEqual(normal[0], float(n.attrib["X"]), 5, "subset " + str(idx))
+        self.assertAlmostEqual(normal[1], float(n.attrib["Y"]), 5, "subset " + str(idx))
+        self.assertAlmostEqual(normal[2], float(n.attrib["Z"]), 5, "subset " + str(idx))
+
   def test_multitexturing(self):
     self.open("multitexturing")
     self.assert_exported_cube_multitexturing()
