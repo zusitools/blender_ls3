@@ -106,6 +106,12 @@ class TestLs3Import(unittest.TestCase):
     self.assertColorEqual((0, 0, 0), mat.zusi_overexposure_addition)
     self.assertColorEqual(gray, mat.zusi_overexposure_addition_ambient)
 
+  def test_color_order(self):
+    self.ls3_import("color_order.ls3")
+    mat = bpy.data.objects["color_order.ls3.0"].data.materials[0]
+    self.assertColorEqual((0x22/0xFF, 0x44/0xFF, 0x66/0xFF), mat.diffuse_color)
+    self.assertColorEqual((0x88/0xFF, 0xAA/0xFF, 0xCC/0xFF), mat.zusi_ambient_color)
+
   def test_zbias(self):
     self.ls3_import("zbias.ls3")
     mat = bpy.data.objects["zbias.ls3.0"].data.materials[0]

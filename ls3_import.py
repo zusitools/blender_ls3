@@ -27,8 +27,10 @@ from . import zusicommon
 from math import pi
 from mathutils import *
 
-# Converts a hex string "0AABBGGRR" into a tuple of a Color object and an alpha value
-hex_string_to_rgba = lambda str : (mathutils.Color((int(str[7:9], 16) / 255, int(str[5:7], 16) / 255, int(str[3:5], 16) / 255)), int(str[1:3], 16) / 255)
+# Converts a hex string "0AABBGGRR"/"0AARRGGBB" into a tuple of a Color object and an alpha value
+bgr_string_to_rgba = lambda str : (mathutils.Color((int(str[7:9], 16) / 255, int(str[5:7], 16) / 255, int(str[3:5], 16) / 255)), int(str[1:3], 16) / 255)
+rgb_string_to_rgba = lambda str : (mathutils.Color((int(str[3:5], 16) / 255, int(str[5:7], 16) / 255, int(str[7:9], 16) / 255)), int(str[1:3], 16) / 255)
+hex_string_to_rgba = lambda str, use_bgr_order : bgr_string_to_rgba(str) if use_bgr_order else rgb_string_to_rgba(str)
 
 # Loads the data from a node's X, Y, and Z attributes into the given vector.
 def fill_xyz_vector(node, vector):
@@ -202,23 +204,23 @@ class Ls3Importer:
         self.currentmesh.materials.append(mat)
 
         # Set ambient/diffuse colors of mesh
-        ambient_color = node.getAttribute("CA")
-        diffuse_color = node.getAttribute("C")
-        night_color = node.getAttribute("E")
+        (ambient_bgr, ambient_color) = (True, node.getAttribute("CA")) if node.hasAttribute("CA") else (False, node.getAttribute("Ca"))
+        (diffuse_bgr, diffuse_color) = (True, node.getAttribute("C")) if node.hasAttribute("C") else (False, node.getAttribute("Cd"))
+        (night_bgr, night_color) = (True, node.getAttribute("E")) if node.hasAttribute("E") else (False, node.getAttribute("Ce"))
 
         if diffuse_color != "":
-            (mat.diffuse_color, mat.alpha) = hex_string_to_rgba(diffuse_color)
+            (mat.diffuse_color, mat.alpha) = hex_string_to_rgba(diffuse_color, diffuse_bgr)
             mat.diffuse_intensity = 1
 
         if ambient_color != "":
             mat.zusi_use_ambient = True
-            (mat.zusi_ambient_color, mat.zusi_ambient_alpha) = hex_string_to_rgba(ambient_color)
+            (mat.zusi_ambient_color, mat.zusi_ambient_alpha) = hex_string_to_rgba(ambient_color, ambient_bgr)
         else:
             mat.zusi_use_ambient = False
 
         if night_color != "":
             mat.zusi_use_emit = True
-            (mat.zusi_emit_color, ignored) = hex_string_to_rgba(night_color)
+            (mat.zusi_emit_color, ignored) = hex_string_to_rgba(night_color, night_bgr)
             mat.diffuse_color += mat.zusi_emit_color
 
             if mat.diffuse_color.r > 1.0 or mat.diffuse_color.g > 1.0 or mat.diffuse_color.b > 1.0:
