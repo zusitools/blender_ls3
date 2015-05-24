@@ -782,6 +782,19 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZW(q_nodes[3], 0, 0, 0.707107, -0.707107)
     self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
+  # Cube (animated via keyframe)
+  # +- Empty (animated via constraint)
+  # => only one file is created
+  def test_animated_nonmesh_child(self):
+    self.open("animation_animated_nonmesh_children")
+    root = self.export_and_parse({"exportAnimations" : True})
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(1, len(subsets))
+
+    verknuepfte = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(0, len(verknuepfte))
+
   def test_animation_animated_child_of_scaled_object(self):
     self.open("animation_animated_child_of_scaled_object")
     files = self.export_and_parse_multiple(["Cube"])[2]

@@ -287,11 +287,22 @@ class Ls3Exporter:
                 # path and datadir are not on the same drive
                 return path.replace(os.sep, "\\")
 
-    def must_start_new_file(self, ob):
-        """Returns whether the specified object and its children must be placed in their own file
-        in order to be animated correctly."""
-        # Animated objects with an animated child start a new file.
-        return self.config.exportAnimations and self.is_animated(ob) and any([self.is_animated(ch) for ch in ob.children])
+    def get_file_root(self, ob):
+        """Returns the object that has to be the root of the LS3 file in which 'ob' is placed
+        in order to animate 'ob' correctly."""
+        # Return the second animated ancestor (where the current object counts if it's animated)
+        if not self.config.exportAnimations:
+            return None
+
+        num_animations = 0
+        cur = ob
+        while cur is not None:
+            if self.is_animated(cur):
+                num_animations += 1
+                if num_animations == 2:
+                    return cur
+            cur = cur.parent
+        return None
 
     def is_animated(self, ob):
         """Returns whether the object ob has an animation of its own (this is not the case if the object
@@ -776,50 +787,49 @@ class Ls3Exporter:
             basename, ext = split_file_name[0], ""
         main_file = Ls3File()
         main_file.filename = self.config.fileName
-        main_file.objects = set(self.config.context.scene.objects.values())
+        main_file.objects = set()
         main_file.is_main_file = True
-        work_list = [main_file]
 
         # The resulting files are indexed by their root object. The main file is the only file without a root object.
         result = { None : main_file }
 
+        # Collect all objects that have to be the root of a file.
+        # Those are the root objects for all exported objects, then the root objects of those objects, and so on.
+        work_list = [ob for ob in self.config.context.scene.objects.values() if len(self.exported_subset_identifiers[ob])]
+        visited = set()
         while len(work_list):
-            cur_file = work_list.pop()
+            ob = work_list.pop()
+            if ob not in visited:
+                visited.add(ob)
 
-            # If there is an object which needs its own file, we "split" this object and its descendants
-            # into a separate file.
-            splitobj = None
-            for ob in sorted(cur_file.objects, key = lambda ob: ob.name):
-                if ob != cur_file.root_obj and self.must_start_new_file(ob):
-                    splitobj = ob
-                    break
+                root_obj = self.get_file_root(ob)
+                debug("Root object of {} is {}", ob, root_obj)
+                if root_obj is not None and root_obj not in visited:
+                    work_list.append(root_obj)
+                if root_obj not in result:
+                    new_file = Ls3File()
+                    new_file.filename = basename + "_" + root_obj.name + ext
+                    new_file.root_obj = root_obj
+                    result[root_obj] = new_file
 
-            if splitobj is not None:
-                # Place this object and all its children into a new file.
-                new_file = Ls3File()
-                new_file.filename = basename + "_" + splitobj.name + ext
-                new_file.root_obj = splitobj
-                new_file.objects = set([splitobj])
-                new_file.objects |= get_children_recursive(splitobj)
-                new_file.is_main_file = False
+        for ob in self.config.context.scene.objects.values():
+            if ob in result:
+                result[ob].objects.add(ob)
+                result[self.get_file_root(ob)].linked_files.append(result[ob])
+            elif len(self.exported_subset_identifiers[ob]):
+                cur = ob.parent
+                while cur is not None and cur not in result:
+                    cur = cur.parent
+                result[cur].objects.add(ob)
 
-                cur_file.objects -= new_file.objects
-                work_list.append(new_file)
-                result[splitobj] = new_file
-                work_list.append(cur_file) # TODO: needs more work, splitobj might not have been the only splitting object!
-
-        # Get subsets and create linked file relation according to parent relation.
         for root_obj, ls3file in result.items():
             ls3file.subsets = self.get_subsets(ls3file)
-            if ls3file.root_obj is not None and (len(ls3file.subsets) > 0 or len(ls3file.linked_files) > 0):
-                parent_root = ls3file.root_obj.parent
-                while parent_root is not None and parent_root not in result:
-                    parent_root = parent_root.parent
-                result[parent_root].linked_files.append(ls3file)
 
         debug("Files:")
         for root_obj, ls3file in result.items():
-            debug(root_obj.name if root_obj is not None else "None")
+            debug("{} (root object {}, linked files {})", ls3file.filename,
+                root_obj.name if root_obj is not None else "None",
+                ", ".join(linkedfile.filename for linkedfile in ls3file.linked_files))
             for sub in ls3file.subsets:
                 debug("   {} - {}", str(sub.identifier), str(sub.objects))
 
@@ -1127,7 +1137,7 @@ class Ls3Exporter:
 
     def export_ls3(self):
         debug("Exported subset IDs:")
-        debug(self.exported_subset_identifiers)
+        debug("{}", str(self.exported_subset_identifiers))
         ls3files = self.get_files()
 
         # ls3files forms a tree, traverse it in postorder so that each file has all information (bounding radius)
