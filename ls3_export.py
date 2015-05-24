@@ -25,8 +25,9 @@ from math import ceil, pi, sqrt
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
-# to a hex string "0AABBGGRR"
-rgba_to_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.b, color.g, color.r]])
+# to a hex string "0AABBGGRR" / "0AARRGGBB", respectively
+rgba_to_bgr_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.b, color.g, color.r]])
+rgba_to_rgb_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.r, color.g, color.b]])
 
 # Returns the length of the projection of the specified vector projected onto the XY plane.
 vector_xy_length = lambda vec : sqrt(vec.x * vec.x + vec.y * vec.y)
@@ -615,13 +616,13 @@ class Ls3Exporter:
             diffuse_color = normalize_color(diffuse_color + material.zusi_overexposure_addition)
             ambient_color = normalize_color(ambient_color + material.zusi_overexposure_addition_ambient)
 
-        subsetNode.setAttribute("C", rgba_to_hex_string(diffuse_color, material.alpha))
+        subsetNode.setAttribute("Cd", rgba_to_rgb_hex_string(diffuse_color, material.alpha))
         if material.zusi_use_ambient:
-            subsetNode.setAttribute("CA", rgba_to_hex_string(ambient_color,
+            subsetNode.setAttribute("Ca", rgba_to_rgb_hex_string(ambient_color,
                 material.zusi_ambient_alpha))
         if material.zusi_use_emit:
             # Emit alpha is ignored in Zusi.
-            subsetNode.setAttribute("E", rgba_to_hex_string(emit_color, 0))
+            subsetNode.setAttribute("Ce", rgba_to_rgb_hex_string(emit_color, 0))
 
         renderFlagsNode = self.xmldoc.createElement("RenderFlags")
         renderFlagsNode.setAttribute("TexVoreinstellung", material.zusi_texture_preset)
