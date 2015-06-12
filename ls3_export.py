@@ -440,6 +440,17 @@ class Ls3Exporter:
                 mesh.transform(ob.matrix_world)
 
             mesh.calc_normals()
+            use_auto_smooth = mesh.use_auto_smooth
+            if mesh.use_auto_smooth:
+                if bpy.app.version[0] >= 2 and bpy.app.version[1] >= 71: # MeshTessFace.split_normals available in >= 2.71
+                    if bpy.app.version[0] == 2 and bpy.app.version[1] <= 73:
+                        mesh.calc_normals_split(mesh.auto_smooth_angle)
+                    else:
+                        mesh.calc_normals_split()
+                    mesh.calc_tessface()
+                else:
+                    print("WARNING: Auto smooth setting will not be honored in Blender < 2.71")
+                    use_auto_smooth = False
 
             # If the object is mirrored/negatively scaled, the normals will come out the wrong way
             # when applying the transformation. Workaround from:
@@ -527,7 +538,10 @@ class Ls3Exporter:
                     if ob.data and ob.data.zusi_is_rail:
                         normal = (0, 0, 1)
                     else:
-                        if face.use_smooth:
+                        if use_auto_smooth:
+                            split_normal = face.split_normals[vertex_no]
+                            normal = Vector((split_normal[1], -split_normal[0], -split_normal[2]))
+                        elif face.use_smooth:
                             normal = Vector((v.normal[1], -v.normal[0], -v.normal[2]))
                             for g in v.groups:
                                 if g.weight == 0.0:

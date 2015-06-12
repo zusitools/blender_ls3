@@ -113,13 +113,13 @@ class TestLs3Export(unittest.TestCase):
     if expected_w != 0.0 or "W" in node.attrib:
       self.assertAlmostEqual(expected_w, float(node.attrib["W"]), places = 5)
 
-  def assertXYZ(self, node, expected_x, expected_y, expected_z, msg = None):
+  def assertXYZ(self, node, expected_x, expected_y, expected_z, msg = None, places = 5):
     if expected_x != 0.0 or "X" in node.attrib:
-      self.assertAlmostEqual(expected_x, float(node.attrib["X"]), places = 5, msg = msg)
+      self.assertAlmostEqual(expected_x, float(node.attrib["X"]), places = places, msg = msg)
     if expected_y != 0.0 or "Y" in node.attrib:
-      self.assertAlmostEqual(expected_y, float(node.attrib["Y"]), places = 5, msg = msg)
+      self.assertAlmostEqual(expected_y, float(node.attrib["Y"]), places = places, msg = msg)
     if expected_z != 0.0 or "Z" in node.attrib:
-      self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = 5, msg = msg)
+      self.assertAlmostEqual(expected_z, float(node.attrib["Z"]), places = places, msg = msg)
 
   def assertVertexCoordsEqual(self, expected_coords, vertices):
     self.assertEqual(len(expected_coords), len(vertices))
@@ -230,6 +230,32 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
+
+  @unittest.skipUnless(not(bpy.app.version[0] <= 2 and bpy.app.version[1] < 71),
+      "MeshTessFace.split_normals available in Blender >= 2.71")
+  def test_split_normals(self):
+    self.open("split_normals")
+    root = self.export_and_parse()
+    normals = root.findall("./Landschaft/SubSet/Vertex/n")
+
+    # Normals point either in X or Z direction, although both faces are
+    # set to smooth and no Edge Split modifier is set. Auto Smooth creates
+    # the correct split normals
+    for n in normals:
+        if float(n.attrib["X"]) < 0.001:
+            self.assertXYZ(n, 0, 0, 1)
+        else:
+            self.assertXYZ(n, 1, 0, 0)
+
+  @unittest.skipUnless(not(bpy.app.version[0] <= 2 and bpy.app.version[1] < 74),
+      "Custom split normals available in Blender >= 2.74")
+  def test_custom_split_normals(self):
+    self.open("custom_split_normals")
+    root = self.export_and_parse()
+    normals = root.findall("./Landschaft/SubSet/Vertex/n")
+    self.assertNotEqual(0, len(normals))
+    for n in normals:
+      self.assertXYZ(n, 0, 1, 0, places = 4) # normals are less accurate
 
   def test_rail_normals(self):
     self.open("rail_normals")
