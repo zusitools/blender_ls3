@@ -37,11 +37,11 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(expected[1], actual.g)
     self.assertAlmostEqual(expected[2], actual.b)
 
-  def assertVectorEqual(self, expected, actual):
+  def assertVectorEqual(self, expected, actual, places = 5):
     expected = Vector(expected)
-    self.assertAlmostEqual(expected[0], actual[0], 5)
-    self.assertAlmostEqual(expected[1], actual[1], 5)
-    self.assertAlmostEqual(expected[2], actual[2], 5)
+    self.assertAlmostEqual(expected[0], actual[0], places)
+    self.assertAlmostEqual(expected[1], actual[1], places)
+    self.assertAlmostEqual(expected[2], actual[2], places)
 
   def assertKeyframes(self, action, curve_data_path, curve_array_index, keyframes):
     fcurves = [c for c in action.fcurves if c.data_path == curve_data_path and c.array_index == curve_array_index]
@@ -55,6 +55,20 @@ class TestLs3Import(unittest.TestCase):
       self.assertEqual("LINEAR", point.interpolation)
       self.assertAlmostEqual(start + keyframes[idx][0] * (end - start), point.co.x, places = 5)
       self.assertAlmostEqual(keyframes[idx][1], point.co.y, places = 5)
+
+  @unittest.skipUnless(not (bpy.app.version[0] <= 2 and bpy.app.version[1] < 74),
+      "Normal import available in Blender >= 2.74")
+  def test_import_normals(self):
+    self.ls3_import("custom_normals.ls3")
+    ob = bpy.data.objects["custom_normals.ls3.0"]
+    me = ob.data
+    me.calc_normals_split()
+
+    vertex_normals = [None] * len(me.loops) * 3
+    me.loops.foreach_get("normal", vertex_normals)
+
+    for normal in tuple(zip(*(iter(vertex_normals),) * 3)):
+      self.assertVectorEqual((1, 0, 0), normal, places = 3) # normals are less accurate
 
   def test_night_color(self):
     self.ls3_import("nightcolor1.ls3")

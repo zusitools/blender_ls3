@@ -18,6 +18,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import array
 import os
 import bpy
 import struct
@@ -26,6 +27,7 @@ import xml.dom.minidom as dom
 from . import zusicommon
 from math import pi
 from mathutils import *
+from bpy_extras.io_utils import unpack_list
 
 # Converts a hex string "0AABBGGRR"/"0AARRGGBB" into a tuple of a Color object and an alpha value
 bgr_string_to_rgba = lambda str : (mathutils.Color((int(str[7:9], 16) / 255, int(str[5:7], 16) / 255, int(str[3:5], 16) / 255)), int(str[1:3], 16) / 255)
@@ -274,35 +276,46 @@ class Ls3Importer:
         if self.lsbreader is not None and self.lsbreader.lsbfile is not None:
             (self.currentvertices, self.currentfaces) = self.lsbreader.read_subset_data(node)
 
-        # Add vertex index and "no merge" flag at the end of the vertex tuple (for mesh optimization)
-        self.currentvertices = [list(v) + [idx, False] for idx, v in enumerate(self.currentvertices)]
-
-        # Separate UV data into array as vertices will be merged later
-        # Convert coordinates into the Blender coordinate system
-        uvdata = [(v[6], 1 - v[7], v[8], 1 - v[9]) for v in self.currentvertices]
-
-        oldlen = len(self.currentvertices)
-        # Join vertices that have the same coordinates and normal angles
-        new_vidx = zusicommon.optimize_mesh(self.currentvertices, 0.001, 2, 2 * pi)
-        print("Optimization: Removed " + str(oldlen - len(self.currentvertices)) + " vertices")
-
         # Fill the mesh with verts, edges, faces
-        # Can't use mesh.from_pydata because it creates ngons, not tessfaces
-        self.currentmesh.vertices.add(len(self.currentvertices) - sum(v is None for v in self.currentvertices))
-        idx_without_None = 0
-        for idx, v in enumerate(self.currentvertices):
-            if v is None:
-                continue
-            # (x,y,z) coordinates are calculated as (y, -x, z) from Zusi coordinates to fit the Blender coordinate system.
-            self.currentmesh.vertices[idx_without_None].co = [v[1], -v[0], v[2]]
-            self.currentmesh.vertices[idx_without_None].normal = self.currentvertices[idx][3:6]
-            idx_without_None += 1
+        self.currentmesh.vertices.add(len(self.currentvertices))
+        self.currentmesh.loops.add(3 * len(self.currentfaces))
+        self.currentmesh.polygons.add(len(self.currentfaces))
 
-        self.currentmesh.tessfaces.add(len(self.currentfaces))
-        for idx, f in enumerate(self.currentfaces):
-            self.currentmesh.tessfaces[idx].vertices = list(map(lambda x : new_vidx[x], self.currentfaces[idx]))
+        self.currentmesh.vertices.foreach_set("co", unpack_list([(v[1], -v[0], v[2]) for v in self.currentvertices]))
+        self.currentmesh.loops.foreach_set("vertex_index", unpack_list([(f[0], f[1], f[2]) for f in self.currentfaces]))
+
+        self.currentmesh.polygons.foreach_set("loop_start", range(0, 3 * len(self.currentfaces), 3))
+        self.currentmesh.polygons.foreach_set("loop_total", [3] * len(self.currentfaces))
+
+        if not (bpy.app.version[0] <= 2 and bpy.app.version[1] < 74):
+            self.currentmesh.create_normals_split()
+            normals = []
+            for f in self.currentfaces:
+                for i in range(0, 3):
+                    v = self.currentvertices[f[i]]
+                    normals += [v[4], -v[3], v[5]]
+            self.currentmesh.loops.foreach_set("normal", normals)
+
+        # Set custom normals
+        if not (bpy.app.version[0] <= 2 and bpy.app.version[1] < 74):
+            self.currentmesh.validate(clean_customdata = False) # False in order to preserve normals stored in loops
+            self.currentmesh.update(calc_edges = False)
+
+            custom_normals = array.array('f', [0.0] * (len(self.currentmesh.loops) * 3))
+            self.currentmesh.loops.foreach_get("normal", custom_normals)
+            self.currentmesh.normals_split_custom_set(tuple(zip(*(iter(custom_normals),) * 3)))
+            self.currentmesh.use_auto_smooth = True
 
         self.currentmesh.update(calc_edges = True)
+
+        # Merge vertices that have the same coordinates
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(self.currentmesh)
+        bmesh.ops.remove_doubles(bm, verts = bm.verts[:], dist = 0.0001)
+        bm.to_mesh(self.currentmesh)
+        bm.free()
+
         self.subsetno += 1
 
     # Visits a <RenderFlags> node
