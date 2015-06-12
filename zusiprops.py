@@ -717,6 +717,13 @@ bpy.types.Material.result_stage = bpy.props.PointerProperty(
 # Texture
 #
 
+bpy.types.Texture.zusi_meters_per_texture = bpy.props.FloatProperty(
+    name = _("Meters per texture"),
+    description = _("Side length of a square which this texture would completely cover"),
+    min = 0.0,
+    default = 0.0,
+)
+
 bpy.types.Texture.zusi_variants_visibility_mode = bpy.props.EnumProperty(
     name = "Variant visibility mode",
     items = variant_visibility_modes
@@ -1150,8 +1157,8 @@ class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
         self.layout.row().prop(context.object, "zusi_subset_name")
         draw_variants_visibility_box(context, self.layout, context.object)
 
-class TEXTURE_PT_variant_visibility(bpy.types.Panel):
-    bl_label = _("Variant visibility")
+class TEXTURE_PT_zusi_properties(bpy.types.Panel):
+    bl_label = _("Zusi specific properties")
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "texture"
@@ -1161,6 +1168,7 @@ class TEXTURE_PT_variant_visibility(bpy.types.Panel):
         return context.texture is not None
 
     def draw(self, context):
+        self.layout.prop(context.texture, "zusi_meters_per_texture")
         draw_variants_visibility_box(context, self.layout, context.texture, object_type = "Texture")
 
 class SCENE_PT_zusi_properties(bpy.types.Panel):

@@ -683,8 +683,12 @@ class Ls3Exporter:
         subsetNode.appendChild(renderFlagsNode)
 
         # Write textures
-        for texture_slot in self.get_active_texture_slots(material):
+        for idx, texture_slot in enumerate(self.get_active_texture_slots(material)):
+            if idx >= 2:
+                break
             texture_node = self.xmldoc.createElement("Textur")
+            if texture_slot.texture.zusi_meters_per_texture != 0:
+              subsetNode.setAttribute("MeterProTex" if idx == 0 else "MeterProTex2", str(texture_slot.texture.zusi_meters_per_texture))
             datei_node = self.xmldoc.createElement("Datei")
             datei_node.setAttribute("Dateiname", self.relpath(texture_slot.texture.image.filepath))
             texture_node.appendChild(datei_node)

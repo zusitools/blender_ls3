@@ -330,6 +330,14 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
+  def test_meters_per_texture(self):
+    self.open("meters_per_texture")
+    root = self.export_and_parse()
+
+    subset = root.find("./Landschaft/SubSet")
+    self.assertEqual(25.5, float(subset.attrib["MeterProTex"]))
+    self.assertEqual(35, float(subset.attrib["MeterProTex2"]))
+
   def test_night_color(self):
     self.open("nightcolor")
     root = self.export_and_parse()
