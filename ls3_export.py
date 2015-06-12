@@ -25,9 +25,9 @@ from math import ceil, pi, sqrt
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
-# to a hex string "0AABBGGRR" / "0AARRGGBB", respectively
+# to a hex string "0AABBGGRR" / "AARRGGBB", respectively
 rgba_to_bgr_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.b, color.g, color.r]])
-rgba_to_rgb_hex_string = lambda color, alpha : "0{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.r, color.g, color.b]])
+rgba_to_rgb_hex_string = lambda color, alpha : "{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.r, color.g, color.b]])
 
 # Returns the length of the projection of the specified vector projected onto the XY plane.
 vector_xy_length = lambda vec : sqrt(vec.x * vec.x + vec.y * vec.y)

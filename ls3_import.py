@@ -29,9 +29,9 @@ from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list
 
-# Converts a hex string "0AABBGGRR"/"0AARRGGBB" into a tuple of a Color object and an alpha value
+# Converts a hex string "0AABBGGRR"/"AARRGGBB" into a tuple of a Color object and an alpha value
 bgr_string_to_rgba = lambda str : (mathutils.Color((int(str[7:9], 16) / 255, int(str[5:7], 16) / 255, int(str[3:5], 16) / 255)), int(str[1:3], 16) / 255)
-rgb_string_to_rgba = lambda str : (mathutils.Color((int(str[3:5], 16) / 255, int(str[5:7], 16) / 255, int(str[7:9], 16) / 255)), int(str[1:3], 16) / 255)
+rgb_string_to_rgba = lambda str : (mathutils.Color((int(str[2:4], 16) / 255, int(str[4:6], 16) / 255, int(str[6:8], 16) / 255)), int(str[0:2], 16) / 255)
 hex_string_to_rgba = lambda str, use_bgr_order : bgr_string_to_rgba(str) if use_bgr_order else rgb_string_to_rgba(str)
 
 # Loads the data from a node's X, Y, and Z attributes into the given vector.

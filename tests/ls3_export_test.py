@@ -338,24 +338,24 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(4, len(subsets))
 
     # Subset 1 has no night color, Cd (diffuse) is white.
-    self.assertEqual("0FFFFFFFF", subsets[0].attrib["Cd"])
+    self.assertEqual("FFFFFFFF", subsets[0].attrib["Cd"])
     self.assertNotIn("E", subsets[0].attrib)
 
     # Subset 2 has a night color of black and a day color of white.
     # It will be black at night and white by day.
-    self.assertEqual("0FFFFFFFF", subsets[1].attrib["Cd"])
-    self.assertEqual("000000000", subsets[1].attrib["Ce"])
+    self.assertEqual("FFFFFFFF", subsets[1].attrib["Cd"])
+    self.assertEqual("00000000", subsets[1].attrib["Ce"])
 
     # Subset 3 has a night color of white and a day color of gray.
     # This does not work in Zusi's lighting model (night color must be darker),
     # so we adjust the night color accordingly (to be gray, too).
-    self.assertEqual("0FF000000", subsets[2].attrib["Cd"])
-    self.assertEqual("000808080", subsets[2].attrib["Ce"])
+    self.assertEqual("FF000000", subsets[2].attrib["Cd"])
+    self.assertEqual("00808080", subsets[2].attrib["Ce"])
 
     # Subset 4 allows overexposure and therefore has a (theoretical)
     # day color of RGB(510, 510, 510).
-    self.assertEqual("0FFFFFFFF", subsets[3].attrib["Cd"])
-    self.assertEqual("000FFFFFF", subsets[3].attrib["Ce"])
+    self.assertEqual("FFFFFFFF", subsets[3].attrib["Cd"])
+    self.assertEqual("00FFFFFF", subsets[3].attrib["Ce"])
 
   def test_color_order(self):
     self.open("color_order")
@@ -364,9 +364,9 @@ class TestLs3Export(unittest.TestCase):
     subsets = root.findall("./Landschaft/SubSet")
     self.assertEqual(1, len(subsets))
 
-    # Test that the color order is ARGB, not ABGR (as in older Zusi versions)
-    self.assertEqual("0FF224466", subsets[0].attrib["Cd"])
-    self.assertEqual("0FF88AACC", subsets[0].attrib["Ca"])
+    # Test that the color order is ARGB, not 0ABGR (as in older Zusi versions)
+    self.assertEqual("FF224466", subsets[0].attrib["Cd"])
+    self.assertEqual("FF88AACC", subsets[0].attrib["Ca"])
 
   def test_ambient_color(self):
     self.open("ambientcolor")
@@ -376,26 +376,26 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(4, len(subsets))
 
     # Subset 1 has a diffuse color of white and an ambient color of gray.
-    self.assertEqual("0FFFFFFFF", subsets[0].attrib["Cd"])
-    self.assertEqual("0FF808080", subsets[0].attrib["Ca"])
+    self.assertEqual("FFFFFFFF", subsets[0].attrib["Cd"])
+    self.assertEqual("FF808080", subsets[0].attrib["Ca"])
     self.assertNotIn("E", subsets[0].attrib)
 
     # Subset 2 has a diffuse color of white and an ambient/night color of gray.
-    self.assertEqual("0FF808080", subsets[1].attrib["Cd"])
-    self.assertEqual("0FF000000", subsets[1].attrib["Ca"])
-    self.assertEqual("000808080", subsets[1].attrib["Ce"])
+    self.assertEqual("FF808080", subsets[1].attrib["Cd"])
+    self.assertEqual("FF000000", subsets[1].attrib["Ca"])
+    self.assertEqual("00808080", subsets[1].attrib["Ce"])
 
     # Subset 3 has a night color that is lighter than the ambient color.
     # It will be reduced to be darker than both diffuse and ambient color.
-    self.assertEqual("0FF808080", subsets[2].attrib["Cd"])
-    self.assertEqual("0FF000000", subsets[2].attrib["Ca"])
-    self.assertEqual("000808080", subsets[2].attrib["Ce"])
+    self.assertEqual("FF808080", subsets[2].attrib["Cd"])
+    self.assertEqual("FF000000", subsets[2].attrib["Ca"])
+    self.assertEqual("00808080", subsets[2].attrib["Ce"])
 
     # Subset 4 has a night color of gray, an ambient color of white
     # and a gray ambient overexposure.
-    self.assertEqual("0FF808080", subsets[3].attrib["Cd"])
-    self.assertEqual("0FFFFFFFF", subsets[3].attrib["Ca"])
-    self.assertEqual("000808080", subsets[3].attrib["Ce"])
+    self.assertEqual("FF808080", subsets[3].attrib["Cd"])
+    self.assertEqual("FFFFFFFF", subsets[3].attrib["Ca"])
+    self.assertEqual("00808080", subsets[3].attrib["Ce"])
 
   def test_zbias(self):
     self.open("zbias")

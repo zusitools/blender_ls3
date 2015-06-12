@@ -2,7 +2,7 @@
 <Zusi>
   <Info DateiTyp="Landschaft" MinVersion="A.1" Version="A.1"/>
   <Landschaft>
-    <SubSet Ca="0FF88AACC" Cd="0FF224466">
+    <SubSet Ca="FF88AACC" Cd="FF224466">
       <RenderFlags TexVoreinstellung="1"/>
       <Vertex U="0.0" V="0.0" U2="0.0" V2="0.0"><p X="-1.0000003576278687" Y="-0.9999996423721313" Z="-1.0"/><n X="-0.0" Y="0.0" Z="-1.0"/></Vertex>
       <Vertex U="0.0" V="0.0" U2="0.0" V2="0.0"><p X="-1.0000003576278687" Y="-0.9999996423721313" Z="-1.0"/><n X="-2.2351744632942427e-07" Y="-1.0" Z="-1.341104365337742e-07"/></Vertex>
