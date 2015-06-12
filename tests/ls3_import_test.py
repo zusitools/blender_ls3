@@ -165,13 +165,6 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual((1.0, 2.0, 3.0), a2.matrix_world.to_translation())
     self.assertVectorEqual((radians(10), radians(20), radians(30)), a2.matrix_world.to_euler())
 
-  def test_two_textures(self):
-    self.ls3_import("two_textures.ls3")
-    ob = bpy.data.objects["two_textures.ls3.0"]
-    mat = ob.data.materials[0]
-
-    self.assertEqual(mat.texture_slots[0].texture.image, mat.texture_slots[1].texture.image)
-
   def test_import_animated_subset(self):
     self.ls3_import("animated_subset.ls3")
 
