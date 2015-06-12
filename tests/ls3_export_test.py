@@ -32,7 +32,13 @@ class TestLs3Export(unittest.TestCase):
       tempfile.close()
 
   def open(self, filename):
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(self._blendsdir, "blends", filename + ".blend"))
+    try:
+      bpy.ops.wm.open_mainfile(filepath=os.path.join(self._blendsdir, "blends", filename + ".blend"))
+    except RuntimeError as e:
+      if "newer Blender binary" in e.args[0]:
+        pass # try to run the test anyway
+      else:
+        raise e
 
   def clear_scene(self):
     for ob in bpy.context.scene.objects:
