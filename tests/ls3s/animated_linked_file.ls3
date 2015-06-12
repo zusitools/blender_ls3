@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+  <Info DateiTyp="Landschaft" MinVersion="A.1" Version="A.1"/>
+  <Landschaft>
+    <Verknuepfte>
+      <Datei Dateiname="animated_linked_file_1.ls3" />
+    </Verknuepfte>
+    <Animation AniBeschreibung="Undefined/signal controlled" AniID="0">
+      <AniNrs AniNr="1"/>
+    </Animation>
+    <VerknAnimation AniGeschw="0.0" AniIndex="0" AniNr="1">
+      <AniPunkt AniZeit="0.0">
+        <p X="-3.0" Y="0.0" Z="-3.0"/>
+        <q W="0.9238794445991516" Y="0.3826836049556732"/>
+      </AniPunkt>
+      <AniPunkt AniZeit="1.0">
+        <p X="3.0" Y="0.0" Z="-3.0"/>
+        <q W="0.8535532355308533" X="0.14644674956798553" Y="0.35355356335639954" Z="-0.35355353355407715"/>
+      </AniPunkt>
+    </VerknAnimation>
+  </Landschaft>
+</Zusi>
