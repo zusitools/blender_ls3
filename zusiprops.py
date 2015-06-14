@@ -929,31 +929,42 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return context.mesh or (context.object and context.object.type == 'EMPTY')
+        return context.mesh
 
     def draw(self, context):
-        layout = self.layout
         if context.mesh:
-            mesh = context.mesh
-            layout.row().prop(mesh, "zusi_is_rail")
-        elif context.object and context.object.type == 'EMPTY':
-            ob = context.object
-            layout.row().prop(ob, "zusi_is_anchor_point")
+            self.layout.row().prop(context.mesh, "zusi_is_rail")
 
-            box = layout.row().box()
-            box.active = ob.zusi_is_anchor_point
+class OBJECT_PT_data_anchor_point(bpy.types.Panel):
+    bl_label = _("Anchor point")
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
 
-            box.row().prop(ob, "zusi_anchor_point_category")
-            box.row().prop(ob, "zusi_anchor_point_type")
-            box.row().prop(ob, "zusi_anchor_point_description")
+    @classmethod
+    def poll(self, context):
+        return context.object and context.object.type == 'EMPTY'
 
-            box.row().label(_("Suggested files/folders to be attached here:"))
-            template_list(box.row(), "ZusiAnchorPointFileList", "",
-                    ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index",
-                    "zusi_anchor_point_files.add", "zusi_anchor_point_files.remove", rows = 3)
+    def draw_header(self, context):
+        self.layout.prop(context.object, "zusi_is_anchor_point", text = "")
 
-            if ob.zusi_anchor_point_files and ob.zusi_anchor_point_files_index >= 0 and ob.zusi_anchor_point_files_index < len(ob.zusi_anchor_point_files):
-                box.row().prop(ob.zusi_anchor_point_files[ob.zusi_anchor_point_files_index], "name")
+    def draw(self, context):
+        ob = context.object
+        layout = self.layout
+
+        layout.active = ob.zusi_is_anchor_point
+
+        layout.prop(ob, "zusi_anchor_point_category")
+        layout.prop(ob, "zusi_anchor_point_type")
+        layout.prop(ob, "zusi_anchor_point_description")
+
+        layout.label(_("Suggested files/folders to be attached here:"))
+        template_list(layout.row(), "ZusiAnchorPointFileList", "",
+                ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index",
+                "zusi_anchor_point_files.add", "zusi_anchor_point_files.remove", rows = 3)
+
+        if ob.zusi_anchor_point_files and ob.zusi_anchor_point_files_index >= 0 and ob.zusi_anchor_point_files_index < len(ob.zusi_anchor_point_files):
+            layout.prop(ob.zusi_anchor_point_files[ob.zusi_anchor_point_files_index], "name")
 
 class ZUSI_ANCHOR_POINT_FILES_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_anchor_point_files.add'
