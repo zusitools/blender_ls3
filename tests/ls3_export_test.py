@@ -1029,6 +1029,22 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertListEqual(expected_vertices, vertices)
 
+  def test_animation_authorinfo(self):
+    self.open("animation_authorinfo")
+    files = self.export_and_parse_multiple(["Parent"])[2]
+
+    author = files[""].findall("./Info/AutorEintrag")
+    self.assertEqual(1, len(author))
+    self.assertEqual("Fritz Fleissig", author[0].attrib["AutorName"])
+    self.assertEqual("Everything", author[0].attrib["AutorBeschreibung"])
+    self.assertEqual(5, float(author[0].attrib["AutorAufwand"]))
+
+    author = files["Parent"].findall("./Info/AutorEintrag")
+    self.assertEqual(1, len(author))
+    self.assertEqual("Fritz Fleissig", author[0].attrib["AutorName"])
+    self.assertEqual("Everything", author[0].attrib["AutorBeschreibung"])
+    self.assertNotIn("AutorAufwand", author[0].attrib)
+
   def test_boundingr(self):
     self.open("boundingr")
     basename, ext, files = self.export_and_parse_multiple(["Planet", "Mond"])
