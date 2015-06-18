@@ -56,8 +56,7 @@ class TestLs3Import(unittest.TestCase):
       self.assertAlmostEqual(start + keyframes[idx][0] * (end - start), point.co.x, places = 5)
       self.assertAlmostEqual(keyframes[idx][1], point.co.y, places = 5)
 
-  @unittest.skipUnless(not (bpy.app.version[0] <= 2 and bpy.app.version[1] < 74),
-      "Normal import available in Blender >= 2.74")
+  @unittest.skipUnless(bpy.app.version >= (2, 74, 0), "Normal import available in Blender >= 2.74")
   def test_import_normals(self):
     self.ls3_import("custom_normals.ls3")
     ob = bpy.data.objects["custom_normals.ls3.0"]

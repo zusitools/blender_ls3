@@ -442,8 +442,8 @@ class Ls3Exporter:
             mesh.calc_normals()
             use_auto_smooth = mesh.use_auto_smooth
             if mesh.use_auto_smooth:
-                if bpy.app.version[0] >= 2 and bpy.app.version[1] >= 71: # MeshTessFace.split_normals available in >= 2.71
-                    if bpy.app.version[0] == 2 and bpy.app.version[1] <= 73:
+                if bpy.app.version >= (2, 71, 0): # MeshTessFace.split_normals available in >= 2.71
+                    if bpy.app.version <= (2, 73, 0):
                         mesh.calc_normals_split(mesh.auto_smooth_angle)
                     else:
                         mesh.calc_normals_split()

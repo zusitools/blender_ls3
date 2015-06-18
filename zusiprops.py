@@ -29,7 +29,7 @@ _ = i18n.language.gettext
 
 # Defines a list with check boxes. In Blender <= 2.65 bpy.types.UIList does not exist
 # and we do not need CheckBoxList there anyway, so define it as empty
-if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+if bpy.app.version <= (2, 65, 0):
     class CheckBoxList():
         pass
 else:
@@ -59,7 +59,7 @@ class ZusiAnimationName(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAnimationName)
 
-if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
+if bpy.app.version > (2, 65, 0):
     class ZusiFileVariantList(bpy.types.UIList):
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
             layout.label(item.name)
@@ -118,7 +118,7 @@ class ZusiAuthor(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAuthor)
 
-if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
+if bpy.app.version > (2, 65, 0):
     class ZusiAuthorList(bpy.types.UIList):
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
             layout.label(item.name)
@@ -132,7 +132,7 @@ class ZusiAnchorPointFile(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAnchorPointFile)
 
-if bpy.app.version[0] > 2 or bpy.app.version[1] > 65:
+if bpy.app.version > (2, 65, 0):
     class ZusiAnchorPointFileList(bpy.types.UIList):
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
             if os.path.exists(item.name):
@@ -433,7 +433,7 @@ def set_zusi_animation_duration(self, duration):
 # Unified wrapper for template lists both in Blender <= 2.65 and above.
 def template_list(layout, listtype_name, list_id, dataptr, propname, active_dataptr, active_propname,
         add_operator_name = "", remove_operator_name = "", rows = 5):
-    if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+    if bpy.app.version <= (2, 65, 0):
         layout.template_list(dataptr, propname, dataptr, active_propname, rows = rows, prop_list = "template_list_controls")
     else:
         layout.template_list(listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = rows)
@@ -854,7 +854,7 @@ bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
     min = 0.0
 )
 
-if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+if bpy.app.version <= (2, 65, 0):
     bpy.types.Action.zusi_animation_wheel_diameter = property(
         get_zusi_animation_wheel_diameter, set_zusi_animation_wheel_diameter)
 
@@ -1366,14 +1366,14 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             row.prop(action, "zusi_animation_speed")
             if action.zusi_animation_type in ["2", "3", "4", "5"]:
                 row = layout.row()
-                if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+                if bpy.app.version <= (2, 65, 0):
                     row.label(_("Wheel diameter: %.2f m") % action.zusi_animation_wheel_diameter)
                     row.operator("action.set_zusi_animation_wheel_diameter", text = _("Set")).action_name = action.name
                 else:
                     row.prop(action, "zusi_animation_wheel_diameter")
             elif action.zusi_animation_type in ["12", "13"]:
                 row = layout.row()
-                if bpy.app.version[0] == 2 and bpy.app.version[1] <= 65:
+                if bpy.app.version <= (2, 65, 0):
                     row.label(_("Duration: %.2f s") % action.zusi_animation_duration)
                     row.operator("action.set_zusi_animation_duration", text = _("Set")).action_name = action.name
                 else:

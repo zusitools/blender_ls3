@@ -231,8 +231,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
-  @unittest.skipUnless(not(bpy.app.version[0] <= 2 and bpy.app.version[1] < 71),
-      "MeshTessFace.split_normals available in Blender >= 2.71")
+  @unittest.skipUnless(bpy.app.version >= (2, 71, 0), "MeshTessFace.split_normals available in Blender >= 2.71")
   def test_split_normals(self):
     self.open("split_normals")
     root = self.export_and_parse()
@@ -247,8 +246,7 @@ class TestLs3Export(unittest.TestCase):
         else:
             self.assertXYZ(n, 1, 0, 0)
 
-  @unittest.skipUnless(not(bpy.app.version[0] <= 2 and bpy.app.version[1] < 74),
-      "Custom split normals available in Blender >= 2.74")
+  @unittest.skipUnless(bpy.app.version >= (2, 74, 0), "Custom split normals available in Blender >= 2.74")
   def test_custom_split_normals(self):
     self.open("custom_split_normals")
     root = self.export_and_parse()

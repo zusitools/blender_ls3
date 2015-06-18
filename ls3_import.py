@@ -287,7 +287,7 @@ class Ls3Importer:
         self.currentmesh.polygons.foreach_set("loop_start", range(0, 3 * len(self.currentfaces), 3))
         self.currentmesh.polygons.foreach_set("loop_total", [3] * len(self.currentfaces))
 
-        if not (bpy.app.version[0] <= 2 and bpy.app.version[1] < 74):
+        if bpy.app.version >= (2, 74, 0):
             self.currentmesh.create_normals_split()
             normals = []
             for f in self.currentfaces:
@@ -297,7 +297,7 @@ class Ls3Importer:
             self.currentmesh.loops.foreach_set("normal", normals)
 
         # Set custom normals
-        if not (bpy.app.version[0] <= 2 and bpy.app.version[1] < 74):
+        if bpy.app.version >= (2, 74, 0):
             self.currentmesh.validate(clean_customdata = False) # False in order to preserve normals stored in loops
             self.currentmesh.update(calc_edges = False)
 
