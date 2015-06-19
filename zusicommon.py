@@ -156,6 +156,43 @@ def optimize_mesh(vertexdata, maxCoordDelta, maxUVDelta, maxNormalAngle):
 
     return new_vidx
 
+# From the first key in "keys" that contains a value, returns a dictionary
+# with the values indexed by "valuenames"
+def read_registry_strings(keys, valuenames):
+    result = {}
+
+    try:
+        import winreg
+        for (root, path) in keys:
+            try:
+                key = winreg.OpenKey(root, path)
+            except WindowsError:
+                continue
+
+            # We have to enumerate all key-value pairs in the open key
+            try:
+                index = 0
+                while True:
+                    # The loop will be ended by a WindowsError being thrown when there
+                    # are no more key-value pairs
+                    value = winreg.EnumValue(key, index)
+                    if value[0] in valuenames and len(value[1]):
+                        result[value[0]] = value[1]
+                    index += 1
+            except WindowsError:
+                pass
+
+            if len(result):
+                break
+
+    except ImportError:
+        # we're not on Windows
+        return None
+    except WindowsError:
+        return None
+
+    return result if len(result) else None
+
 # Retrieve the path name of the Zusi data directory
 def get_zusi_data_path():
     # Base path for path names relative to the Zusi data directory.
@@ -166,33 +203,27 @@ def get_zusi_data_path():
     except ImportError:
         basepath = ""
 
-    # Read basepath from registry. Do not look at this code, it's ugly!
-    try:
-        import winreg
+    if basepath is None or basepath == "":
+        # Read basepath from registry.
         try:
-            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\Zusi3")
-        except WindowsError:
-            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\Wow6432Node\\Zusi3")
-
-        # We have to enumerate all key-value pairs in the open key
-        try:
-            index = 0
-            while True:
-                # The loop will be ended by a WindowsError being thrown when there
-                # are no more key-value pairs
-                value = winreg.EnumValue(key, index)
-                if value[0] in ["DatenDirDemo", "DatenDir"]:
-                    basepath = value[1]
-                    break
-                index += 1
-        except WindowsError:
+            import winreg
+            registry_values = read_registry_strings([
+                (winreg.HKEY_LOCAL_MACHINE, "Software\\Zusi3"),
+                (winreg.HKEY_LOCAL_MACHINE, "Software\\Wow6432Node\\Zusi3"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Zusi3"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Wow6432Node\\Zusi3"),
+            ], set(["DatenVerzeichnis", "DatenDir", "DatenVerzeichnisDemo", "DatenDirDemo"]))
+            if registry_values is not None:
+                if "DatenVerzeichnis" in registry_values:
+                    return registry_values["DatenVerzeichnis"]
+                elif "DatenDir" in registry_values:
+                    return registry_values["DatenDir"]
+                elif "DatenVerzeichnisDemo" in registry_values:
+                    return registry_values["DatenVerzeichnisDemo"]
+                elif "DatenDirDemo" in registry_values:
+                    return registry_values["DatenDirDemo"]
+        except ImportError:
             pass
-
-    except ImportError:
-        # we're not on Windows
-        pass
-    except WindowsError:
-        pass
 
     return basepath
 
@@ -204,54 +235,57 @@ def get_zusi2_data_path():
     except ImportError:
         basepath = ""
 
-    # TODO read from registry
+    if basepath is None or basepath == "":
+        # Read basepath from registry.
+        try:
+            import winreg
+            registry_value = read_registry_strings([
+                (winreg.HKEY_CURRENT_USER, "Software\\Zusi"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Wow6432Node\\Zusi"),
+            ], set(["ZusiDir"]))
+            if registry_value is not None:
+                return registry_value["ZusiDir"]
+        except ImportError:
+            pass
+
     return basepath
 
 # Retrieve the default author information from the registry (Windows) or the config file (Linux)
 def get_default_author_info():
-    default_author = { 'name' : "", 'id' : 0, 'email' : "" }
+    default_author = None
     
     try:
         from . import zusiconfig
-        if zusiconfig.default_author:
-            default_author = zusiconfig.default_author
+        default_author = zusiconfig.default_author
+    except NameError:
+        pass
     except ImportError:
         pass
 
-    # Read author information from registry.
-    try:
-        import winreg
-        # Try all possible key names until we manage to open a key
-        for keyname in ["Software\\Zusi3\\Einstellungen", "Software\\Wow6432Node\\Zusi3\\Einstellungen",
-                "Software\\Zusi3\\EinstellungenDemo", "Software\\Wow6432Node\\Zusi3\\EinstellungenDemo"]:
-            try:
-                key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, keyname)
-                break
-            except WindowsError:
-                pass
+    if default_author is None:
+        default_author = { 'name' : "", 'id' : 0, 'email' : "" }
 
-        # We have to enumerate all key-value pairs in the open key
         try:
-            index = 0
-            while True:
-                # The loop will be ended by a WindowsError being thrown when there
-                # are no more key-value pairs
-                value = winreg.EnumValue(key, index)
-                if value[0] == "AutorName":
-                    default_author['name'] = value[1]
-                if value[0] == "AutorID":
-                    default_author['id'] = int(value[1])
-                if value[0] == "AutorEMail":
-                    default_author['email'] = value[1]
-                index += 1
-        except WindowsError:
-            pass
+            import winreg
+            registry_value = read_registry_strings([
+                (winreg.HKEY_CURRENT_USER, "Software\\Zusi3\\Einstellungen"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Wow6432Node\\Zusi3\\Einstellungen"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Zusi3\\EinstellungenDemo"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Wow6432Node\\Zusi3\\EinstellungenDemo"),
+            ], set(["AutorName", "AutorID", "AutorEMail"]))
 
-    except ImportError:
-        # we're not on Windows
-        pass
-    except WindowsError:
-        pass
+            if registry_value is not None:
+                if "AutorName" in registry_value:
+                    default_author['name'] = registry_value["AutorName"]
+                if "AutorID" in registry_value:
+                    try:
+                        default_author['id'] = int(registry_value["AutorId"])
+                    except ValueError:
+                        pass
+                if "AutorEMail" in registry_value:
+                    default_author['email'] = registry_value["AutorEMail"]
+        except ImportError:
+            pass # not on Windows
 
     return default_author
 

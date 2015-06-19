@@ -362,7 +362,7 @@ class Ls3Exporter:
 
                 for entry in ob.zusi_anchor_point_files:
                     dateiNode = self.xmldoc.createElement("Datei")
-                    dateiNode.setAttribute("Dateiname", self.relpath(entry.name))
+                    dateiNode.setAttribute("Dateiname", self.relpath(entry.name_realpath))
                     ankerpunktNode.appendChild(dateiNode)
 
         for name in sorted(anchor_points.keys()):

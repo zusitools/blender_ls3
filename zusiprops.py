@@ -27,6 +27,33 @@ _ = i18n.language.gettext
 
 # This file defines Zusi specific custom properties and the corresponding UI.
 
+# Functions for file paths that are stored internally as paths relative to the
+# Zusi data directory (indicated by a "zusi2:"/"zusi3:" prefix) or as a regular path
+def zusi_file_path_to_blender_path(zusi_path):
+    if zusi_path.startswith("zusi2:"):
+        return os.path.normpath(os.path.join(zusicommon.get_zusi2_data_path(),
+            zusi_path[len("zusi2:"):])).replace('\\', os.path.sep)
+    elif zusi_path.startswith("zusi3:"):
+        return os.path.normpath(os.path.join(zusicommon.get_zusi_data_path(),
+            zusi_path[len("zusi3:"):])).replace('\\', os.path.sep)
+    return zusi_path
+
+def zusi_file_path_to_display_path(zusi_path):
+    if zusi_path.startswith("zusi2:"):
+        return zusi_path[len("zusi2:"):]
+    elif zusi_path.startswith("zusi3:"):
+        return zusi_path[len("zusi3:"):]
+    return zusi_path
+
+def blender_path_to_zusi_file_path(blender_path):
+    path = os.path.realpath(bpy.path.abspath(blender_path))
+    (dirname, filename) = os.path.split(path)
+    if bpy.path.is_subdir(dirname, zusicommon.get_zusi_data_path()):
+        return "zusi3:" + os.path.relpath(path, zusicommon.get_zusi_data_path()).replace(os.path.sep, '\\')
+    if bpy.path.is_subdir(dirname, zusicommon.get_zusi2_data_path()):
+        return "zusi2:" + os.path.relpath(path, zusicommon.get_zusi2_data_path()).replace(os.path.sep, '\\')
+    return blender_path
+
 # Defines a list with check boxes. In Blender <= 2.65 bpy.types.UIList does not exist
 # and we do not need CheckBoxList there anyway, so define it as empty
 if bpy.app.version <= (2, 65, 0):
@@ -124,10 +151,14 @@ if bpy.app.version > (2, 65, 0):
             layout.label(item.name)
 
 class ZusiAnchorPointFile(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    def set_name(self, value):
+        self.name = blender_path_to_zusi_file_path(value)
+
+    name_realpath = bpy.props.StringProperty(
         name = _("File or folder name"),
-        subtype = 'FILE_PATH',
-        default = ""
+        subtype = "FILE_PATH",
+        get = lambda self: zusi_file_path_to_blender_path(self.name),
+        set = set_name,
     )
 
 bpy.utils.register_class(ZusiAnchorPointFile)
@@ -135,12 +166,10 @@ bpy.utils.register_class(ZusiAnchorPointFile)
 if bpy.app.version > (2, 65, 0):
     class ZusiAnchorPointFileList(bpy.types.UIList):
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-            if os.path.exists(item.name):
-                icon = 'FILE_FOLDER' if os.path.isdir(item.name) else 'FILE'
+            if os.path.exists(item.name_realpath):
+                layout.label(zusi_file_path_to_display_path(item.name), icon = 'FILE_FOLDER' if os.path.isdir(item.name_realpath) else 'FILE')
             else:
-                icon = 'ERROR'
-            # TODO: display path relative to Zusi dir
-            layout.label(item.name, icon = icon)
+                layout.label(item.name_realpath, icon = 'ERROR')
 
 # Custom texture preset properties
 
@@ -964,7 +993,7 @@ class OBJECT_PT_data_anchor_point(bpy.types.Panel):
                 "zusi_anchor_point_files.add", "zusi_anchor_point_files.remove", rows = 3)
 
         if ob.zusi_anchor_point_files and ob.zusi_anchor_point_files_index >= 0 and ob.zusi_anchor_point_files_index < len(ob.zusi_anchor_point_files):
-            layout.prop(ob.zusi_anchor_point_files[ob.zusi_anchor_point_files_index], "name")
+            layout.prop(ob.zusi_anchor_point_files[ob.zusi_anchor_point_files_index], "name_realpath")
 
 class ZUSI_ANCHOR_POINT_FILES_OT_add(bpy.types.Operator):
     bl_idname = 'zusi_anchor_point_files.add'

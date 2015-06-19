@@ -11,6 +11,44 @@ import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from math import radians
 
+# Windows Registry mocks
+try:
+  # Python needs winreg.OpenKey for import mechanisms, so we must
+  # exercise care to only mock the invocations we are interested in.
+  import winreg
+  realOpenKey = winreg.OpenKey
+  realEnumValue = winreg.EnumValue
+except ImportError:
+  pass # not on Windows
+
+class MockZusi3RegistryKey:
+  pass
+
+class MockZusi2RegistryKey:
+  pass
+
+def mockOpenKeyImpl(root, keyname):
+  if root == winreg.HKEY_LOCAL_MACHINE and keyname == "Software\\Zusi3":
+    return MockZusi3RegistryKey()
+  elif root == winreg.HKEY_CURRENT_USER and keyname == "Software\\Zusi":
+    return MockZusi2RegistryKey()
+  else:
+    return realOpenKey(root, keyname)
+
+def mockEnumValueImpl(key, index):
+  if isinstance(key, MockZusi3RegistryKey):
+    if index == 0:
+      return ('DatenDir', 'Z:\\Zusi\\Daten')
+    else:
+      raise WindowsError()
+  elif isinstance(key, MockZusi2RegistryKey):
+    if index == 0:
+      return ('ZusiDir', 'Z:\\Zusi2')
+    else:
+      raise WindowsError()
+  else:
+    return realEnumValue(key, index)
+
 class MockFile():
   """A file for MockFS that is based on a BytesIO/StringIO object
   but does not free the buffer when close() is called."""
@@ -463,33 +501,8 @@ class TestLs3Export(unittest.TestCase):
 
   @unittest.skipUnless(sys.platform.startswith("win"), "only makes sense on Windows")
   def test_path_relative_to_zusi_dir(self):
-    # Python needs winreg.OpenKey for import mechanisms, so we must
-    # exercise care to only mock the invocations we are interested in.
-    import winreg
-    realOpenKey = winreg.OpenKey
-    realEnumValue = winreg.EnumValue
-
-    class MockRegistryKey:
-      pass
-
-    def mockOpenKeyImpl(root, keyname):
-      if root == winreg.HKEY_LOCAL_MACHINE and keyname == "Software\\Zusi3":
-        return MockRegistryKey()
-      else:
-        return realOpenKey(root, keyname)
-
-    def mockEnumValueImpl(key, index):
-      if isinstance(key, MockRegistryKey):
-        if index == 0:
-          return ('DatenDir', 'Z:\\Zusi\\Daten')
-        else:
-          raise WindowsError()
-      else:
-        return realEnumValue(key, index)
-
     with patch('winreg.OpenKey', side_effect=mockOpenKeyImpl):
       with patch('winreg.EnumValue', side_effect=mockEnumValueImpl):
-
         # Test that a path outside the Zusi data dir (but on the same drive)
         # is exported as a relative path instead of an absolute one.
         self.open('relpath_windows')
@@ -497,6 +510,43 @@ class TestLs3Export(unittest.TestCase):
         textur_datei_nodes = mainfile.findall('./Landschaft/SubSet/Textur/Datei')
         self.assertEqual(1, len(textur_datei_nodes))
         self.assertEqual('..\\Objektbau\\textur.png', textur_datei_nodes[0].attrib['Dateiname'])
+
+  @unittest.skipUnless(sys.platform.startswith("win"), "Zusi data path mocking currently available on Windows only")
+  def test_relative_path_properties(self):
+    with patch('winreg.OpenKey', side_effect=mockOpenKeyImpl):
+      with patch('winreg.EnumValue', side_effect=mockEnumValueImpl):
+        self.open('relpath_properties')
+        files = bpy.data.objects['Empty'].zusi_anchor_point_files
+
+        # Get properties
+        self.assertEqual(r"zusi2:Loks\Dieselloks\203\203.fst", files[0].name)
+        self.assertEqual(r"Z:\Zusi2\Loks\Dieselloks\203\203.fst", files[0].name_realpath)
+
+        self.assertEqual(r"zusi3:Routes\Deutschland\32U_0004_0057\000442_005692_Freienohl\Freienohl_1985.ls3",
+            files[1].name)
+        self.assertEqual(r"Z:\Zusi\Daten\Routes\Deutschland\32U_0004_0057\000442_005692_Freienohl\Freienohl_1985.ls3",
+            files[1].name_realpath)
+
+        self.assertEqual("/tmp/foo.bar", files[2].name)
+        self.assertEqual("/tmp/foo.bar", files[2].name_realpath)
+
+        # Set properties
+        files[0].name_realpath = r"Z:\Zusi2\Loks\Elektroloks\101\101.fzg"
+        self.assertEqual(r"zusi2:Loks\Elektroloks\101\101.fzg", files[0].name)
+
+        files[1].name_realpath = r"Z:\Zusi\Daten\Loks\Elektroloks\101\101.fzg"
+        self.assertEqual(r"zusi3:Loks\Elektroloks\101\101.fzg", files[1].name)
+
+        files[2].name_realpath = r"Z:\NichtZusi\KeineDaten\Irgendwas.fzg"
+        self.assertEqual(files[2].name_realpath, files[2].name)
+
+        # Export
+        mainfile = self.export_and_parse()
+        datei_nodes = mainfile.findall('./Landschaft/Ankerpunkt/Datei')
+        self.assertEqual(3, len(datei_nodes))
+        self.assertEqual(r"..\..\Zusi2\Loks\Elektroloks\101\101.fzg", datei_nodes[0].attrib["Dateiname"])
+        self.assertEqual(r"Loks\Elektroloks\101\101.fzg", datei_nodes[1].attrib["Dateiname"])
+        self.assertEqual(r"..\..\NichtZusi\KeineDaten\Irgendwas.fzg", datei_nodes[2].attrib["Dateiname"])
 
   # ---
   # Variants tests
