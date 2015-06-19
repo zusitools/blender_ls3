@@ -9,7 +9,7 @@ fi
 rm release/release.zip
 mkdir io_scene_ls3
 cp -r README.md batchexport_settings.py.default __init__.py ls3_export.py ls3_import.py ls_import.py zusicommon.py zusiconfig.py.default zusiprops.py i18n.py l10n io_scene_ls3
-7z a -r -tzip release/release.zip io_scene_ls3
+7z a -r -tzip release/blender_ls3.zip io_scene_ls3
 rm -rf io_scene_ls3
 
 if [ "$1" != "upload" ]; then
