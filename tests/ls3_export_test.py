@@ -6,34 +6,85 @@ import shutil
 import sys
 import tempfile
 import unittest
+import io
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from math import radians
 
+class MockFile():
+  """A file for MockFS that is based on a BytesIO/StringIO object
+  but does not free the buffer when close() is called."""
+
+  def __init__(self, filename, is_binary):
+    self.closed = True
+    self.contents = io.BytesIO() if is_binary else io.StringIO()
+    self.filename = filename
+
+  def open(self):
+    self.closed = False
+    self.contents.seek(0)
+
+  def close(self):
+    self.closed = True
+    self.contents.flush()
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    self.close()
+    return True
+
+  def read(self, count = 0):
+    if self.closed:
+      raise ValueError("I/O on closed file")
+    return self.contents.read(count) if count != 0 else self.contents.read()
+
+  def write(self, contents):
+    if self.closed:
+      raise ValueError("I/O on closed file")
+    return self.contents.write(contents)
+
+class MockFS():
+  """A simple overlay file system that redirects writes to MockFiles stored in memory."""
+  def __init__(self):
+    self.files = {}
+    self.originalOpen = open
+    self.originalOsPathExists = os.path.exists
+
+  def open(self, filename, mode):
+    if "w" not in mode and filename in self.files:
+      f = self.files[filename]
+      f.open()
+      return f
+
+    if "w" in mode:
+      mockfile = MockFile(filename, "b" in mode)
+      mockfile.open()
+      self.files[filename] = mockfile
+      return mockfile
+    else:
+      return self.originalOpen(filename, mode)
+
+  def path_exists(self, path):
+    return path in self.files or self.originalOsPathExists(path)
+
 class TestLs3Export(unittest.TestCase):
-  @classmethod
-  def setUpClass(cls):
-    # Copy test blend files into temporary directory.
-    cls._tempdir = tempfile.mkdtemp()
-    cls._exportdir = tempfile.mkdtemp(dir=cls._tempdir)
-    cls._blendsdir = tempfile.mkdtemp(dir=cls._tempdir)
-    shutil.copytree("blends", os.path.join(cls._blendsdir, "blends"))
-
-  @classmethod
-  def tearDownClass(cls):
-    shutil.rmtree(cls._tempdir)
-
   def setUp(self):
     bpy.ops.wm.read_homefile()
-    self.tempfiles = []
+    self._mock_fs = MockFS()
+    self._open_patch = patch('builtins.open', side_effect=lambda filename, mode: self._mock_fs.open(filename, mode))
+    self._open_patch.start()
+    self._pathexists_patch = patch('os.path.exists', side_effect=lambda path: self._mock_fs.path_exists(path))
+    self._pathexists_patch.start()
 
   def tearDown(self):
-    for tempfile in self.tempfiles:
-      tempfile.close()
+    self._pathexists_patch.stop()
+    self._open_patch.stop()
 
   def open(self, filename):
     try:
-      bpy.ops.wm.open_mainfile(filepath=os.path.join(self._blendsdir, "blends", filename + ".blend"))
+      bpy.ops.wm.open_mainfile(filepath=os.path.join(os.getcwd(), "blends", filename + ".blend"))
     except RuntimeError as e:
       if "newer Blender binary" in e.args[0]:
         pass # try to run the test anyway
@@ -50,17 +101,14 @@ class TestLs3Export(unittest.TestCase):
     context = bpy.context.copy()
     context['selected_objects'] = []
 
-    # Close the generated file right away (this requires setting delete=False, else it will be deleted)
-    # as the file cannot be open()ed a second time on Windows.
-    tempfile_file = tempfile.NamedTemporaryFile(suffix=exportargs.get("ext", ".ls3"), dir=self._exportdir, delete=False)
-    tempfile_file.close()
-
     if "ext" in exportargs:
+      filename = "export" + exportargs["ext"]
       del exportargs["ext"]
-    self.tempfiles.append(tempfile_file)
+    else:
+      filename = "export.ls3"
 
-    tempfile_path = tempfile_file.name
-    (tempfile_dir, tempfile_name) = os.path.split(tempfile_path)
+    exportdir = r'Z:\Zusi3\Daten\ExportTest' if sys.platform.startswith("win") else '/mnt/zusi3/ExportTest'
+    exportpath = os.path.join(exportdir, filename)
 
     if "exportSelected" not in exportargs:
       exportargs["exportSelected"] = "0"
@@ -69,14 +117,15 @@ class TestLs3Export(unittest.TestCase):
       exportargs["optimizeMesh"] = False
 
     bpy.ops.export_scene.ls3(context,
-      filepath=tempfile_path, filename=tempfile_name, directory=tempfile_dir,
+      filepath=exportpath, filename=filename, directory=exportdir,
       **exportargs)
 
-    return tempfile_file.name
+    return exportpath
 
   def export_and_parse(self, exportargs={}):
     exported_file_name = self.export(exportargs)
-    # print(exported_file.read())
+    # with open(exported_file_name, 'rb') as f:
+    #   print(f.read().decode('utf-8'))
     tree = ET.parse(exported_file_name)
     return tree.getroot()
 
