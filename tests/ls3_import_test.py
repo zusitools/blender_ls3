@@ -1,11 +1,16 @@
 import bpy
 from math import radians
+import sys
 import os
 import shutil
 import tempfile
 import unittest
 from math import radians
 from mathutils import *
+
+ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/zusi3/daten"
+ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/zusi2/daten"
+NON_ZUSI_PATH = r"Z:\NichtZusi" if sys.platform.startswith("win") else "/mnt/nichtzusi"
 
 class TestLs3Import(unittest.TestCase):
   @classmethod
@@ -19,6 +24,10 @@ class TestLs3Import(unittest.TestCase):
     shutil.rmtree(cls._tempdir)
 
   def setUp(self):
+    sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
+    sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
+    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
+
     # Clear scene.
     bpy.ops.wm.read_homefile()
     for ob in bpy.context.scene.objects:
@@ -152,8 +161,8 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_euler())
 
     self.assertEqual(2, len(a1.zusi_anchor_point_files))
-    self.assertEqual("file.ls3", a1.zusi_anchor_point_files[0].name[-len("file.ls3"):])
-    self.assertEqual("folder", a1.zusi_anchor_point_files[1].name[-len("folder"):])
+    self.assertEqual(r"zusi3:Loks\Elektroloks\file.ls3", a1.zusi_anchor_point_files[0].name)
+    self.assertEqual(r"zusi3:Loks\Elektroloks", a1.zusi_anchor_point_files[1].name)
 
     self.assertEqual('EMPTY', a2.type)
     self.assertEqual('ARROWS', a2.empty_draw_type)

@@ -4,8 +4,8 @@
   <Landschaft>
     <Ankerpunkt AnkerKat="1" AnkerTyp="2" Beschreibung="Anchor point 1 description">
       <phi X="0.0" Y="0.0" Z="0.0"/>
-      <Datei Dateiname="file.ls3"/>
-      <Datei Dateiname="folder"/>
+      <Datei Dateiname="Loks\Elektroloks\file.ls3"/>
+      <Datei Dateiname="Loks\Elektroloks"/>
     </Ankerpunkt>
     <Ankerpunkt Beschreibung="Anchor point 2 description">
       <p X="-2.0" Y="1.0" Z="3.0"/>

@@ -434,8 +434,8 @@ class Ls3Importer:
             if n.nodeName == "Datei":
                 if n.getAttribute("Dateiname"):
                     entry = empty.zusi_anchor_point_files.add()
-                    entry.name = zusicommon.resolve_file_path(n.getAttribute("Dateiname"), self.config.fileDirectory,
-                        self.datapath)
+                    entry.name_realpath = zusicommon.resolve_file_path(n.getAttribute("Dateiname"),
+                        self.config.fileDirectory, self.datapath)
             elif n.nodeName == "p":
                 fill_xyz_vector(n, loc)
             elif n.nodeName == "phi":
