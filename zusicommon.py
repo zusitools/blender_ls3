@@ -19,6 +19,11 @@ from math import sqrt, acos
 import array
 import os
 
+try:
+    from . import zusiconfig
+except:
+    pass
+
 # Forces a value into a range
 forcerange = lambda x, minval, maxval : min(max(x, minval), maxval)
 
@@ -198,9 +203,8 @@ def get_zusi_data_path():
     # Base path for path names relative to the Zusi data directory.
     # Change default value to your liking. It has to contain a trailing (back)slash
     try:
-        from . import zusiconfig
         basepath = zusiconfig.datapath
-    except ImportError:
+    except:
         basepath = ""
 
     if basepath is None or basepath == "":
@@ -230,9 +234,8 @@ def get_zusi_data_path():
 # Retrieve the path name of the Zusi 2 data directory
 def get_zusi2_data_path():
     try:
-        from . import zusiconfig
         basepath = zusiconfig.z2datapath
-    except ImportError:
+    except:
         basepath = ""
 
     if basepath is None or basepath == "":
@@ -252,15 +255,10 @@ def get_zusi2_data_path():
 
 # Retrieve the default author information from the registry (Windows) or the config file (Linux)
 def get_default_author_info():
-    default_author = None
-    
     try:
-        from . import zusiconfig
         default_author = zusiconfig.default_author
-    except NameError:
-        pass
-    except ImportError:
-        pass
+    except:
+        default_author = None
 
     if default_author is None:
         default_author = { 'name' : "", 'id' : 0, 'email' : "" }

@@ -52,6 +52,10 @@ import bpy
 import os
 from bpy.props import *
 from . import zusiprops, zusicommon
+try:
+    from . import zusiconfig
+except:
+    pass
 from . import ls3_export
 from . import i18n
 from bpy_extras.io_utils import ExportHelper, ImportHelper

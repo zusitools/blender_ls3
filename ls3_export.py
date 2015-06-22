@@ -21,6 +21,10 @@ import bpy
 import os
 import xml.dom.minidom as dom
 from . import zusicommon, zusiprops
+try:
+    from . import zusiconfig
+except:
+    pass
 from math import ceil, pi, sqrt
 from mathutils import *
 
@@ -59,7 +63,6 @@ def info(msg, *args, **kwargs):
 # or the default value specified above if an error occurs.
 def get_exporter_setting(key):
     try:
-        from . import zusiconfig
         return zusiconfig.default_export_settings[key]
     except:
         return default_export_settings[key]
@@ -247,7 +250,6 @@ class Ls3Exporter:
         self.subset_data = []
 
         try:
-            from . import zusiconfig
             self.use_lsb = zusiconfig.use_lsb
         except:
             self.use_lsb = False

@@ -10,6 +10,12 @@ import io
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from math import radians
+from copy import copy
+
+ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/zusi3/daten"
+ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/zusi2/daten"
+ZUSI3_EXPORTPATH = r"Z:\Zusi3\Daten\ExportTest" if sys.platform.startswith("win") else "/mnt/zusi3/daten/ExportTest"
+NON_ZUSI_PATH = r"Z:\NichtZusi" if sys.platform.startswith("win") else "/mnt/nichtzusi"
 
 # Windows Registry mocks
 try:
@@ -38,12 +44,12 @@ def mockOpenKeyImpl(root, keyname):
 def mockEnumValueImpl(key, index):
   if isinstance(key, MockZusi3RegistryKey):
     if index == 0:
-      return ('DatenDir', 'Z:\\Zusi\\Daten')
+      return ('DatenDir', ZUSI3_DATAPATH)
     else:
       raise WindowsError()
   elif isinstance(key, MockZusi2RegistryKey):
     if index == 0:
-      return ('ZusiDir', 'Z:\\Zusi2')
+      return ('ZusiDir', ZUSI2_DATAPATH)
     else:
       raise WindowsError()
   else:
@@ -116,9 +122,28 @@ class TestLs3Export(unittest.TestCase):
     self._pathexists_patch = patch('os.path.exists', side_effect=lambda path: self._mock_fs.path_exists(path))
     self._pathexists_patch.start()
 
+    self._openkey_patch = patch('winreg.OpenKey', side_effect=mockOpenKeyImpl)
+    self._enumvalue_patch = patch('winreg.EnumValue', side_effect=mockEnumValueImpl)
+    if sys.platform.startswith("win"):
+      self._openkey_patch.start()
+      self._enumvalue_patch.start()
+
+    sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
+    sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
+    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
+    sys.modules["io_scene_ls3.zusiconfig"].default_export_settings = {
+        "exportAnimations" : False,
+        "optimizeMesh" : False,
+        "exportSelected" : '0',
+    }
+
   def tearDown(self):
     self._pathexists_patch.stop()
     self._open_patch.stop()
+
+    if sys.platform.startswith("win"):
+      self._openkey_patch.stop()
+      self._enumvalue_patch.stop()
 
   def open(self, filename):
     try:
@@ -145,25 +170,21 @@ class TestLs3Export(unittest.TestCase):
     else:
       filename = "export.ls3"
 
-    exportdir = r'Z:\Zusi3\Daten\ExportTest' if sys.platform.startswith("win") else '/mnt/zusi3/ExportTest'
-    exportpath = os.path.join(exportdir, filename)
+    exportpath = os.path.join(ZUSI3_EXPORTPATH, filename)
 
-    if "exportSelected" not in exportargs:
-      exportargs["exportSelected"] = "0"
-
-    if "optimizeMesh" not in exportargs:
-      exportargs["optimizeMesh"] = False
+    args = copy(sys.modules["io_scene_ls3.zusiconfig"].default_export_settings)
+    args.update(exportargs)
 
     bpy.ops.export_scene.ls3(context,
-      filepath=exportpath, filename=filename, directory=exportdir,
-      **exportargs)
+      filepath=exportpath, filename=filename, directory=ZUSI3_EXPORTPATH,
+      **args)
 
     return exportpath
 
   def export_and_parse(self, exportargs={}):
     exported_file_name = self.export(exportargs)
-    # with open(exported_file_name, 'rb') as f:
-    #   print(f.read().decode('utf-8'))
+    #with open(exported_file_name, 'rb') as f:
+    #  print(f.read().decode('utf-8'))
     tree = ET.parse(exported_file_name)
     return tree.getroot()
 
@@ -501,8 +522,6 @@ class TestLs3Export(unittest.TestCase):
 
   @unittest.skipUnless(sys.platform.startswith("win"), "only makes sense on Windows")
   def test_path_relative_to_zusi_dir(self):
-    with patch('winreg.OpenKey', side_effect=mockOpenKeyImpl):
-      with patch('winreg.EnumValue', side_effect=mockEnumValueImpl):
         # Test that a path outside the Zusi data dir (but on the same drive)
         # is exported as a relative path instead of an absolute one.
         self.open('relpath_windows')
@@ -511,42 +530,45 @@ class TestLs3Export(unittest.TestCase):
         self.assertEqual(1, len(textur_datei_nodes))
         self.assertEqual('..\\Objektbau\\textur.png', textur_datei_nodes[0].attrib['Dateiname'])
 
-  @unittest.skipUnless(sys.platform.startswith("win"), "Zusi data path mocking currently available on Windows only")
   def test_relative_path_properties(self):
-    with patch('winreg.OpenKey', side_effect=mockOpenKeyImpl):
-      with patch('winreg.EnumValue', side_effect=mockEnumValueImpl):
         self.open('relpath_properties')
         files = bpy.data.objects['Empty'].zusi_anchor_point_files
 
         # Get properties
         self.assertEqual(r"zusi2:Loks\Dieselloks\203\203.fst", files[0].name)
-        self.assertEqual(r"Z:\Zusi2\Loks\Dieselloks\203\203.fst", files[0].name_realpath)
+        self.assertEqual(os.path.join(*[ZUSI2_DATAPATH, "Loks", "Dieselloks", "203", "203.fst"]), files[0].name_realpath)
 
         self.assertEqual(r"zusi3:Routes\Deutschland\32U_0004_0057\000442_005692_Freienohl\Freienohl_1985.ls3",
             files[1].name)
-        self.assertEqual(r"Z:\Zusi\Daten\Routes\Deutschland\32U_0004_0057\000442_005692_Freienohl\Freienohl_1985.ls3",
+        self.assertEqual(os.path.join(*[ZUSI3_DATAPATH, "Routes", "Deutschland", "32U_0004_0057", "000442_005692_Freienohl", "Freienohl_1985.ls3"]),
             files[1].name_realpath)
 
         self.assertEqual("/tmp/foo.bar", files[2].name)
         self.assertEqual("/tmp/foo.bar", files[2].name_realpath)
 
         # Set properties
-        files[0].name_realpath = r"Z:\Zusi2\Loks\Elektroloks\101\101.fzg"
+        files[0].name_realpath = os.path.join(*[ZUSI2_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg"])
         self.assertEqual(r"zusi2:Loks\Elektroloks\101\101.fzg", files[0].name)
 
-        files[1].name_realpath = r"Z:\Zusi\Daten\Loks\Elektroloks\101\101.fzg"
+        files[1].name_realpath = os.path.join(*[ZUSI3_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg"])
         self.assertEqual(r"zusi3:Loks\Elektroloks\101\101.fzg", files[1].name)
 
-        files[2].name_realpath = r"Z:\NichtZusi\KeineDaten\Irgendwas.fzg"
+        files[2].name_realpath = os.path.join(*[NON_ZUSI_PATH, "KeineDaten", "Irgendwas.fzg"])
         self.assertEqual(files[2].name_realpath, files[2].name)
 
         # Export
         mainfile = self.export_and_parse()
         datei_nodes = mainfile.findall('./Landschaft/Ankerpunkt/Datei')
         self.assertEqual(3, len(datei_nodes))
-        self.assertEqual(r"..\..\Zusi2\Loks\Elektroloks\101\101.fzg", datei_nodes[0].attrib["Dateiname"])
-        self.assertEqual(r"Loks\Elektroloks\101\101.fzg", datei_nodes[1].attrib["Dateiname"])
-        self.assertEqual(r"..\..\NichtZusi\KeineDaten\Irgendwas.fzg", datei_nodes[2].attrib["Dateiname"])
+
+        if sys.platform.startswith("win"):
+          self.assertEqual(r"..\..\Zusi2\Daten\Loks\Elektroloks\101\101.fzg", datei_nodes[0].attrib["Dateiname"])
+          self.assertEqual(r"Loks\Elektroloks\101\101.fzg", datei_nodes[1].attrib["Dateiname"])
+          self.assertEqual(r"..\..\NichtZusi\KeineDaten\Irgendwas.fzg", datei_nodes[2].attrib["Dateiname"])
+        else:
+          self.assertEqual(r"..\..\zusi2\daten\Loks\Elektroloks\101\101.fzg", datei_nodes[0].attrib["Dateiname"])
+          self.assertEqual(r"Loks\Elektroloks\101\101.fzg", datei_nodes[1].attrib["Dateiname"])
+          self.assertEqual(r"..\..\nichtzusi\KeineDaten\Irgendwas.fzg", datei_nodes[2].attrib["Dateiname"])
 
   # ---
   # Variants tests
