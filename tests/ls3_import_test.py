@@ -156,7 +156,7 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual("folder", a1.zusi_anchor_point_files[1].name[-len("folder"):])
 
     self.assertEqual('EMPTY', a2.type)
-    self.assertEqual('ARROWS', a1.empty_draw_type)
+    self.assertEqual('ARROWS', a2.empty_draw_type)
     self.assertEqual(True, a2.zusi_is_anchor_point)
     self.assertEqual("0", a2.zusi_anchor_point_category)
     self.assertEqual("0", a2.zusi_anchor_point_type)
