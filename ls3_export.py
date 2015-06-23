@@ -80,6 +80,15 @@ def normalize_color(color):
         min(1.0, max(0.0, color.b))
     ))
 
+def zusi_rotation_from_quaternion(quat, euler_compat=None):
+    # Blender uses extrinsic Euler rotation (the order can be specified).
+    # Zusi uses intrinsic ZYX Euler rotation, which corresponds to extrinsic XYZ Euler rotation,
+    # and because the X and Y axes are swapped compared to Blender, this corresponds to YXZ rotation
+    # in Blender.
+    # euler_compat is given in Zusi coordinates as well (i.e. axis swapped)
+    rot = quat.to_euler('YXZ', Euler((euler_compat.y, -euler_compat.x, euler_compat.z))) if euler_compat is not None else quat.to_euler('YXZ')
+    return Euler((-rot.y, rot.x, rot.z))
+
 def get_used_materials_for_object(ob):
     """Returns a set of all materials used (i.e. assigned to any face) in the given object."""
     if ob.data and (len(ob.data.materials) > 0):
@@ -156,6 +165,17 @@ class Ls3File:
         self.boundingr = 0
         self.objects = set()
         self.root_obj = None
+        self.group_name = ""
+        self.visible_from = 0.0
+        self.visible_to = 0.0
+        self.preload_factor = 0.0
+        self.forced_brightness = 0.0
+        self.lod = 0
+        self.is_tile = False
+        self.is_detail_tile = False
+        self.is_billboard = False
+        self.is_readonly = False
+        self.must_export = True  # set to False for links to existing files
 
 # Stores information about one subset of a LS3 file.
 #     identifier: The internal identifier of the subset. 
@@ -350,16 +370,17 @@ class Ls3Exporter:
                 if ob.zusi_anchor_point_description != bpy.types.Object.zusi_anchor_point_description[1]["default"]:
                     ankerpunktNode.setAttribute("Beschreibung", ob.zusi_anchor_point_description)
 
-                translation = ob.matrix_world.to_translation()
+                translation, rotation_quaternion, scale = ob.matrix_world.decompose()
+
                 if translation != Vector((0.0, 0.0, 0.0)):
                     pNode = self.xmldoc.createElement("p")
                     fill_node_xyz(pNode, -translation[1], translation[0], translation[2])
                     ankerpunktNode.appendChild(pNode)
 
-                rotation = ob.matrix_world.to_euler()
+                rotation = zusi_rotation_from_quaternion(rotation_quaternion)
                 if rotation != Vector((0.0, 0.0, 0.0)):
                     phiNode = self.xmldoc.createElement("phi")
-                    fill_node_xyz(phiNode, -rotation[1], rotation[0], rotation[2])
+                    fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
                     ankerpunktNode.appendChild(phiNode)
 
                 for entry in ob.zusi_anchor_point_files:
@@ -711,7 +732,7 @@ class Ls3Exporter:
 
         # Write keyframes.
         original_current_frame = self.config.context.scene.frame_current
-        previous_rotation = None
+        rotation_euler = None
         for keyframe_no in sorted(keyframe_nos):
             aniPunktNode = self.xmldoc.createElement("AniPunkt")
             aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
@@ -729,27 +750,19 @@ class Ls3Exporter:
 
             if write_rotation:
                 # Make rotation Euler compatible with the previous frame to prevent axis flipping.
-                if previous_rotation is not None:
-                    rot_euler = rot.to_matrix().to_euler('YXZ', previous_rotation)
-                else:
-                    rot_euler = rot.to_matrix().to_euler('YXZ')
-                previous_rotation = rot_euler
+                rotation_euler = zusi_rotation_from_quaternion(rot, rotation_euler)
+                rotation_quaternion = rotation_euler.to_quaternion()
 
-                # Convert rotation into Zusi's coordinate system.
-                rot_euler_swapped = Euler((-rot_euler.y, rot_euler.x, rot_euler.z))
-                rotation = rot_euler_swapped.to_quaternion()
-
-                rotationNode = (None if rotation == Vector((0.0, 0.0, 0.0, 0.0))
-                    else self.xmldoc.createElement("q"))
-                if rotationNode is not None:
-                    if rotation.x != 0.0:
-                        rotationNode.setAttribute("X", str(rotation.x))
-                    if rotation.y != 0.0:
-                        rotationNode.setAttribute("Y", str(rotation.y))
-                    if rotation.z != 0.0:
-                        rotationNode.setAttribute("Z", str(rotation.z))
-                    if rotation.w != 0.0:
-                        rotationNode.setAttribute("W", str(rotation.w))
+                rotationNode = self.xmldoc.createElement("q")
+                if abs(rotation_quaternion.x) > 0.0001:
+                    rotationNode.setAttribute("X", str(rotation_quaternion.x))
+                if abs(rotation_quaternion.y) > 0.0001:
+                    rotationNode.setAttribute("Y", str(rotation_quaternion.y))
+                if abs(rotation_quaternion.z) > 0.0001:
+                    rotationNode.setAttribute("Z", str(rotation_quaternion.z))
+                if abs(rotation_quaternion.w) > 0.0001:
+                    rotationNode.setAttribute("W", str(rotation_quaternion.w))
+                if len(rotationNode.attributes):
                     aniPunktNode.appendChild(rotationNode)
         self.config.context.scene.frame_set(original_current_frame)
         return translation_length
@@ -840,6 +853,24 @@ class Ls3Exporter:
                 while cur is not None and cur not in result:
                     cur = cur.parent
                 result[cur].objects.add(ob)
+
+            if ob.zusi_is_linked_file:
+                linked_file = Ls3File()
+                linked_file.filename = self.relpath(ob.zusi_link_file_name_realpath)
+                linked_file.root_obj = ob
+                linked_file.group_name = ob.zusi_link_group
+                linked_file.visible_from = ob.zusi_link_visible_from
+                linked_file.visible_to = ob.zusi_link_visible_to
+                linked_file.preload_factor = ob.zusi_link_preload_factor
+                linked_file.boundingr = ob.zusi_link_radius
+                linked_file.forced_brightness = ob.zusi_link_forced_brightness
+                linked_file.lod = ob.zusi_link_lod
+                linked_file.is_tile = ob.zusi_link_is_tile
+                linked_file.is_detail_tile = ob.zusi_link_is_detail_tile
+                linked_file.is_billboard = ob.zusi_link_is_billboard
+                linked_file.is_readonly = ob.zusi_link_is_readonly
+                linked_file.must_export = False
+                result[self.get_file_root(ob)].linked_files.append(linked_file)
 
         for root_obj, ls3file in result.items():
             ls3file.subsets = self.get_subsets(ls3file)
@@ -980,42 +1011,60 @@ class Ls3Exporter:
         self.xmldoc.documentElement.appendChild(landschaftNode)
 
         # Write linked files.
-        for linked_file in ls3file.linked_files:
-            translation = linked_file.root_obj.matrix_local.to_translation()
-            rotation = linked_file.root_obj.matrix_local.to_euler('YXZ')
-            scale = linked_file.root_obj.matrix_local.to_scale()
+        for linked_file in sorted(ls3file.linked_files, key = lambda lf: lf.root_obj.name):
+            translation, rotation_quaternion, scale = linked_file.root_obj.matrix_local.decompose()
+            rotation = zusi_rotation_from_quaternion(rotation_quaternion)
             max_scale_factor = max(scale.x, scale.y, scale.z)
             scaled_boundingr = linked_file.boundingr * max_scale_factor
 
             verknuepfteNode = self.xmldoc.createElement("Verknuepfte")
-            verknuepfteNode.setAttribute("BoundingR", str(int(ceil(scaled_boundingr))))
+
+            boundingr = int(ceil(scaled_boundingr))
+            if boundingr != 0:
+                verknuepfteNode.setAttribute("BoundingR", str(boundingr))
             dateiNode = self.xmldoc.createElement("Datei")
             dateiNode.setAttribute("Dateiname", linked_file.filename)
             verknuepfteNode.appendChild(dateiNode)
             landschaftNode.appendChild(verknuepfteNode)
 
+            if len(linked_file.group_name):
+                verknuepfteNode.setAttribute("GruppenName", linked_file.group_name)
+            if linked_file.visible_from != 0.0:
+                verknuepfteNode.setAttribute("SichtbarAb", str(linked_file.visible_from))
+            if linked_file.visible_to != 0.0:
+                verknuepfteNode.setAttribute("SichtbarBis", str(linked_file.visible_to))
+            if linked_file.preload_factor != 0.0:
+                verknuepfteNode.setAttribute("Vorlade", str(linked_file.preload_factor))
+            if linked_file.forced_brightness != 0.0:
+                verknuepfteNode.setAttribute("Helligkeit", str(linked_file.forced_brightness))
+            if linked_file.lod != 0.0:
+                verknuepfteNode.setAttribute("LODbit", str(linked_file.lod))
+            flags = linked_file.is_tile * 4 + linked_file.is_detail_tile * 32 + linked_file.is_billboard * 8 + linked_file.is_readonly * 16
+            if flags != 0:
+                verknuepfteNode.setAttribute("Flags", str(flags))
+
             # Include location and rotation in the link information if they are
             # not animated.
+            pNode = self.xmldoc.createElement("p")
+            verknuepfteNode.appendChild(pNode)
             write_translation = not has_location_animation(self.animations[linked_file.root_obj])
             if write_translation:
-                if translation != Vector((0.0, 0.0, 0.0)):
-                    pNode = self.xmldoc.createElement("p")
+                if any([abs(translation[i]) > 0.00001 for i in range(0, 3)]):
                     fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
-                    verknuepfteNode.appendChild(pNode)
                 ls3file.boundingr = max(ls3file.boundingr,
                     max_scale_factor * scaled_boundingr + vector_xy_length(translation))
 
+            phiNode = self.xmldoc.createElement("phi")
+            verknuepfteNode.appendChild(phiNode)
             write_rotation = not has_rotation_animation(self.animations[linked_file.root_obj])
-            if write_rotation and rotation != Vector((0.0, 0.0, 0.0)):
-                phiNode = self.xmldoc.createElement("phi")
-                fill_node_xyz(phiNode, -rotation.y, rotation.x, rotation.z)
-                verknuepfteNode.appendChild(phiNode)
+            if write_rotation and any([abs(rotation[i]) > 0.00001 for i in range(0, 3)]):
+                fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
 
             # Always include scale in the link information because this cannot be animated.
-            if scale != Vector((1.0, 1.0, 1.0)):
-                skNode = self.xmldoc.createElement("sk")
+            skNode = self.xmldoc.createElement("sk")
+            verknuepfteNode.appendChild(skNode)
+            if any([abs(scale[i] - 1.0) > 0.00001 for i in range(0, 3)]):
                 fill_node_xyz(skNode, scale.y, scale.x, scale.z)
-                verknuepfteNode.appendChild(skNode)
 
         # Write anchor points (into the main file)
         if ls3file.is_main_file:
@@ -1167,7 +1216,7 @@ class Ls3Exporter:
         while len(work_list):
             cur_file = work_list.pop()
             write_list.insert(0, cur_file)
-            work_list.extend(cur_file.linked_files)
+            work_list.extend([f for f in cur_file.linked_files if f.must_export])
 
         for ls3file in write_list:
             self.write_ls3(ls3file)

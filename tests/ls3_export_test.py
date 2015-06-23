@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 import io
+import mathutils
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from math import radians
@@ -819,7 +820,7 @@ class TestLs3Export(unittest.TestCase):
     verknuepfte_node = files[""].find("./Landschaft/Verknuepfte")
     p_node = verknuepfte_node.find("./p")
     self.assertXYZ(p_node, 0, 1, 0)
-    self.assertEqual(None, verknuepfte_node.find('sk'))
+    self.assertEqual(0, len(verknuepfte_node.find('sk').attrib))
 
     # Check for <AniNrs> node in <Animation> node.
     animation_node = files[""].find("./Landschaft/Animation")
@@ -1217,11 +1218,73 @@ class TestLs3Export(unittest.TestCase):
     a2 = anchor_point_nodes[1]
     self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
     self.assertXYZ(a2.find("./p"), -2, 1, 3)
-    self.assertXYZ(a2.find("./phi"), radians(-20), radians(10), radians(30))
+    rot = mathutils.Euler((radians(10), radians(20), radians(30))).to_quaternion().to_euler('YXZ')
+    self.assertXYZ(a2.find("./phi"), -rot.y, rot.x, rot.z)
 
     a2files = a2.findall("./Datei")
     self.assertEqual(0, len(a2files))
 
+  # ---
+  # Linked files tests
+  # ---
+
+  def test_linked_file_export(self):
+    self.open("linked_files")
+    root = self.export_and_parse()
+
+    subset_nodes = root.findall("./Landschaft/SubSet")
+    self.assertEqual(0, len(subset_nodes))
+
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(5, len(verknuepfte_nodes))
+
+    v1phi = verknuepfte_nodes[0].find("phi")
+    self.assertAlmostEqual(radians(0), float(v1phi.attrib["X"]), places = 5)
+    self.assertAlmostEqual(radians(40), float(v1phi.attrib["Y"]), places = 5)
+    self.assertAlmostEqual(radians(0), float(v1phi.attrib["Z"]), places = 5)
+
+    v2phi = verknuepfte_nodes[1].find("phi")
+    self.assertAlmostEqual(radians(-30), float(v2phi.attrib["X"]), places = 5)
+    self.assertAlmostEqual(radians(0), float(v2phi.attrib["Y"]), places = 5)
+    self.assertAlmostEqual(radians(0), float(v2phi.attrib["Z"]), places = 5)
+
+    v3phi = verknuepfte_nodes[2].find("phi")
+    self.assertAlmostEqual(radians(0), float(v3phi.attrib["X"]), places = 5)
+    self.assertAlmostEqual(radians(0), float(v3phi.attrib["Y"]), places = 5)
+    self.assertAlmostEqual(radians(20), float(v3phi.attrib["Z"]), places = 5)
+
+    v4 = verknuepfte_nodes[3]
+    self.assertEqual(r"RollingStock\Diverse\Blindlok\Blindlok.ls3", v4.find("Datei").attrib["Dateiname"])
+    self.assertEqual(0, len(v4.find("p").attrib))
+    self.assertEqual(0, len(v4.find("phi").attrib))
+    self.assertEqual(0, len(v4.find("sk").attrib))
+    self.assertEqual("TestGroup", v4.attrib["GruppenName"])
+    self.assertEqual(1.5, float(v4.attrib["SichtbarAb"]))
+    self.assertEqual(5.5, float(v4.attrib["SichtbarBis"]))
+    self.assertEqual(13.5, float(v4.attrib["Vorlade"]))
+    self.assertEqual(15, int(v4.attrib["BoundingR"]))
+    self.assertEqual(0.5, float(v4.attrib["Helligkeit"]))
+    self.assertEqual(5, int(v4.attrib["LODbit"]))
+    self.assertEqual(4 + 8, int(v4.attrib["Flags"])) # Tile + Billboard
+
+    v5 = verknuepfte_nodes[4]
+    self.assertEqual(r"RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3", v5.find("Datei").attrib["Dateiname"])
+    self.assertXYZ(v5.find("p"), -1, 2, -3)
+
+    rot = mathutils.Euler((radians(20), radians(-21), radians(45))).to_quaternion().to_euler('YXZ')
+    self.assertXYZ(v5.find("phi"), -rot.y, rot.x, rot.z)
+
+    self.assertXYZ(v5.find("sk"), 1.5, 2.5, 3.5)
+
+    self.assertNotIn("GruppenName", v5.attrib)
+    self.assertNotIn("SichtbarAb", v5.attrib)
+    self.assertNotIn("SichtbarBis", v5.attrib)
+    self.assertNotIn("SichtbarBis", v5.attrib)
+    self.assertNotIn("Vorlade", v5.attrib)
+    self.assertNotIn("BoundingR", v5.attrib)
+    self.assertNotIn("Helligkeit", v5.attrib)
+    self.assertEqual(10, int(v5.attrib["LODbit"]))
+    self.assertEqual(32 + 16, int(v5.attrib["Flags"])) # Detail tile + read only
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
