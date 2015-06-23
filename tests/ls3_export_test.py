@@ -1286,6 +1286,26 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(10, int(v5.attrib["LODbit"]))
     self.assertEqual(32 + 16, int(v5.attrib["Flags"])) # Detail tile + read only
 
+  def test_linked_file_animation(self):
+    self.open("linked_file_animation")
+    root = self.export_and_parse({"exportAnimations": True})
+
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
+
+    verkn_animation_nodes = root.findall("./Landschaft/VerknAnimation")
+    self.assertEqual(1, len(verkn_animation_nodes))
+
+    self.assertEqual(0, int(verkn_animation_nodes[0].attrib["AniIndex"]))
+
+    ani_pkt_nodes = verkn_animation_nodes[0].findall("./AniPunkt")
+    self.assertEqual(2, len(ani_pkt_nodes))
+
+    animation_nodes = root.findall("./Landschaft/Animation")
+    self.assertEqual(1, len(animation_nodes))
+
+    self.assertEqual(6, int(animation_nodes[0].attrib["AniID"]))
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   unittest.TextTestRunner(verbosity=2).run(suite)

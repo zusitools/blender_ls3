@@ -858,6 +858,7 @@ class Ls3Exporter:
                 linked_file = Ls3File()
                 linked_file.filename = self.relpath(ob.zusi_link_file_name_realpath)
                 linked_file.root_obj = ob
+                linked_file.objects.add(ob)
                 linked_file.group_name = ob.zusi_link_group
                 linked_file.visible_from = ob.zusi_link_visible_from
                 linked_file.visible_to = ob.zusi_link_visible_to
