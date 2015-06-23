@@ -1320,10 +1320,11 @@ class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return context.object is not None and context.object.type == 'MESH'
+        return context.object is not None and (context.object.type == 'MESH' or context.object.type == 'EMPTY')
 
     def draw(self, context):
-        self.layout.row().prop(context.object, "zusi_subset_name")
+        if context.object.type == 'MESH':
+            self.layout.row().prop(context.object, "zusi_subset_name")
         draw_variants_visibility_box(context, self.layout, context.object)
 
 class TEXTURE_PT_zusi_properties(bpy.types.Panel):

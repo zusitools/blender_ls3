@@ -854,7 +854,7 @@ class Ls3Exporter:
                     cur = cur.parent
                 result[cur].objects.add(ob)
 
-            if ob.zusi_is_linked_file:
+            if ob.zusi_is_linked_file and zusicommon.is_object_visible(ob, self.config.variantIDs):
                 linked_file = Ls3File()
                 linked_file.filename = self.relpath(ob.zusi_link_file_name_realpath)
                 linked_file.root_obj = ob

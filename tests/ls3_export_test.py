@@ -171,13 +171,20 @@ class TestLs3Export(unittest.TestCase):
     else:
       filename = "export.ls3"
 
+    variants = []
+    if "variants" in exportargs:
+      for variant_id in exportargs["variants"]:
+        variants.append({"variant_id": variant_id, "export": True,
+            "name":"foobar", "template_list_controls": "foobar"})
+      del exportargs["variants"]
+
     exportpath = os.path.join(ZUSI3_EXPORTPATH, filename)
 
     args = copy(sys.modules["io_scene_ls3.zusiconfig"].default_export_settings)
     args.update(exportargs)
 
     bpy.ops.export_scene.ls3(context,
-      filepath=exportpath, filename=filename, directory=ZUSI3_EXPORTPATH,
+      filepath=exportpath, filename=filename, directory=ZUSI3_EXPORTPATH, variant_export_setting=variants,
       **args)
 
     return exportpath
@@ -1305,6 +1312,18 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(animation_nodes))
 
     self.assertEqual(6, int(animation_nodes[0].attrib["AniID"]))
+
+  def test_linkd_file_variant_visibility(self):
+    self.open("linked_file_variant_visibility")
+    root = self.export_and_parse({"variants" : [1]})
+
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
+
+    root = self.export_and_parse({"variants" : [0]})
+
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(0, len(verknuepfte_nodes))
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
