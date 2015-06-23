@@ -823,6 +823,79 @@ bpy.types.Object.zusi_anchor_point_files = bpy.props.CollectionProperty(
 
 bpy.types.Object.zusi_anchor_point_files_index = bpy.props.IntProperty()
 
+# Links
+
+bpy.types.Object.zusi_is_linked_file = bpy.props.BoolProperty(
+    name = _("Linked file"),
+    description = _("Create a link to another file, with location, rotation, and scale taken from this object"),
+    default = False
+)
+
+bpy.types.Object.zusi_link_file_name = bpy.props.StringProperty()
+
+def set_zusi_link_file_name(self, value):
+    self.zusi_link_file_name = blender_path_to_zusi_file_path(value)
+
+bpy.types.Object.zusi_link_file_name_realpath = bpy.props.StringProperty(
+    name = _("File name"),
+    subtype = 'FILE_PATH',
+    get = lambda self: zusi_file_path_to_blender_path(self.zusi_link_file_name),
+    set = set_zusi_link_file_name,
+)
+
+bpy.types.Object.zusi_link_group = bpy.props.StringProperty(
+    name = _("Group"),
+)
+
+bpy.types.Object.zusi_link_visible_from = bpy.props.FloatProperty(
+    name = _("Visible from [m]"),
+    min = 0.0,
+)
+
+bpy.types.Object.zusi_link_visible_to = bpy.props.FloatProperty(
+    name = _("Visible to [m]"),
+    min = 0.0,
+)
+
+bpy.types.Object.zusi_link_preload_factor = bpy.props.FloatProperty(
+    name = _("Preload from [Factor]"),
+    min = 0.0,
+)
+
+bpy.types.Object.zusi_link_radius = bpy.props.IntProperty(
+    name = _("Radius [m]"),
+)
+
+bpy.types.Object.zusi_link_forced_brightness = bpy.props.FloatProperty(
+    name = _("Forced brightness [0..1]"),
+)
+
+bpy.types.Object.zusi_link_lod = bpy.props.IntProperty(
+    name = _("Level of detail"),
+)
+
+bpy.types.Object.zusi_link_is_tile = bpy.props.BoolProperty(
+    name = _("Tile"),
+    default = False,
+)
+
+bpy.types.Object.zusi_link_is_detail_tile = bpy.props.BoolProperty(
+    name = _("Detail tile"),
+    default = False,
+)
+
+bpy.types.Object.zusi_link_is_billboard = bpy.props.BoolProperty(
+    name = _("Billboard"),
+    default = False,
+)
+
+bpy.types.Object.zusi_link_is_readonly = bpy.props.BoolProperty(
+    name = _("Read only"),
+    default = False,
+)
+
+
+
 #
 # Scene
 #
@@ -947,7 +1020,7 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
         box.label(_("Variants can be defined in the Scene settings."))
 
 # ---
-# Data panel (Mesh and anchor point properties)
+# Data panel (Mesh, link, and anchor point properties)
 # ---
 
 class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
@@ -963,6 +1036,46 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
     def draw(self, context):
         if context.mesh:
             self.layout.row().prop(context.mesh, "zusi_is_rail")
+
+class OBJECT_PT_data_linked_file(bpy.types.Panel):
+    bl_label = _("Linked file")
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+
+    @classmethod
+    def poll(self, context):
+        return context.object and context.object.type == 'EMPTY'
+
+    def draw_header(self, context):
+        self.layout.prop(context.object, "zusi_is_linked_file", text = "")
+
+    def draw(self, context):
+        ob = context.object
+        layout = self.layout
+
+        layout.active = ob.zusi_is_linked_file
+
+        layout.prop(ob, "zusi_link_file_name_realpath")
+        layout.prop(ob, "zusi_link_group")
+        layout.prop(ob, "zusi_link_visible_from")
+        layout.prop(ob, "zusi_link_visible_to")
+        layout.prop(ob, "zusi_link_preload_factor")
+        layout.prop(ob, "zusi_link_radius")
+        layout.prop(ob, "zusi_link_forced_brightness")
+
+        box = layout.box()
+        for lod, lodbit in enumerate([1, 2, 4, 8]):
+            row = box.row()
+            row.alignment = 'LEFT'
+            op = row.operator("zusi.toggle_link_lod", text = _("LOD {}").format(lod), emboss = False,
+                icon = "CHECKBOX_HLT" if ob.zusi_link_lod & lodbit else "CHECKBOX_DEHLT")
+            op.lodbit = lodbit
+
+        layout.prop(ob, "zusi_link_is_tile")
+        layout.prop(ob, "zusi_link_is_detail_tile")
+        layout.prop(ob, "zusi_link_is_billboard")
+        layout.prop(ob, "zusi_link_is_readonly")
 
 class OBJECT_PT_data_anchor_point(bpy.types.Panel):
     bl_label = _("Anchor point")
@@ -1157,6 +1270,22 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
+
+class OBJECT_OT_zusi_toggle_link_lod(bpy.types.Operator):
+    bl_idname = "zusi.toggle_link_lod"
+    bl_label = _("Toggle linked file LOD")
+    bl_options = {'INTERNAL'}
+
+    lodbit = bpy.props.IntProperty()
+
+    def execute(self, context):
+        ob = context.object
+        if ob.zusi_link_lod & self.lodbit:
+            ob.zusi_link_lod &= ~self.lodbit
+        else:
+            ob.zusi_link_lod |= self.lodbit
+
+        return{'FINISHED'}
 
 class OBJECT_OT_zusi_toggle_variant_visibility(bpy.types.Operator):
     bl_idname = "zusi.toggle_variant_visibility"
