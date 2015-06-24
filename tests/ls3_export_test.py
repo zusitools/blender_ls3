@@ -6,12 +6,14 @@ import shutil
 import sys
 import tempfile
 import unittest
-import io
 import mathutils
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from math import radians
 from copy import copy
+
+sys.path.append(os.getcwd())
+from mocks import MockFS
 
 ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/zusi3/daten"
 ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/zusi2/daten"
@@ -56,72 +58,11 @@ def mockEnumValueImpl(key, index):
   else:
     return realEnumValue(key, index)
 
-class MockFile():
-  """A file for MockFS that is based on a BytesIO/StringIO object
-  but does not free the buffer when close() is called."""
-
-  def __init__(self, filename, is_binary):
-    self.closed = True
-    self.contents = io.BytesIO() if is_binary else io.StringIO()
-    self.filename = filename
-
-  def open(self):
-    self.closed = False
-    self.contents.seek(0)
-
-  def close(self):
-    self.closed = True
-    self.contents.flush()
-
-  def __enter__(self):
-    return self
-
-  def __exit__(self, exc_type, exc_val, exc_tb):
-    self.close()
-    return True
-
-  def read(self, count = 0):
-    if self.closed:
-      raise ValueError("I/O on closed file")
-    return self.contents.read(count) if count != 0 else self.contents.read()
-
-  def write(self, contents):
-    if self.closed:
-      raise ValueError("I/O on closed file")
-    return self.contents.write(contents)
-
-class MockFS():
-  """A simple overlay file system that redirects writes to MockFiles stored in memory."""
-  def __init__(self):
-    self.files = {}
-    self.originalOpen = open
-    self.originalOsPathExists = os.path.exists
-
-  def open(self, filename, mode):
-    if "w" not in mode and filename in self.files:
-      f = self.files[filename]
-      f.open()
-      return f
-
-    if "w" in mode:
-      mockfile = MockFile(filename, "b" in mode)
-      mockfile.open()
-      self.files[filename] = mockfile
-      return mockfile
-    else:
-      return self.originalOpen(filename, mode)
-
-  def path_exists(self, path):
-    return path in self.files or self.originalOsPathExists(path)
-
 class TestLs3Export(unittest.TestCase):
   def setUp(self):
     bpy.ops.wm.read_homefile()
     self._mock_fs = MockFS()
-    self._open_patch = patch('builtins.open', side_effect=lambda filename, mode: self._mock_fs.open(filename, mode))
-    self._open_patch.start()
-    self._pathexists_patch = patch('os.path.exists', side_effect=lambda path: self._mock_fs.path_exists(path))
-    self._pathexists_patch.start()
+    self._mock_fs.start()
 
     self._openkey_patch = patch('winreg.OpenKey', side_effect=mockOpenKeyImpl)
     self._enumvalue_patch = patch('winreg.EnumValue', side_effect=mockEnumValueImpl)
@@ -139,8 +80,7 @@ class TestLs3Export(unittest.TestCase):
     }
 
   def tearDown(self):
-    self._pathexists_patch.stop()
-    self._open_patch.stop()
+    self._mock_fs.stop()
 
     if sys.platform.startswith("win"):
       self._openkey_patch.stop()
