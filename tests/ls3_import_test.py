@@ -295,8 +295,28 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(r'zusi2:Loks\Dieselloks\Gleisbagger\Bagger_gelb.ls', ob.zusi_link_file_name)
 
     self.assertVectorEqual(Vector((6170.986, -271.785, -20.488)), ob.location)
-    self.assertVectorEqual(Vector((radians(10), radians(-20), radians(-30-90))), ob.rotation_euler)
+    self.assertVectorEqual(Vector((radians(10), radians(-20), radians(-30))), ob.rotation_euler)
     self.assertEqual('XYZ', ob.rotation_mode)
+
+  def test_ls_import_linked_file_nesting(self):
+    # make sure the linked files exist (in the mock file system)
+    for filename in ["linked_file_nesting_2.ls", "empty.ls"]:
+      with open(os.path.join(*[ZUSI2_DATAPATH, filename]), 'w') as f:
+        with open(os.path.join("ls", filename), 'r') as f2:
+          f.write(f2.read())
+
+    self.ls_import("linked_file_nesting.ls", {"loadLinkedMode": "2"})
+
+    ob1 = bpy.data.objects["linked_file_nesting.ls"]
+    self.assertVectorEqual(Vector((0, 0, 0)), ob1.location)
+    self.assertVectorEqual(Vector((0, 0, radians(-90))), ob1.rotation_euler)
+    ob1 = bpy.data.objects["linked_file_nesting_2.ls"]
+    self.assertVectorEqual(Vector((10, 20, 30)), ob1.location)
+    self.assertVectorEqual(Vector((0, 0, 0)), ob1.rotation_euler)
+    ob2 = bpy.data.objects["empty.ls"]
+    self.assertVectorEqual(Vector((10, 20, 30)), ob1.location)
+    self.assertVectorEqual(Vector((0, 0, 0)), ob1.rotation_euler)
+    self.assertEqual(ob1, ob2.parent)
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)

@@ -434,8 +434,9 @@ class Ls3Importer:
                         filename,
                         directory,
                         self.config.loadLinkedMode,
-                        [loc[x] + self.config.location[x] for x in [0,1,2]],
-                        [rot[x] + self.config.rotation[x] for x in [0,1,2]],
+                        (0, 0, 0),
+                        (0, 0, 0),
+                        empty
                     )
                     ls_import.LsImporter(settings).import_ls()
                 else:

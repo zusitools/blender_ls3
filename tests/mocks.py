@@ -33,6 +33,11 @@ class MockFile():
       raise ValueError("I/O on closed file")
     return self.contents.read(count) if count != 0 else self.contents.read()
 
+  def readline(self):
+    if self.closed:
+      raise ValueError("I/O on closed file")
+    return self.contents.readline()
+
   def write(self, contents):
     if self.closed:
       raise ValueError("I/O on closed file")

@@ -32,9 +32,6 @@ IMPORT_LINKED_EMBED = "2"
 # Converts value "BBGGRR" into a Color object
 color_to_rgba = lambda color : mathutils.Color(((color & 0xFF) / 255.0, ((color >> 8) & 0xFF) / 255.0, ((color >> 16) & 0xFF) / 255.0))
 
-zusi2_pos_to_blender = lambda pos : pos
-zusi2_rot_to_blender = lambda rot : (rot[0], rot[1], rot[2] - radians(90))
-
 def skipLine(fp, count = 1):
     for i in range(0, count):
         fp.readline()
@@ -55,6 +52,8 @@ class LsImporterSettings:
                 loadLinkedMode,
                 location = [0.0, 0.0, 0.0], # in Blender coords
                 rotation = [0.0, 0.0, 0.0], # in Blender coords
+                parent = None,
+                parent_is_ls3 = True,
                 ):
         self.context = context
         self.filePath = filePath
@@ -63,6 +62,8 @@ class LsImporterSettings:
         self.loadLinkedMode = loadLinkedMode
         self.location = location
         self.rotation = rotation
+        self.parent = parent
+        self.parent_is_ls3 = parent_is_ls3
 
 class LsImporter:
     def __init__(self, config):
@@ -99,8 +100,7 @@ class LsImporter:
             if numVertices >= 3:
                 skipLine(fp)
             
-                verts = [self.currentbmesh.verts.new(zusi2_pos_to_blender(read3floats(fp)))
-                    for i in range(0, numVertices)]
+                verts = [self.currentbmesh.verts.new(read3floats(fp)) for i in range(0, numVertices)]
                 face = self.currentbmesh.faces.new(verts)
 
                 diffuse_color = int(fp.readline())
@@ -148,6 +148,19 @@ class LsImporter:
             skipLine(fp)
             numElements = int(fp.readline())
 
+            # Create new mesh
+            self.currentmesh = bpy.data.meshes.new(self.config.fileName)
+
+            # Create new object
+            self.currentobject = bpy.data.objects.new(self.config.fileName, self.currentmesh)
+            self.currentobject.parent = self.config.parent
+            self.currentobject.location = self.config.location
+            self.currentobject.rotation_euler = self.config.rotation
+            if self.config.parent_is_ls3:
+                # Coordinate system conversion
+                self.currentobject.rotation_euler.z -= radians(90)
+            bpy.context.scene.objects.link(self.currentobject)
+
             # Linked files
             line = fp.readline()
             while line != "#\n":
@@ -155,9 +168,7 @@ class LsImporter:
                 (directory, filename) = os.path.split(path)
 
                 loc = read3floats(fp)
-                loc = [loc[i] + self.config.location[i] for i in range(0,3)]
                 rot = read3floats(fp)
-                rot = [rot[i] + self.config.rotation[i] for i in range(0,3)]
                 
                 if self.config.loadLinkedMode == IMPORT_LINKED_EMBED:
                     if os.path.exists(path):
@@ -168,7 +179,9 @@ class LsImporter:
                             directory,
                             self.config.loadLinkedMode,
                             loc,
-                            rot
+                            rot,
+                            self.currentobject,
+                            parent_is_ls3 = False
                         )
 
                         importer = LsImporter(settings)
@@ -177,8 +190,9 @@ class LsImporter:
                         print("Warning: Linked file %s not found" % path)
                 elif self.config.loadLinkedMode == IMPORT_LINKED_AS_EMPTYS:
                     empty = bpy.data.objects.new("{}_{}".format(self.config.fileName, filename), None)
-                    empty.location = zusi2_pos_to_blender(loc)
-                    empty.rotation_euler = zusi2_rot_to_blender(rot)
+                    empty.location = loc
+                    empty.rotation_euler = rot
+                    empty.parent = self.currentobject
 
                     empty.zusi_is_linked_file = True
                     empty.zusi_link_file_name_realpath = path
@@ -187,8 +201,6 @@ class LsImporter:
 
                 line = fp.readline()
 
-            # Create new mesh
-            self.currentmesh = bpy.data.meshes.new(self.config.fileName)
             self.currentbmesh = bmesh.new()
             self.currentbmesh.from_mesh(self.currentmesh)
 
@@ -196,11 +208,5 @@ class LsImporter:
                 self.readElement(fp)
 
             self.currentbmesh.to_mesh(self.currentmesh)
-
-            # Create new object
-            self.currentobject = bpy.data.objects.new(self.config.fileName, self.currentmesh)
-            self.currentobject.location = zusi2_pos_to_blender(self.config.location)
-            self.currentobject.rotation_euler = zusi2_rot_to_blender(self.config.rotation)
-            bpy.context.scene.objects.link(self.currentobject)
 
             print("Done")

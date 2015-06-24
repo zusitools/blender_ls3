@@ -1,0 +1,10 @@
+2.3
+0
+linked_file_nesting_2.ls
+10
+20
+30
+0
+0
+0
+#
