@@ -134,6 +134,12 @@ class ZusiLodImportSettingList(zusiprops.CheckBoxList):
     def get_item_text(self, item):
         return str(item.name)
 
+load_linked_modes = [
+    ("0", _("Don't import"), ""),
+    ("1", _("Import as links"), ""),
+    ("2", _("Embed"), ""),
+]
+
 # ---
 # Import menu
 # ---
@@ -152,17 +158,18 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
     files = bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
     directory = bpy.props.StringProperty()
 
-    loadLinked = bpy.props.BoolProperty(
+    loadLinkedMode = bpy.props.EnumProperty(
         name = _("Load linked files"),
         description = _("Import files that are linked in the LS file"),
-        default = True
+        items = load_linked_modes,
+        default = "1"
     )
 
     def draw(self, context):
         layout = self.layout
 
         row = layout.row()
-        row.prop(self, "loadLinked")
+        row.prop(self, "loadLinkedMode")
 
     def execute(self, context):
         from . import ls_import
@@ -172,7 +179,7 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
                 os.path.join(self.properties.directory, f.name),
                 f.name,
                 self.properties.directory,
-                self.properties.loadLinked,
+                self.properties.loadLinkedMode,
             )
 
             importer = ls_import.LsImporter(settings)
@@ -206,11 +213,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     loadLinkedMode = bpy.props.EnumProperty(
         name = _("Load linked files"),
         description = _("Import files that are linked in the LS3 file"),
-        items = [
-            ("0", _("Don't import"), ""),
-            ("1", _("Import as links"), ""),
-            ("2", _("Embed"), ""),
-        ],
+        items = load_linked_modes,
         default = "1"
     )
 

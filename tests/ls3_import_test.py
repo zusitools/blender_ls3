@@ -21,6 +21,7 @@ class TestLs3Import(unittest.TestCase):
     # Copy test LS3 files into temporary directory.
     cls._tempdir = tempfile.mkdtemp()
     shutil.copytree("ls3s", os.path.join(cls._tempdir, "ls3s"))
+    shutil.copytree("ls", os.path.join(cls._tempdir, "ls"))
 
   @classmethod
   def tearDownClass(cls):
@@ -48,6 +49,12 @@ class TestLs3Import(unittest.TestCase):
     bpy.ops.import_scene.ls3(bpy.context.copy(),
       files=[{"name":filename}],
       directory=os.path.join(self._tempdir, "ls3s"),
+      **importargs)
+
+  def ls_import(self, filename, importargs={}):
+    bpy.ops.import_scene.ls(bpy.context.copy(),
+      files=[{"name":filename}],
+      directory=os.path.join(self._tempdir, "ls"),
       **importargs)
 
   def assertColorEqual(self, expected, actual):
@@ -274,6 +281,21 @@ class TestLs3Import(unittest.TestCase):
     ob = bpy.data.objects["linked_file_zusi2.ls3_AVG_803_Front.ls.001"]
     self.assertEqual(True, ob.zusi_is_linked_file)
     self.assertEqual(r'zusi2:Loks\Elektrotriebwagen\450\AVG_803_Front.ls', ob.zusi_link_file_name)
+
+  # ---
+  # LS import tests
+  # ---
+
+  def test_ls_import_linked_file(self):
+    self.ls_import("linked_file.ls")
+
+    ob = bpy.data.objects["linked_file.ls_Bagger_gelb.ls"]
+    self.assertEqual('EMPTY', ob.type)
+    self.assertTrue(ob.zusi_is_linked_file)
+
+    self.assertVectorEqual(Vector((6170.986, 271.785, -20.488)), ob.location)
+    self.assertVectorEqual(Vector((radians(10), radians(20), radians(-30))), ob.rotation_euler)
+    self.assertEqual('XYZ', ob.rotation_mode)
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)

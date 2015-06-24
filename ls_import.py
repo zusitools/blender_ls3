@@ -25,6 +25,10 @@ import xml.dom.minidom as dom
 from . import zusicommon
 from math import pi
 
+IMPORT_LINKED_NO = "0"
+IMPORT_LINKED_AS_EMPTYS = "1"
+IMPORT_LINKED_EMBED = "2"
+
 # Converts value "BBGGRR" into a Color object
 color_to_rgba = lambda color : mathutils.Color(((color & 0xFF) / 255.0, ((color >> 8) & 0xFF) / 255.0, ((color >> 16) & 0xFF) / 255.0))
 
@@ -45,7 +49,7 @@ class LsImporterSettings:
                 filePath,
                 fileName,
                 fileDirectory,
-                loadLinked = True,
+                loadLinkedMode,
                 location = [0.0, 0.0, 0.0],
                 rotation = [0.0, 0.0, 0.0],
                 ):
@@ -53,7 +57,7 @@ class LsImporterSettings:
         self.filePath = filePath
         self.fileName = fileName
         self.fileDirectory = fileDirectory
-        self.loadLinked = loadLinked
+        self.loadLinkedMode = loadLinkedMode
         self.location = location
         self.rotation = rotation
 
@@ -147,24 +151,35 @@ class LsImporter:
                 (directory, filename) = os.path.split(path)
 
                 loc = read3floats(fp)
+                loc = [loc[i] + self.config.location[i] for i in range(0,3)]
                 rot = read3floats(fp)
+                rot = [rot[i] + self.config.rotation[i] for i in range(0,3)]
                 
-                if self.config.loadLinked:
+                if self.config.loadLinkedMode == IMPORT_LINKED_EMBED:
                     if os.path.exists(path):
                         settings = LsImporterSettings(
                             self.config.context,
                             path,
                             filename,
                             directory,
-                            self.config.loadLinked,
-                            [loc[i] + self.config.location[i] for i in [0,1,2]],
-                            [rot[i] + self.config.rotation[i] for i in [0,1,2]],
+                            self.config.loadLinkedMode,
+                            loc,
+                            rot
                         )
 
                         importer = LsImporter(settings)
                         importer.import_ls()
                     else:
                         print("Warning: Linked file %s not found" % path)
+                elif self.config.loadLinkedMode == IMPORT_LINKED_AS_EMPTYS:
+                    empty = bpy.data.objects.new("{}_{}".format(self.config.fileName, filename), None)
+                    empty.location = (loc[0], -loc[1], loc[2])
+                    empty.rotation_euler = (rot[0], -rot[1], rot[2])
+
+                    empty.zusi_is_linked_file = True
+                    empty.zusi_link_file_name_realpath = path
+
+                    self.config.context.scene.objects.link(empty)
 
                 line = fp.readline()
 
