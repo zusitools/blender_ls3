@@ -354,7 +354,7 @@ bpy.utils.register_class(ZusiTexturePresetResultStageSettings)
 
 def on_zusi_texture_preset_update(self, context):
     # TODO call this when initializing the object
-    if not hasattr(context, 'object'):
+    if not hasattr(context, 'object') or context.object is None:
         return
 
     mat = context.object.data.materials[context.object.active_material_index]
