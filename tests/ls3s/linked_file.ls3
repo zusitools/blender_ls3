@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+<Landschaft>
+<Verknuepfte Flags="12" GruppenName="TestGroup" BoundingR="15" SichtbarAb="1.5" SichtbarBis="5.5" Vorlade="13.5" LODbit="5" Helligkeit="0.5">
+<Datei Dateiname="RollingStock\Diverse\Blindlok\Blindlok.ls3"/>
+<p/>
+<phi/>
+<sk/>
+</Verknuepfte>
+<Verknuepfte Flags="48" LODbit="10">
+<Datei Dateiname="RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3"/>
+<p X="-1" Y="2" Z="-3"/>
+<phi X="-0.3490658503988659" Y="0.17453292519943295" Z="-0.5235987755982988"/>
+<sk X="1.5" Y="2.5" Z="3.5"/>
+</Verknuepfte>
+</Landschaft>
+</Zusi>

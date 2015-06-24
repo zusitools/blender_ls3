@@ -192,7 +192,7 @@ class TestLs3Import(unittest.TestCase):
     self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
 
   def test_import_animated_linked_file(self):
-    self.ls3_import("animated_linked_file.ls3")
+    self.ls3_import("animated_linked_file.ls3", {"loadLinkedMode" : "2"})
 
     ob = bpy.data.objects["animated_linked_file.ls3_animated_linked_file_1.ls3.001"]
     self.assertEqual('EMPTY', ob.type)
@@ -215,6 +215,49 @@ class TestLs3Import(unittest.TestCase):
     self.assertKeyframes(action, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
     self.assertKeyframes(action, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
     self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
+
+  def test_import_linked_file_as_empty(self):
+    self.ls3_import("linked_file.ls3")
+
+    ob = bpy.data.objects["linked_file.ls3_Blindlok.ls3.001"]
+    self.assertEqual('EMPTY', ob.type)
+    self.assertEqual(True, ob.zusi_is_linked_file)
+    self.assertEqual(r'zusi3:RollingStock\Diverse\Blindlok\Blindlok.ls3', ob.zusi_link_file_name)
+    self.assertEqual("TestGroup", ob.zusi_link_group)
+    self.assertEqual(1.5, ob.zusi_link_visible_from)
+    self.assertEqual(5.5, ob.zusi_link_visible_to)
+    self.assertEqual(13.5, ob.zusi_link_preload_factor)
+    self.assertEqual(15, ob.zusi_link_radius)
+    self.assertEqual(0.5, ob.zusi_link_forced_brightness)
+    self.assertEqual(5, ob.zusi_link_lod)
+    self.assertEqual(True, ob.zusi_link_is_tile)
+    self.assertEqual(False, ob.zusi_link_is_detail_tile)
+    self.assertEqual(True, ob.zusi_link_is_billboard)
+    self.assertEqual(False, ob.zusi_link_is_readonly)
+
+    ob = bpy.data.objects["linked_file.ls3_101_vr.lod.ls3.002"]
+    self.assertEqual('EMPTY', ob.type)
+    self.assertEqual(True, ob.zusi_is_linked_file)
+    self.assertEqual(r'zusi3:RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3', ob.zusi_link_file_name)
+    self.assertEqual("", ob.zusi_link_group)
+    self.assertEqual(0, ob.zusi_link_visible_from)
+    self.assertEqual(0, ob.zusi_link_visible_to)
+    self.assertEqual(0, ob.zusi_link_preload_factor)
+    self.assertEqual(0, ob.zusi_link_radius)
+    self.assertEqual(0, ob.zusi_link_forced_brightness)
+    self.assertEqual(10, ob.zusi_link_lod)
+    self.assertEqual(False, ob.zusi_link_is_tile)
+    self.assertEqual(True, ob.zusi_link_is_detail_tile)
+    self.assertEqual(False, ob.zusi_link_is_billboard)
+    self.assertEqual(True, ob.zusi_link_is_readonly)
+
+    self.assertVectorEqual(Vector((2, 1, -3)), ob.location)
+    self.assertVectorEqual(Vector((radians(10), radians(20), radians(-30))), ob.rotation_euler)
+    self.assertEqual('YXZ', ob.rotation_mode)
+    self.assertVectorEqual(Vector((2.5, 1.5, 3.5)), ob.scale)
+
+  def test_import_zusi2_linked_file(self):
+    pass
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)

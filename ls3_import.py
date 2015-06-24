@@ -29,6 +29,10 @@ from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list
 
+IMPORT_LINKED_NO = "0"
+IMPORT_LINKED_AS_EMPTYS = "1"
+IMPORT_LINKED_EMBED = "2"
+
 # Converts a hex string "0AABBGGRR"/"AARRGGBB" into a tuple of a Color object and an alpha value
 bgr_string_to_rgba = lambda str : (mathutils.Color((int(str[7:9], 16) / 255, int(str[5:7], 16) / 255, int(str[3:5], 16) / 255)), int(str[1:3], 16) / 255)
 rgb_string_to_rgba = lambda str : (mathutils.Color((int(str[2:4], 16) / 255, int(str[4:6], 16) / 255, int(str[6:8], 16) / 255)), int(str[0:2], 16) / 255)
@@ -69,7 +73,18 @@ def zusi_to_blender(vector):
     return Vector((vector[1], -vector[0], vector[2]))
 
 def zusi_to_blender_euler(euler):
-    return Euler((euler[1], -euler[0], euler[2]))
+    return Euler((euler[1], -euler[0], euler[2]), 'YXZ')
+
+def zusi_to_blender_scale(scale):
+    return Vector((scale[1], scale[0], scale[2]))
+
+def get_float_attr(node, name):
+    attr = node.getAttribute(name)
+    return float(attr) if len(attr) else 0.0
+
+def get_int_attr(node, name):
+    attr = node.getAttribute(name)
+    return int(attr) if len(attr) else 0
 
 class Ls3ImporterSettings:
     def __init__(self,
@@ -78,7 +93,7 @@ class Ls3ImporterSettings:
                 fileName,
                 fileDirectory,
                 loadAuthorInformation = True,
-                loadLinked = True,
+                loadLinkedMode = IMPORT_LINKED_AS_EMPTYS,
                 location = [0.0, 0.0, 0.0],
                 rotation = [0.0, 0.0, 0.0],
                 scale = [1.0, 1.0, 1.0],
@@ -90,7 +105,7 @@ class Ls3ImporterSettings:
         self.fileName = fileName
         self.fileDirectory = fileDirectory
         self.loadAuthorInformation = loadAuthorInformation
-        self.loadLinked = loadLinked
+        self.loadLinkedMode = loadLinkedMode
         self.location = location
         self.rotation = rotation
         self.scale = scale
@@ -352,10 +367,12 @@ class Ls3Importer:
     # Visits a <Verknuepfte> node.
     #
     def visitVerknuepfteNode(self, node):
-        if not self.config.loadLinked:
+        if self.config.loadLinkedMode == IMPORT_LINKED_NO:
             return
 
-        if node.getAttribute("LODbit") != "" and (self.config.lod_bit & int(node.getAttribute("LODbit"))) == 0:
+        if self.config.loadLinkedMode == IMPORT_LINKED_EMBED \
+                and node.getAttribute("LODbit") != "" \
+                and (self.config.lod_bit & int(node.getAttribute("LODbit"))) == 0:
             return
 
         try:
@@ -378,36 +395,55 @@ class Ls3Importer:
                 fill_xyz_vector(scale_node[0], scale)
 
             # Transform location and rotation into Blender coordinates
-            loc = [loc[1], -loc[0], loc[2]]
-            rot = [rot[1], -rot[0], rot[2]]
-            scale = [scale[1], scale[0], scale[2]]
+            loc = zusi_to_blender(loc)
+            rot = zusi_to_blender_euler(rot)
+            scale = zusi_to_blender_scale(scale)
 
             (directory, filename) = os.path.split(dateiname)
 
             empty = bpy.data.objects.new("%s_%s.%03d" % (self.config.fileName, filename, len(self.linked_files) + 1), None)
             empty.location = loc
             empty.rotation_euler = rot
+            empty.rotation_mode = rot.order
             empty.scale = scale
             empty.parent = self.config.parent
+
+            empty.zusi_link_file_name_realpath = dateiname
+            empty.zusi_link_group = node.getAttribute("GruppenName")
+            empty.zusi_link_visible_from = get_float_attr(node, "SichtbarAb")
+            empty.zusi_link_visible_to = get_float_attr(node, "SichtbarBis")
+            empty.zusi_link_preload_factor = get_float_attr(node, "Vorlade")
+            empty.zusi_link_radius = get_int_attr(node, "BoundingR")
+            empty.zusi_link_forced_brightness = get_float_attr(node, "Helligkeit")
+            empty.zusi_link_lod = get_int_attr(node, "LODbit")
+
+            flags = get_int_attr(node, "Flags")
+            empty.zusi_link_is_tile = flags & 4 != 0
+            empty.zusi_link_is_detail_tile = flags & 32 != 0
+            empty.zusi_link_is_billboard = flags & 8 != 0
+            empty.zusi_link_is_readonly = flags & 16 != 0
+
             self.config.context.scene.objects.link(empty)
             self.linked_files.append(empty)
 
-            settings = Ls3ImporterSettings(
-                self.config.context,
-                dateiname,
-                filename,
-                directory,
-                self.config.loadAuthorInformation,
-                self.config.loadLinked,
-                [loc[x] + self.config.location[x] for x in [0,1,2]],
-                [rot[x] + self.config.rotation[x] for x in [0,1,2]],
-                [scale[x] * self.config.scale[x] for x in [0,1,2]],
-                self.config.lod_bit,
-                empty,
-            )
-
-            importer = Ls3Importer(settings)
-            importer.import_ls3()
+            if self.config.loadLinkedMode == IMPORT_LINKED_EMBED:
+                settings = Ls3ImporterSettings(
+                    self.config.context,
+                    dateiname,
+                    filename,
+                    directory,
+                    self.config.loadAuthorInformation,
+                    self.config.loadLinkedMode,
+                    [loc[x] + self.config.location[x] for x in [0,1,2]],
+                    [rot[x] + self.config.rotation[x] for x in [0,1,2]],
+                    [scale[x] * self.config.scale[x] for x in [0,1,2]],
+                    self.config.lod_bit,
+                    empty,
+                )
+                importer = Ls3Importer(settings)
+                importer.import_ls3()
+            else:
+                empty.zusi_is_linked_file = True
         except(IndexError):
             pass
 

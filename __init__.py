@@ -203,10 +203,15 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         default = True
     )
 
-    loadLinked = bpy.props.BoolProperty(
+    loadLinkedMode = bpy.props.EnumProperty(
         name = _("Load linked files"),
         description = _("Import files that are linked in the LS3 file"),
-        default = True
+        items = [
+            ("0", _("Don't import"), ""),
+            ("1", _("Import as links"), ""),
+            ("2", _("Embed"), ""),
+        ],
+        default = "1"
     )
 
     lod_import_setting = bpy.props.CollectionProperty(
@@ -223,11 +228,11 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         row.prop(self, "loadAuthorInformation")
 
         row = layout.row()
-        row.prop(self, "loadLinked")
+        row.prop(self, "loadLinkedMode")
 
-        layout.label(_("Import LODs (only linked files)"))
+        layout.label(_("Import LODs (only embedded linked files)"))
         row = layout.row()
-        row.enabled = self.properties.loadLinked
+        row.enabled = self.properties.loadLinkedMode == "2"
         
         if bpy.app.version <= (2, 65, 0):
             row.template_list(self, "lod_import_setting", self, "lod_import_setting_index", prop_list = "template_list_controls")
@@ -243,7 +248,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
                 f.name,
                 self.properties.directory,
                 self.properties.loadAuthorInformation,
-                self.properties.loadLinked,
+                self.properties.loadLinkedMode,
                 lod_bit = sum([s.lod_bit for s in self.properties.lod_import_setting if s.imp])
             )
 
