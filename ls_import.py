@@ -23,7 +23,7 @@ import struct
 import mathutils
 import xml.dom.minidom as dom
 from . import zusicommon
-from math import pi
+from math import pi, radians
 
 IMPORT_LINKED_NO = "0"
 IMPORT_LINKED_AS_EMPTYS = "1"
@@ -31,6 +31,9 @@ IMPORT_LINKED_EMBED = "2"
 
 # Converts value "BBGGRR" into a Color object
 color_to_rgba = lambda color : mathutils.Color(((color & 0xFF) / 255.0, ((color >> 8) & 0xFF) / 255.0, ((color >> 16) & 0xFF) / 255.0))
+
+zusi2_pos_to_blender = lambda pos : pos
+zusi2_rot_to_blender = lambda rot : (rot[0], rot[1], rot[2] - radians(90))
 
 def skipLine(fp, count = 1):
     for i in range(0, count):
@@ -50,8 +53,8 @@ class LsImporterSettings:
                 fileName,
                 fileDirectory,
                 loadLinkedMode,
-                location = [0.0, 0.0, 0.0],
-                rotation = [0.0, 0.0, 0.0],
+                location = [0.0, 0.0, 0.0], # in Blender coords
+                rotation = [0.0, 0.0, 0.0], # in Blender coords
                 ):
         self.context = context
         self.filePath = filePath
@@ -96,7 +99,8 @@ class LsImporter:
             if numVertices >= 3:
                 skipLine(fp)
             
-                verts = [self.currentbmesh.verts.new(read3floats(fp)) for i in range(0, numVertices)]
+                verts = [self.currentbmesh.verts.new(zusi2_pos_to_blender(read3floats(fp)))
+                    for i in range(0, numVertices)]
                 face = self.currentbmesh.faces.new(verts)
 
                 diffuse_color = int(fp.readline())
@@ -173,8 +177,8 @@ class LsImporter:
                         print("Warning: Linked file %s not found" % path)
                 elif self.config.loadLinkedMode == IMPORT_LINKED_AS_EMPTYS:
                     empty = bpy.data.objects.new("{}_{}".format(self.config.fileName, filename), None)
-                    empty.location = (loc[0], -loc[1], loc[2])
-                    empty.rotation_euler = (rot[0], -rot[1], rot[2])
+                    empty.location = zusi2_pos_to_blender(loc)
+                    empty.rotation_euler = zusi2_rot_to_blender(rot)
 
                     empty.zusi_is_linked_file = True
                     empty.zusi_link_file_name_realpath = path
@@ -195,8 +199,8 @@ class LsImporter:
 
             # Create new object
             self.currentobject = bpy.data.objects.new(self.config.fileName, self.currentmesh)
-            self.currentobject.location = self.config.location
-            self.currentobject.rotation_euler = [self.config.rotation[0], -self.config.rotation[1], self.config.rotation[2]]
+            self.currentobject.location = zusi2_pos_to_blender(self.config.location)
+            self.currentobject.rotation_euler = zusi2_rot_to_blender(self.config.rotation)
             bpy.context.scene.objects.link(self.currentobject)
 
             print("Done")

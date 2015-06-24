@@ -292,9 +292,10 @@ class TestLs3Import(unittest.TestCase):
     ob = bpy.data.objects["linked_file.ls_Bagger_gelb.ls"]
     self.assertEqual('EMPTY', ob.type)
     self.assertTrue(ob.zusi_is_linked_file)
+    self.assertEqual(r'zusi2:Loks\Dieselloks\Gleisbagger\Bagger_gelb.ls', ob.zusi_link_file_name)
 
-    self.assertVectorEqual(Vector((6170.986, 271.785, -20.488)), ob.location)
-    self.assertVectorEqual(Vector((radians(10), radians(20), radians(-30))), ob.rotation_euler)
+    self.assertVectorEqual(Vector((6170.986, -271.785, -20.488)), ob.location)
+    self.assertVectorEqual(Vector((radians(10), radians(-20), radians(-30-90))), ob.rotation_euler)
     self.assertEqual('XYZ', ob.rotation_mode)
 
 if __name__ == '__main__':

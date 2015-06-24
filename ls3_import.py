@@ -24,7 +24,7 @@ import bpy
 import struct
 import mathutils
 import xml.dom.minidom as dom
-from . import zusicommon
+from . import zusicommon, ls_import
 from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list
@@ -94,9 +94,9 @@ class Ls3ImporterSettings:
                 fileDirectory,
                 loadAuthorInformation = True,
                 loadLinkedMode = IMPORT_LINKED_AS_EMPTYS,
-                location = [0.0, 0.0, 0.0],
-                rotation = [0.0, 0.0, 0.0],
-                scale = [1.0, 1.0, 1.0],
+                location = [0.0, 0.0, 0.0], # in Blender coords
+                rotation = [0.0, 0.0, 0.0], # in Blender coords
+                scale = [1.0, 1.0, 1.0],    # in Blender coords
                 lod_bit = 15,
                 parent = None,
                 ):
@@ -427,21 +427,32 @@ class Ls3Importer:
             self.linked_files.append(empty)
 
             if self.config.loadLinkedMode == IMPORT_LINKED_EMBED:
-                settings = Ls3ImporterSettings(
-                    self.config.context,
-                    dateiname,
-                    filename,
-                    directory,
-                    self.config.loadAuthorInformation,
-                    self.config.loadLinkedMode,
-                    [loc[x] + self.config.location[x] for x in [0,1,2]],
-                    [rot[x] + self.config.rotation[x] for x in [0,1,2]],
-                    [scale[x] * self.config.scale[x] for x in [0,1,2]],
-                    self.config.lod_bit,
-                    empty,
-                )
-                importer = Ls3Importer(settings)
-                importer.import_ls3()
+                if filename.lower().endswith("ls"):
+                    settings = ls_import.LsImporterSettings(
+                        self.config.context,
+                        dateiname,
+                        filename,
+                        directory,
+                        self.config.loadLinkedMode,
+                        [loc[x] + self.config.location[x] for x in [0,1,2]],
+                        [rot[x] + self.config.rotation[x] for x in [0,1,2]],
+                    )
+                    ls_import.LsImporter(settings).import_ls()
+                else:
+                    settings = Ls3ImporterSettings(
+                        self.config.context,
+                        dateiname,
+                        filename,
+                        directory,
+                        self.config.loadAuthorInformation,
+                        self.config.loadLinkedMode,
+                        [loc[x] + self.config.location[x] for x in [0,1,2]],
+                        [rot[x] + self.config.rotation[x] for x in [0,1,2]],
+                        [scale[x] * self.config.scale[x] for x in [0,1,2]],
+                        self.config.lod_bit,
+                        empty,
+                    )
+                    Ls3Importer(settings).import_ls3()
             else:
                 empty.zusi_is_linked_file = True
         except(IndexError):
