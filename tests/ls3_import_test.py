@@ -8,8 +8,11 @@ import unittest
 from math import radians
 from mathutils import *
 
-ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/zusi3/daten"
-ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/zusi2/daten"
+sys.path.append(os.getcwd())
+from mocks import MockFS
+
+ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/Zusi3/Daten"
+ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/Zusi2/Daten"
 NON_ZUSI_PATH = r"Z:\NichtZusi" if sys.platform.startswith("win") else "/mnt/nichtzusi"
 
 class TestLs3Import(unittest.TestCase):
@@ -28,12 +31,18 @@ class TestLs3Import(unittest.TestCase):
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
 
+    self._mock_fs = MockFS()
+    self._mock_fs.start()
+
     # Clear scene.
     bpy.ops.wm.read_homefile()
     for ob in bpy.context.scene.objects:
       bpy.context.scene.objects.unlink(ob)
       bpy.data.objects.remove(ob)
     bpy.context.scene.update()
+
+  def tearDown(self):
+    self._mock_fs.stop()
 
   def ls3_import(self, filename, importargs={}):
     bpy.ops.import_scene.ls3(bpy.context.copy(),
@@ -257,7 +266,14 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual(Vector((2.5, 1.5, 3.5)), ob.scale)
 
   def test_import_zusi2_linked_file(self):
-    pass
+    # make sure the file exists (in the mock file system)
+    with open(os.path.join(*[ZUSI2_DATAPATH, "Loks", "Elektrotriebwagen", "450", "AVG_803_Front.ls"]), 'w'):
+      pass
+
+    self.ls3_import("linked_file_zusi2.ls3")
+    ob = bpy.data.objects["linked_file_zusi2.ls3_AVG_803_Front.ls.001"]
+    self.assertEqual(True, ob.zusi_is_linked_file)
+    self.assertEqual(r'zusi2:Loks\Elektrotriebwagen\450\AVG_803_Front.ls', ob.zusi_link_file_name)
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)

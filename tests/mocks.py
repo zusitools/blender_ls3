@@ -63,7 +63,7 @@ class MockFS():
     return path in self.files or self.originalOsPathExists(path)
 
   def start(self):
-    self._open_patch = patch('builtins.open', side_effect=lambda filename, mode: self.open(filename, mode))
+    self._open_patch = patch('builtins.open', side_effect=lambda filename, mode, encoding='UTF-8': self.open(filename, mode))
     self._open_patch.start()
     self._pathexists_patch = patch('os.path.exists', side_effect=lambda path: self.path_exists(path))
     self._pathexists_patch.start()
