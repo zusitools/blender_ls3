@@ -284,10 +284,6 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual(Vector((2.5, 1.5, 3.5)), ob.scale)
 
   def test_import_zusi2_linked_file(self):
-    # make sure the file exists (in the mock file system)
-    with open(os.path.join(ZUSI2_DATAPATH, "Loks", "Elektrotriebwagen", "450", "AVG_803_Front.ls"), 'w'):
-      pass
-
     self.ls3_import("linked_file_zusi2.ls3")
     ob = bpy.data.objects["linked_file_zusi2.ls3_AVG_803_Front.ls.001"]
     self.assertTrue(ob.zusi_is_linked_file)
