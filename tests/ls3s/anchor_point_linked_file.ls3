@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+<Landschaft>
+<Verknuepfte>
+<Datei Dateiname="anchor_point_linked_file_2.ls3"/>
+<p X="10.0" Y="20.0" Z="30.0"/>
+</Verknuepfte>
+</Landschaft>
+</Zusi>

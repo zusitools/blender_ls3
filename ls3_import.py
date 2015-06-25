@@ -489,8 +489,13 @@ class Ls3Importer:
             elif n.nodeName == "phi":
                 fill_xyz_vector(n, rot)
 
-        empty.location = Vector((loc[1], -loc[0], loc[2]))
-        empty.rotation_euler = Vector((rot[1], -rot[0], rot[2]))
+        loc = zusi_to_blender(loc)
+        rot = zusi_to_blender_euler(rot)
+
+        empty.location = loc
+        empty.rotation_euler = rot
+        empty.rotation_mode = rot.order
+        empty.parent = self.config.parent
         bpy.context.scene.objects.link(empty)
 
     #

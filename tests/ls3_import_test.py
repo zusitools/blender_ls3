@@ -187,7 +187,18 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual("0", a2.zusi_anchor_point_type)
     self.assertEqual("Anchor point 2 description", a2.zusi_anchor_point_description)
     self.assertVectorEqual((1.0, 2.0, 3.0), a2.matrix_world.to_translation())
-    self.assertVectorEqual((radians(10), radians(20), radians(30)), a2.matrix_world.to_euler())
+    self.assertVectorEqual((radians(10), radians(20), radians(30)), a2.matrix_world.to_euler('YXZ'))
+
+  def test_import_anchor_point_linked_file(self):
+    self.ls3_import("anchor_point_linked_file.ls3", {"loadLinkedMode": "2"})
+
+    a1 = bpy.data.objects["anchor_point_linked_file_2.ls3_AnchorPoint.001"]
+    self.assertVectorEqual(Vector((2.0, -1.0, 3.0)), a1.location)
+
+    ob1 = bpy.data.objects["anchor_point_linked_file.ls3_anchor_point_linked_file_2.ls3.001"]
+    self.assertVectorEqual(Vector((20.0, -10.0, 30.0)), ob1.location)
+
+    self.assertEqual(ob1, a1.parent)
 
   def test_import_animated_subset(self):
     self.ls3_import("animated_subset.ls3")

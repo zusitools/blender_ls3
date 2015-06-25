@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+  <Info DateiTyp="Landschaft" MinVersion="A.1" Version="A.1"/>
+  <Landschaft>
+    <Ankerpunkt>
+      <p X="1.0" Y="2.0" Z="3.0"/>
+    </Ankerpunkt>
+  </Landschaft>
+</Zusi>
