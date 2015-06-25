@@ -1490,6 +1490,7 @@ class ACTION_OT_del_zusi_animation_name(bpy.types.Operator):
     bl_idname = 'action.del_zusi_animation_name'
     bl_label = _("Remove animation name")
     bl_description = _("Remove the selected animation name from the list of animations this action belongs to")
+    bl_options = {'INTERNAL'}
 
     @classmethod
     def poll(self, context):
@@ -1502,6 +1503,20 @@ class ACTION_OT_del_zusi_animation_name(bpy.types.Operator):
         if action.zusi_animation_names_index >= 0 and len(animation_names) > 0:
             animation_names.remove(action.zusi_animation_names_index)
             action.zusi_animation_names_index = max(action.zusi_animation_names_index - 1, 0)
+        return{'FINISHED'}
+
+class ACTION_OT_set_interpolation_linear(bpy.types.Operator):
+    bl_idname = 'action.set_interpolation_linear'
+    bl_label = _("Set interpolation to linear")
+    bl_description = _("Set the interpolation mode of all animation curves of this action to 'Linear'")
+    bl_options = {'INTERNAL', 'UNDO'}
+
+    action_name = bpy.props.StringProperty(options = {'HIDDEN'})
+
+    def execute(self, context):
+        for fcurve in bpy.data.actions[self.action_name].fcurves:
+            for keyframe in fcurve.keyframe_points:
+                keyframe.interpolation = 'LINEAR'
         return{'FINISHED'}
 
 class SCENE_PT_zusi_animations(bpy.types.Panel):
@@ -1546,6 +1561,8 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
                         "action.add_zusi_animation_name", "action.del_zusi_animation_name", rows = 3)
                 if len(action.zusi_animation_names):
                     box.row().prop(action.zusi_animation_names[action.zusi_animation_names_index], "name")
+
+            layout.operator("action.set_interpolation_linear").action_name = action.name
 
 # ---
 # Author info UI

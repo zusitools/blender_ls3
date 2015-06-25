@@ -1140,6 +1140,17 @@ class TestLs3Export(unittest.TestCase):
     verknuepfte_node = linkedfile.find("./Landschaft/Verknuepfte")
     self.assertEqual("2", verknuepfte_node.attrib["BoundingR"])
 
+  def test_set_interpolation_linear(self):
+    self.open("animation_set_interpolation_linear")
+    for fcurve in bpy.data.actions["CubeAction"].fcurves:
+        for keyframe in fcurve.keyframe_points:
+            self.assertEqual('BEZIER', keyframe.interpolation)
+
+    self.assertEqual({'FINISHED'}, bpy.ops.action.set_interpolation_linear(action_name = "CubeAction"))
+    for fcurve in bpy.data.actions["CubeAction"].fcurves:
+        for keyframe in fcurve.keyframe_points:
+            self.assertEqual('LINEAR', keyframe.interpolation)
+
   # ---
   # Anchor point tests
   # ---
