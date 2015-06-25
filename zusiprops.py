@@ -855,11 +855,13 @@ bpy.types.Object.zusi_link_visible_from = bpy.props.FloatProperty(
 bpy.types.Object.zusi_link_visible_to = bpy.props.FloatProperty(
     name = _("Visible to [m]"),
     min = 0.0,
+    default = 3000.0,
 )
 
 bpy.types.Object.zusi_link_preload_factor = bpy.props.FloatProperty(
     name = _("Preload from [Factor]"),
     min = 0.0,
+    default = 1.0,
 )
 
 bpy.types.Object.zusi_link_radius = bpy.props.IntProperty(
@@ -891,7 +893,7 @@ bpy.types.Object.zusi_link_is_billboard = bpy.props.BoolProperty(
 
 bpy.types.Object.zusi_link_is_readonly = bpy.props.BoolProperty(
     name = _("Read only"),
-    default = False,
+    default = True,
 )
 
 
