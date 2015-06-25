@@ -1158,9 +1158,8 @@ class TestLs3Export(unittest.TestCase):
 
     a1files = a1.findall("./Datei")
     self.assertEqual(2, len(a1files))
-    # TODO: Test that the path is relative to the Zusi data directory
-    self.assertEqual("file.ls3", a1files[0].attrib["Dateiname"][-len("file.ls3"):])
-    self.assertEqual("folder", a1files[1].attrib["Dateiname"][-len("folder"):])
+    self.assertEqual("file.ls3", a1files[0].attrib["Dateiname"])
+    self.assertEqual("folder", a1files[1].attrib["Dateiname"])
 
     a2 = anchor_point_nodes[1]
     self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
