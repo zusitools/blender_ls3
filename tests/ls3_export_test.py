@@ -1170,6 +1170,15 @@ class TestLs3Export(unittest.TestCase):
     a2files = a2.findall("./Datei")
     self.assertEqual(0, len(a2files))
 
+  def test_anchor_points_variants(self):
+    self.open("anchor_points_variants")
+
+    for variants, expected in [([0], ["A", "AB"]), ([1], ["B", "AB"]),
+        ([0, 1], ["A", "B", "AB"]), ([], ["A", "B", "AB", "None"])]:
+      root = self.export_and_parse({"variants": variants})
+      anchor_points = set([a.attrib["Beschreibung"] for a in root.findall("./Landschaft/Ankerpunkt")])
+      self.assertEqual(set(expected), anchor_points)
+
   # ---
   # Linked files tests
   # ---

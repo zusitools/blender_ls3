@@ -359,7 +359,7 @@ class Ls3Exporter:
     def write_anchor_points(self, landschaftNode):
         anchor_points = {}
         for ob in self.config.context.scene.objects:
-            if ob.zusi_is_anchor_point:
+            if ob.zusi_is_anchor_point and zusicommon.is_object_visible(ob, self.config.variantIDs):
                 ankerpunktNode = self.xmldoc.createElement("Ankerpunkt")
                 anchor_points[ob.name] = ankerpunktNode
 
