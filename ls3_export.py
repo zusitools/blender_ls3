@@ -20,7 +20,8 @@
 import bpy
 import os
 import xml.dom.minidom as dom
-from . import zusicommon, zusiprops
+from . import zusiprops
+from .zusicommon import zusicommon
 try:
     from . import zusiconfig
 except:

@@ -22,7 +22,7 @@ import bmesh
 import struct
 import mathutils
 import xml.dom.minidom as dom
-from . import zusicommon
+from .zusicommon import zusicommon
 from math import pi, radians
 
 IMPORT_LINKED_NO = "0"

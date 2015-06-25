@@ -20,7 +20,8 @@
 import bpy
 import mathutils
 import os
-from . import zusicommon, i18n
+from . import i18n
+from .zusicommon import zusicommon
 from math import pi
 
 _ = i18n.language.gettext

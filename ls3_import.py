@@ -24,7 +24,8 @@ import bpy
 import struct
 import mathutils
 import xml.dom.minidom as dom
-from . import zusicommon, ls_import
+from . import ls_import
+from .zusicommon import zusicommon
 from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list

@@ -52,6 +52,7 @@ import bpy
 import os
 from bpy.props import *
 from . import zusiprops, zusicommon
+from .zusicommon import zusicommon
 try:
     from . import zusiconfig
 except:
