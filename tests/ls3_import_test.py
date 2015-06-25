@@ -295,7 +295,7 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(r'zusi2:Loks\Dieselloks\Gleisbagger\Bagger_gelb.ls', ob.zusi_link_file_name)
 
     self.assertVectorEqual(Vector((6170.986, -271.785, -20.488)), ob.location)
-    self.assertVectorEqual(Vector((radians(10), radians(-20), radians(-30))), ob.rotation_euler)
+    self.assertVectorEqual(Vector((radians(10), radians(20), radians(-30))), ob.rotation_euler)
     self.assertEqual('XYZ', ob.rotation_mode)
 
   def test_ls_import_linked_file_nesting(self):

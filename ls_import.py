@@ -43,6 +43,8 @@ def skipUntil(fp, terminator):
 def read3floats(fp):
     return (float(fp.readline().replace(",", ".")), float(fp.readline().replace(",", ".")), float(fp.readline().replace(",", ".")))
 
+zusi_rot_to_blender = lambda rot: (rot[0], -rot[1], rot[2])
+
 class LsImporterSettings:
     def __init__(self,
                 context,
@@ -179,7 +181,7 @@ class LsImporter:
                             directory,
                             self.config.loadLinkedMode,
                             loc,
-                            rot,
+                            zusi_rot_to_blender(rot),
                             self.currentobject,
                             parent_is_ls3 = False
                         )
@@ -191,7 +193,7 @@ class LsImporter:
                 elif self.config.loadLinkedMode == IMPORT_LINKED_AS_EMPTYS:
                     empty = bpy.data.objects.new("{}_{}".format(self.config.fileName, filename), None)
                     empty.location = loc
-                    empty.rotation_euler = rot
+                    empty.rotation_euler = zusi_rot_to_blender(rot)
                     empty.parent = self.currentobject
 
                     empty.zusi_is_linked_file = True
