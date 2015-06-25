@@ -60,13 +60,11 @@ if bpy.app.version <= (2, 65, 0):
     class CheckBoxList():
         pass
 else:
-    class CheckBoxList(bpy.types.UIList):
+    class CheckBoxList():
         def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
             icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
             layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
             layout.label(self.get_item_text(item))
-
-    bpy.utils.register_class(CheckBoxList)
 
 # Defines a variant in a scene with an ID (which should not be changed) and a variant name
 # (Name is defined in PropertyGroup)
@@ -100,7 +98,8 @@ class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariantVisibility)
 
-class ZusiFileVariantVisibilityList(CheckBoxList):
+class ZusiFileVariantVisibilityList(CheckBoxList, bpy.types.UIList):
+
     def get_property_name(self):
         return "visible"
     
