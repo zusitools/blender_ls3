@@ -99,10 +99,10 @@ class TestLs3Import(unittest.TestCase):
     mat = bpy.data.objects["nightcolor1.ls3.0"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
 
-    self.assertEqual(True, mat.zusi_use_emit)
+    self.assertTrue(mat.zusi_use_emit)
     self.assertColorEqual((0.2, 0.2, 0.2), mat.zusi_emit_color)
 
-    self.assertEqual(False, mat.zusi_allow_overexposure)
+    self.assertFalse(mat.zusi_allow_overexposure)
 
   def test_overexposure(self):
     self.ls3_import("overexposure.ls3")
@@ -110,10 +110,10 @@ class TestLs3Import(unittest.TestCase):
     mat = bpy.data.objects["overexposure.ls3.0"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
 
-    self.assertEqual(True, mat.zusi_use_emit)
+    self.assertTrue(mat.zusi_use_emit)
     self.assertColorEqual((1, 1, 1), mat.zusi_emit_color)
 
-    self.assertEqual(True, mat.zusi_allow_overexposure)
+    self.assertTrue(mat.zusi_allow_overexposure)
     self.assertColorEqual((1, 1, 1), mat.zusi_overexposure_addition)
 
   def test_ambient_color(self):
@@ -121,26 +121,26 @@ class TestLs3Import(unittest.TestCase):
     gray = (128.0/255, 128.0/255, 128.0/255)
 
     mat = bpy.data.objects["ambientcolor.ls3.0"].data.materials[0]
-    self.assertEqual(False, mat.zusi_use_emit)
-    self.assertEqual(True, mat.zusi_use_ambient)
+    self.assertFalse(mat.zusi_use_emit)
+    self.assertTrue(mat.zusi_use_ambient)
     self.assertColorEqual(gray, mat.zusi_ambient_color)
-    self.assertEqual(False, mat.zusi_allow_overexposure)
+    self.assertFalse(mat.zusi_allow_overexposure)
 
     mat = bpy.data.objects["ambientcolor.ls3.1"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
-    self.assertEqual(True, mat.zusi_use_emit)
+    self.assertTrue(mat.zusi_use_emit)
     self.assertColorEqual((0, 0, 0), mat.zusi_emit_color)
-    self.assertEqual(True, mat.zusi_use_ambient)
+    self.assertTrue(mat.zusi_use_ambient)
     self.assertColorEqual((0, 0, 0), mat.zusi_ambient_color)
-    self.assertEqual(False, mat.zusi_allow_overexposure)
+    self.assertFalse(mat.zusi_allow_overexposure)
 
     mat = bpy.data.objects["ambientcolor.ls3.2"].data.materials[0]
     self.assertColorEqual((1, 1, 1), mat.diffuse_color)
-    self.assertEqual(True, mat.zusi_use_emit)
+    self.assertTrue(mat.zusi_use_emit)
     self.assertColorEqual(gray, mat.zusi_emit_color)
-    self.assertEqual(True, mat.zusi_use_ambient)
+    self.assertTrue(mat.zusi_use_ambient)
     self.assertColorEqual((1, 1, 1), mat.zusi_ambient_color)
-    self.assertEqual(True, mat.zusi_allow_overexposure)
+    self.assertTrue(mat.zusi_allow_overexposure)
     self.assertColorEqual((0, 0, 0), mat.zusi_overexposure_addition)
     self.assertColorEqual(gray, mat.zusi_overexposure_addition_ambient)
 
@@ -169,7 +169,7 @@ class TestLs3Import(unittest.TestCase):
 
     self.assertEqual('EMPTY', a1.type)
     self.assertEqual('ARROWS', a1.empty_draw_type)
-    self.assertEqual(True, a1.zusi_is_anchor_point)
+    self.assertTrue(a1.zusi_is_anchor_point)
     self.assertEqual("1", a1.zusi_anchor_point_category)
     self.assertEqual("2", a1.zusi_anchor_point_type)
     self.assertEqual("Anchor point 1 description", a1.zusi_anchor_point_description)
@@ -182,7 +182,7 @@ class TestLs3Import(unittest.TestCase):
 
     self.assertEqual('EMPTY', a2.type)
     self.assertEqual('ARROWS', a2.empty_draw_type)
-    self.assertEqual(True, a2.zusi_is_anchor_point)
+    self.assertTrue(a2.zusi_is_anchor_point)
     self.assertEqual("0", a2.zusi_anchor_point_category)
     self.assertEqual("0", a2.zusi_anchor_point_type)
     self.assertEqual("Anchor point 2 description", a2.zusi_anchor_point_description)
@@ -248,7 +248,7 @@ class TestLs3Import(unittest.TestCase):
 
     ob = bpy.data.objects["linked_file.ls3_Blindlok.ls3.001"]
     self.assertEqual('EMPTY', ob.type)
-    self.assertEqual(True, ob.zusi_is_linked_file)
+    self.assertTrue(ob.zusi_is_linked_file)
     self.assertEqual(r'zusi3:RollingStock\Diverse\Blindlok\Blindlok.ls3', ob.zusi_link_file_name)
     self.assertEqual("TestGroup", ob.zusi_link_group)
     self.assertEqual(1.5, ob.zusi_link_visible_from)
@@ -257,14 +257,14 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(15, ob.zusi_link_radius)
     self.assertEqual(0.5, ob.zusi_link_forced_brightness)
     self.assertEqual(5, ob.zusi_link_lod)
-    self.assertEqual(True, ob.zusi_link_is_tile)
-    self.assertEqual(False, ob.zusi_link_is_detail_tile)
-    self.assertEqual(True, ob.zusi_link_is_billboard)
-    self.assertEqual(False, ob.zusi_link_is_readonly)
+    self.assertTrue(ob.zusi_link_is_tile)
+    self.assertFalse(ob.zusi_link_is_detail_tile)
+    self.assertTrue(ob.zusi_link_is_billboard)
+    self.assertFalse(ob.zusi_link_is_readonly)
 
     ob = bpy.data.objects["linked_file.ls3_101_vr.lod.ls3.002"]
     self.assertEqual('EMPTY', ob.type)
-    self.assertEqual(True, ob.zusi_is_linked_file)
+    self.assertTrue(ob.zusi_is_linked_file)
     self.assertEqual(r'zusi3:RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3', ob.zusi_link_file_name)
     self.assertEqual("", ob.zusi_link_group)
     self.assertEqual(0, ob.zusi_link_visible_from)
@@ -273,10 +273,10 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(0, ob.zusi_link_radius)
     self.assertEqual(0, ob.zusi_link_forced_brightness)
     self.assertEqual(10, ob.zusi_link_lod)
-    self.assertEqual(False, ob.zusi_link_is_tile)
-    self.assertEqual(True, ob.zusi_link_is_detail_tile)
-    self.assertEqual(False, ob.zusi_link_is_billboard)
-    self.assertEqual(True, ob.zusi_link_is_readonly)
+    self.assertFalse(ob.zusi_link_is_tile)
+    self.assertTrue(ob.zusi_link_is_detail_tile)
+    self.assertFalse(ob.zusi_link_is_billboard)
+    self.assertTrue(ob.zusi_link_is_readonly)
 
     self.assertVectorEqual(Vector((2, 1, -3)), ob.location)
     self.assertVectorEqual(Vector((radians(10), radians(20), radians(-30))), ob.rotation_euler)
@@ -290,7 +290,7 @@ class TestLs3Import(unittest.TestCase):
 
     self.ls3_import("linked_file_zusi2.ls3")
     ob = bpy.data.objects["linked_file_zusi2.ls3_AVG_803_Front.ls.001"]
-    self.assertEqual(True, ob.zusi_is_linked_file)
+    self.assertTrue(ob.zusi_is_linked_file)
     self.assertEqual(r'zusi2:Loks\Elektrotriebwagen\450\AVG_803_Front.ls', ob.zusi_link_file_name)
 
   # ---
