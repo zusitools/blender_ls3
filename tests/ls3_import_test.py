@@ -285,7 +285,7 @@ class TestLs3Import(unittest.TestCase):
 
   def test_import_zusi2_linked_file(self):
     # make sure the file exists (in the mock file system)
-    with open(os.path.join(*[ZUSI2_DATAPATH, "Loks", "Elektrotriebwagen", "450", "AVG_803_Front.ls"]), 'w'):
+    with open(os.path.join(ZUSI2_DATAPATH, "Loks", "Elektrotriebwagen", "450", "AVG_803_Front.ls"), 'w'):
       pass
 
     self.ls3_import("linked_file_zusi2.ls3")
@@ -312,7 +312,7 @@ class TestLs3Import(unittest.TestCase):
   def test_ls_import_linked_file_nesting(self):
     # make sure the linked files exist (in the mock file system)
     for filename in ["linked_file_nesting_2.ls", "empty.ls"]:
-      with open(os.path.join(*[ZUSI2_DATAPATH, filename]), 'w') as f:
+      with open(os.path.join(ZUSI2_DATAPATH, filename), 'w') as f:
         with open(os.path.join("ls", filename), 'r') as f2:
           f.write(f2.read())
 

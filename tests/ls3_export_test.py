@@ -484,24 +484,24 @@ class TestLs3Export(unittest.TestCase):
 
         # Get properties
         self.assertEqual(r"zusi2:Loks\Dieselloks\203\203.fst", files[0].name)
-        self.assertEqual(os.path.join(*[ZUSI2_DATAPATH, "Loks", "Dieselloks", "203", "203.fst"]), files[0].name_realpath)
+        self.assertEqual(os.path.join(ZUSI2_DATAPATH, "Loks", "Dieselloks", "203", "203.fst"), files[0].name_realpath)
 
         self.assertEqual(r"zusi3:Routes\Deutschland\32U_0004_0057\000442_005692_Freienohl\Freienohl_1985.ls3",
             files[1].name)
-        self.assertEqual(os.path.join(*[ZUSI3_DATAPATH, "Routes", "Deutschland", "32U_0004_0057", "000442_005692_Freienohl", "Freienohl_1985.ls3"]),
+        self.assertEqual(os.path.join(ZUSI3_DATAPATH, "Routes", "Deutschland", "32U_0004_0057", "000442_005692_Freienohl", "Freienohl_1985.ls3"),
             files[1].name_realpath)
 
         self.assertEqual("/tmp/foo.bar", files[2].name)
         self.assertEqual("/tmp/foo.bar", files[2].name_realpath)
 
         # Set properties
-        files[0].name_realpath = os.path.join(*[ZUSI2_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg"])
+        files[0].name_realpath = os.path.join(ZUSI2_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg")
         self.assertEqual(r"zusi2:Loks\Elektroloks\101\101.fzg", files[0].name)
 
-        files[1].name_realpath = os.path.join(*[ZUSI3_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg"])
+        files[1].name_realpath = os.path.join(ZUSI3_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg")
         self.assertEqual(r"zusi3:Loks\Elektroloks\101\101.fzg", files[1].name)
 
-        files[2].name_realpath = os.path.join(*[NON_ZUSI_PATH, "KeineDaten", "Irgendwas.fzg"])
+        files[2].name_realpath = os.path.join(NON_ZUSI_PATH, "KeineDaten", "Irgendwas.fzg")
         self.assertEqual(files[2].name_realpath, files[2].name)
 
         # Export
