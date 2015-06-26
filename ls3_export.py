@@ -986,7 +986,7 @@ class Ls3Exporter:
         if sce.zusi_object_id != bpy.types.Scene.zusi_object_id[1]["default"]:
             infoNode.setAttribute("ObjektID", sce.zusi_object_id)
         if sce.zusi_license != bpy.types.Scene.zusi_license[1]["default"]:
-            infoNode.setAttribute("Lizenz", sce.zusi_license)
+            infoNode.setAttribute("Lizenz", sce.zusi_license) # Deprecated
         if sce.zusi_description != bpy.types.Scene.zusi_description[1]["default"]:
             infoNode.setAttribute("Beschreibung", sce.zusi_description)
         # TODO: Einsatz ab/bis
@@ -1005,6 +1005,8 @@ class Ls3Exporter:
                 autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
             if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
                 autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
+            if author.license != zusiprops.ZusiAuthor.license[1]["default"]:
+                autorEintragNode.setAttribute("AutorLizenz", author.license)
 
             infoNode.appendChild(autorEintragNode)
 

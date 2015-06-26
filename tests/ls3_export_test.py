@@ -269,6 +269,14 @@ class TestLs3Export(unittest.TestCase):
       self.assertEqual(content[idx - len(indent):idx + len("<Face")], indent + "<Face")
       idx = content.find("<Face", idx + 1)
 
+  def test_author_info_licenses(self):
+    self.open("author_info_licenses")
+    root = self.export_and_parse()
+
+    licenses = set([(a.attrib["AutorName"], a.attrib["AutorLizenz"] if "AutorLizenz" in a.attrib else "0")
+        for a in root.findall("./Info/AutorEintrag")])
+    self.assertEqual(set([("Author 1", "0"), ("Author 2", "5")]), licenses)
+
   # ---
   # Mesh and texture export tests
   # ---
