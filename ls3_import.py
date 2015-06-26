@@ -355,14 +355,40 @@ class Ls3Importer:
     #
     def visitAutorEintragNode(self, node):
         if self.config.loadAuthorInformation:
-            author = bpy.context.scene.zusi_authors.add()
+            author = None
+            for a in bpy.context.scene.zusi_authors:
+                if a.id != 0 and node.getAttribute("AutorID") != "" and int(node.getAttribute("AutorID")) != a.id:
+                    continue
+                if a.name != "" and node.getAttribute("AutorName") != a.name:
+                    continue
+                if a.email != "" and node.getAttribute("AutorEmail") != a.email:
+                    continue
+                if a.remarks != "" and node.getAttribute("AutorBemerkung") != a.remarks:
+                    continue
+                if node.getAttribute("AutorLizenz") != "" and a.license != node.getAttribute("AutorLizenz"):
+                    continue
+
+                author = a
+                break
+
+            if author is None:
+                author = bpy.context.scene.zusi_authors.add()
+
             if node.getAttribute("AutorID") != "":
                 author.id = int(node.getAttribute("AutorID"))
             if node.getAttribute("AutorAufwand") != "":
-                author.effort = float(node.getAttribute("AutorAufwand"))
-            author.name = node.getAttribute("AutorName")
-            author.email = node.getAttribute("AutorEmail")
-            author.remarks = node.getAttribute("AutorBeschreibung")
+                author.effort += float(node.getAttribute("AutorAufwand"))
+            if node.getAttribute("AutorName") != "":
+                author.name = node.getAttribute("AutorName")
+            if node.getAttribute("AutorEmail") != "":
+                author.email = node.getAttribute("AutorEmail")
+            if node.getAttribute("AutorBeschreibung") != "":
+                author.remarks = node.getAttribute("AutorBeschreibung")
+            license = node.getAttribute("AutorLizenz")
+            try:
+                author.license = node.getAttribute("AutorLizenz")
+            except TypeError:
+                author.license = "0"
 
     #
     # Visits a <Verknuepfte> node.

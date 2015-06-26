@@ -110,6 +110,15 @@ class ZusiFileVariantVisibilityList(CheckBoxList, bpy.types.UIList):
     def get_item_text(self, item):
         return str(item.name)
 
+licenses = [
+    ("0", _("Default license (add-on pool, revenue goes to author)"), ""),
+    ("1", _("Add-on pool, revenue goes to the add-on pool"), ""),
+    ("2", _("Add-on pool, revenue goes to Carsten Hölscher Software"), ""),
+    ("3", _("Add-on pool, no effort points, released for all types of use"), ""),
+    ("4", _("Private file, not intended to be distributed"), ""),
+    ("5", _("Special commercial usage"), ""),
+]
+
 # Contains information about a file's author
 class ZusiAuthor(bpy.types.PropertyGroup):
     id = bpy.props.IntProperty(
@@ -142,6 +151,14 @@ class ZusiAuthor(bpy.types.PropertyGroup):
         description = _("Remarks about the author"),
         default = ""
     )
+
+    license = bpy.props.EnumProperty(
+        name = _("License"),
+        description = _("The license under which the author has published this object"),
+        items = licenses,
+        default = "0"
+    )
+
 
 bpy.utils.register_class(ZusiAuthor)
 
@@ -527,15 +544,6 @@ texture_presets = [
     ("8", _("Semi-transparency for leaf-like structures"), ""),
     ("9", _("Overlaying window, dimming off at day"), ""),
     ("10", _("Overlaying window, switched off at day"), ""),
-]
-
-licenses = [
-    ("0", _("Default license (add-on pool, revenue goes to author)"), ""),
-    ("1", _("Add-on pool, revenue goes to the add-on pool"), ""),
-    ("2", _("Add-on pool, revenue goes to Carsten Hölscher Software"), ""),
-    ("3", _("Add-on pool, no effort points, released for all types of use"), ""),
-    ("4", _("Private file, not intended to be distributed"), ""),
-    ("5", _("Special commercial usage"), ""),
 ]
 
 variant_visibility_modes = [
@@ -925,6 +933,7 @@ bpy.types.Scene.zusi_object_id = bpy.props.IntProperty(
     min = 0
 )
 
+# DEPRECATED. Licenses are now specified per author.
 bpy.types.Scene.zusi_license = bpy.props.EnumProperty(
     name = _("License"),
     description = _("The license under which this object is published"),
@@ -1354,7 +1363,6 @@ class SCENE_PT_zusi_properties(bpy.types.Panel):
         sce = context.scene
 
         layout.row().prop(sce, "zusi_object_id")
-        layout.row().prop(sce, "zusi_license")
         layout.row().prop(sce, "zusi_description")
 
 # ---
@@ -1637,4 +1645,5 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
             row.prop(entry, "id")
             layout.row().prop(entry, "email")
             layout.row().prop(entry, "effort")
+            layout.row().prop(entry, "license")
             layout.row().prop(entry, "remarks")

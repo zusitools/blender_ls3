@@ -81,6 +81,30 @@ class TestLs3Import(unittest.TestCase):
       self.assertAlmostEqual(start + keyframes[idx][0] * (end - start), point.co.x, places = 5)
       self.assertAlmostEqual(keyframes[idx][1], point.co.y, places = 5)
 
+  # ---
+  # Tests start here
+  # ---
+
+  def test_import_author_info(self):
+    self.ls3_import("author_info_1.ls3")
+    self.ls3_import("author_info_2.ls3")
+
+    expected = set([
+        # name, id, aufwand, lizenz, email, beschreibung
+        ("Otto OhneID", 0, 6.0, "0", "", ""),
+        ("Otto OhneID", 0, 0.0, "1", "", ""),
+        ("Zacharias Zweiundvierzig", 42, 0.0, "0", "zach@example.com", ""),
+        ("Zacharias Zweiundvierzig", 42, 0.0, "0", "", "Kommentar"),
+        ("Zacharias Zweiundvierzig", 42, 0.0, "2", "zach@example.com", "Kommentar 2"),
+    ])
+
+    actual = set([
+        (a.name, a.id, a.effort, a.license, a.email, a.remarks)
+        for a in bpy.data.scenes[0].zusi_authors
+    ])
+
+    self.assertEqual(expected, actual)
+
   @unittest.skipUnless(bpy.app.version >= (2, 74, 0), "Normal import available in Blender >= 2.74")
   def test_import_normals(self):
     self.ls3_import("custom_normals.ls3")

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1">
+<AutorEintrag AutorName="Otto OhneID" AutorAufwand="2"/>
+<AutorEintrag AutorID="42" AutorName="Zacharias Zweiundvierzig" />
+<AutorEintrag AutorID="42" AutorName="Zacharias Zweiundvierzig" AutorBeschreibung="Kommentar"/>
+</Info>
+<Landschaft/>
+</Zusi>
