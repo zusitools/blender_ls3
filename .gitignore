@@ -1,5 +1,9 @@
 batchexport_settings.py
 zusiconfig.py
+zusiconfig.py.__backup
+release/*
+TODO
+callstats.txt
 
 *.py[co]
 
