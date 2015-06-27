@@ -544,6 +544,7 @@ texture_presets = [
     ("8", _("Semi-transparency for leaf-like structures"), ""),
     ("9", _("Overlaying window, dimming off at day"), ""),
     ("10", _("Overlaying window, switched off at day"), ""),
+    ("11", _("Wall of fog"), ""),
 ]
 
 variant_visibility_modes = [
