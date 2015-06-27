@@ -19,7 +19,7 @@ bl_info = {
     'name': 'Zusi Scenery Format (.ls3)',
     'author': 'Johannes',
     'version': (0, 1, 0),
-    'blender': (2, 6, 3),
+    'blender': (2, 66, 0),
     'location': 'File > Import -> Zusi Scenery (.ls3) / File -> Export > Zusi Scenery (.ls3)',
     'description': 'Import and export files from/to the Zusi Scenery format (.ls3)',
     'category': 'Import-Export',
@@ -232,11 +232,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         layout.label(_("Import LODs (only embedded linked files)"))
         row = layout.row()
         row.enabled = self.properties.loadLinkedMode == "2"
-        
-        if bpy.app.version <= (2, 65, 0):
-            row.template_list(self, "lod_import_setting", self, "lod_import_setting_index", prop_list = "template_list_controls")
-        else:
-            row.template_list("ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
+        row.template_list("ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
 
     def execute(self, context):
         from . import ls3_import
@@ -367,11 +363,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
         if len(context.scene.zusi_variants) > 0:
             num_rows = min(5, len(self.properties.variant_export_setting))
-
-            if bpy.app.version <= (2, 65, 0):
-                layout.template_list(self, "variant_export_setting", self, "variant_export_setting_index", prop_list = "template_list_controls", rows = num_rows)
-            else:
-                layout.template_list("ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
+            layout.template_list("ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
         else:
             box = layout.box()
             box.label(_("Variants can be defined in the Scene settings."))
@@ -551,10 +543,7 @@ class VIEW_OT_show_variants(bpy.types.Operator):
         layout.label(_("Variants (leave empty to show all)"))
 
         if len(context.scene.zusi_variants) > 0:
-            if bpy.app.version <= (2, 65, 0):
-                layout.template_list(self, "variant_visibility_setting", self, "variant_visibility_setting_index", prop_list = "template_list_controls")
-            else:
-                layout.template_list("ZusiFileVariantVisibilityList", "", self, "variant_visibility_setting", self, "variant_visibility_setting_index")
+            layout.template_list("ZusiFileVariantVisibilityList", "", self, "variant_visibility_setting", self, "variant_visibility_setting_index")
         else:
             box = layout.box()
             box.label(_("Variants can be defined in the Scene settings."))

@@ -55,17 +55,11 @@ def blender_path_to_zusi_file_path(blender_path):
         return "zusi2:" + os.path.relpath(path, zusicommon.get_zusi2_data_path()).replace(os.path.sep, '\\')
     return blender_path
 
-# Defines a list with check boxes. In Blender <= 2.65 bpy.types.UIList does not exist
-# and we do not need CheckBoxList there anyway, so define it as empty
-if bpy.app.version <= (2, 65, 0):
-    class CheckBoxList():
-        pass
-else:
-    class CheckBoxList():
-        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-            icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
-            layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
-            layout.label(self.get_item_text(item))
+class CheckBoxList():
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
+        layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
+        layout.label(self.get_item_text(item))
 
 # Defines a variant in a scene with an ID (which should not be changed) and a variant name
 # (Name is defined in PropertyGroup)
@@ -85,10 +79,9 @@ class ZusiAnimationName(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAnimationName)
 
-if bpy.app.version > (2, 65, 0):
-    class ZusiFileVariantList(bpy.types.UIList):
-        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-            layout.label(item.name)
+class ZusiFileVariantList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.label(item.name)
 
 # Defines a visibility of an object/material/texture/whatever in a certain variant
 class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
@@ -162,10 +155,9 @@ class ZusiAuthor(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAuthor)
 
-if bpy.app.version > (2, 65, 0):
-    class ZusiAuthorList(bpy.types.UIList):
-        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-            layout.label(item.name)
+class ZusiAuthorList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.label(item.name)
 
 class ZusiAnchorPointFile(bpy.types.PropertyGroup):
     def set_name(self, value):
@@ -180,13 +172,12 @@ class ZusiAnchorPointFile(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAnchorPointFile)
 
-if bpy.app.version > (2, 65, 0):
-    class ZusiAnchorPointFileList(bpy.types.UIList):
-        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-            if os.path.exists(item.name_realpath):
-                layout.label(zusi_file_path_to_display_path(item.name), icon = 'FILE_FOLDER' if os.path.isdir(item.name_realpath) else 'FILE')
-            else:
-                layout.label(item.name_realpath, icon = 'ERROR')
+class ZusiAnchorPointFileList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        if os.path.exists(item.name_realpath):
+            layout.label(zusi_file_path_to_display_path(item.name), icon = 'FILE_FOLDER' if os.path.isdir(item.name_realpath) else 'FILE')
+        else:
+            layout.label(item.name_realpath, icon = 'ERROR')
 
 # Custom texture preset properties
 
@@ -479,10 +470,7 @@ def set_zusi_animation_duration(self, duration):
 # Unified wrapper for template lists both in Blender <= 2.65 and above.
 def template_list(layout, listtype_name, list_id, dataptr, propname, active_dataptr, active_propname,
         add_operator_name = "", remove_operator_name = "", rows = 5):
-    if bpy.app.version <= (2, 65, 0):
-        layout.template_list(dataptr, propname, dataptr, active_propname, rows = rows, prop_list = "template_list_controls")
-    else:
-        layout.template_list(listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = rows)
+    layout.template_list(listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = rows)
 
     if len(add_operator_name) or len(remove_operator_name):
         col = layout.column(align = True)
@@ -968,32 +956,25 @@ bpy.types.Action.zusi_animation_speed = bpy.props.FloatProperty(
     min = 0.0
 )
 
-if bpy.app.version <= (2, 65, 0):
-    bpy.types.Action.zusi_animation_wheel_diameter = property(
-        get_zusi_animation_wheel_diameter, set_zusi_animation_wheel_diameter)
+bpy.types.Action.zusi_animation_wheel_diameter = bpy.props.FloatProperty(
+    name = _("Wheel diameter"),
+    description = _("The animation speed converted into a wheel diameter for wheel animations"),
+    subtype = "DISTANCE",
+    default = 0.0,
+    min = 0.0,
+    get = get_zusi_animation_wheel_diameter,
+    set = set_zusi_animation_wheel_diameter
+)
 
-    bpy.types.Action.zusi_animation_duration = property(
-        get_zusi_animation_duration, set_zusi_animation_duration)
-else:
-    bpy.types.Action.zusi_animation_wheel_diameter = bpy.props.FloatProperty(
-        name = _("Wheel diameter"),
-        description = _("The animation speed converted into a wheel diameter for wheel animations"),
-        subtype = "DISTANCE",
-        default = 0.0,
-        min = 0.0,
-        get = get_zusi_animation_wheel_diameter,
-        set = set_zusi_animation_wheel_diameter
-    )
-
-    bpy.types.Action.zusi_animation_duration = bpy.props.FloatProperty(
-        name = _("Animation duration"),
-        description = _("The animation speed converted into an animation duration (in seconds) for door animations"),
-        subtype = "TIME",
-        default = 0.0,
-        min = 0.0,
-        get = get_zusi_animation_duration,
-        set = set_zusi_animation_duration
-    )
+bpy.types.Action.zusi_animation_duration = bpy.props.FloatProperty(
+    name = _("Animation duration"),
+    description = _("The animation speed converted into an animation duration (in seconds) for door animations"),
+    subtype = "TIME",
+    default = 0.0,
+    min = 0.0,
+    get = get_zusi_animation_duration,
+    set = set_zusi_animation_duration
+)
 
 bpy.types.Action.zusi_animation_names = bpy.props.CollectionProperty(
     name = _("Animation names"),
@@ -1445,54 +1426,6 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
 # Animation info UI
 # ---
 
-class ACTION_OT_set_zusi_animation_wheel_diameter(bpy.types.Operator):
-    bl_idname = 'action.set_zusi_animation_wheel_diameter'
-    bl_label = _("Set wheel diameter")
-    bl_description = _("Set the animation speed of a wheel animation action to conform to the specified wheel diameter")
-    bl_options = {'INTERNAL'}
-
-    action_name = bpy.props.StringProperty(options = {'HIDDEN'})
-
-    wheel_diameter = bpy.props.FloatProperty(
-        name = _("Wheel diameter"),
-        description = _("Wheel diameter"),
-        subtype = 'DISTANCE',
-        min = 0.0,
-    )
-
-    def invoke(self, context, event):
-        self.properties.wheel_diameter = bpy.data.actions[self.properties.action_name].zusi_animation_wheel_diameter
-        context.window_manager.invoke_props_dialog(self)
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
-        bpy.data.actions[self.properties.action_name].zusi_animation_wheel_diameter = self.properties.wheel_diameter
-        return {'FINISHED'}
-
-class ACTION_OT_set_zusi_animation_duration(bpy.types.Operator):
-    bl_idname = 'action.set_zusi_animation_duration'
-    bl_label = _("Set duration")
-    bl_description = _("Set the animation speed of a door animation action to conform to the specified animation duration")
-    bl_options = {'INTERNAL'}
-
-    action_name = bpy.props.StringProperty(options = {'HIDDEN'})
-
-    duration = bpy.props.FloatProperty(
-        name = _("Duration [s]"),
-        description = _("Duration in seconds"),
-        subtype = 'TIME',
-        min = 0.0,
-    )
-
-    def invoke(self, context, event):
-        self.properties.duration = bpy.data.actions[self.properties.action_name].zusi_animation_duration
-        context.window_manager.invoke_props_dialog(self)
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
-        bpy.data.actions[self.properties.action_name].zusi_animation_duration = self.properties.duration
-        return {'FINISHED'}
-
 class ACTION_OT_add_zusi_animation_name(bpy.types.Operator):
     bl_idname = 'action.add_zusi_animation_name'
     bl_label = _("Add animation name")
@@ -1559,19 +1492,9 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             row.active = ani_speed_enabled
             row.prop(action, "zusi_animation_speed")
             if action.zusi_animation_type in ["2", "3", "4", "5"]:
-                if bpy.app.version <= (2, 65, 0):
-                    row = layout.row()
-                    row.label(_("Wheel diameter: %.2f m") % action.zusi_animation_wheel_diameter)
-                    row.operator("action.set_zusi_animation_wheel_diameter", text = _("Set")).action_name = action.name
-                else:
-                    layout.prop(action, "zusi_animation_wheel_diameter")
+                layout.prop(action, "zusi_animation_wheel_diameter")
             elif action.zusi_animation_type in ["12", "13"]:
-                if bpy.app.version <= (2, 65, 0):
-                    row = layout.row()
-                    row.label(_("Duration: %.2f s") % action.zusi_animation_duration)
-                    row.operator("action.set_zusi_animation_duration", text = _("Set")).action_name = action.name
-                else:
-                    layout.prop(action, "zusi_animation_duration")
+                layout.prop(action, "zusi_animation_duration")
             elif action.zusi_animation_type == "0":
                 box = layout.box()
                 box.row().label(text = _("Part of the following animations:"))
