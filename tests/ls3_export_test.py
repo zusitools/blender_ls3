@@ -1158,6 +1158,16 @@ class TestLs3Export(unittest.TestCase):
     keyframes = [float(p.attrib["AniZeit"]) if "AniZeit" in p.attrib else 0.0 for p in mesh_animation_nodes[0].findall("./AniPunkt")]
     self.assertEqual([0.0, 0.25, 0.7, 1.25, 2.0], keyframes) # should add keyframes at 0.0 and 2.0
 
+  def test_animation_loop(self):
+    self.open("animation_loop")
+    root = self.export_and_parse({"exportAnimations" : True})
+    mesh_animation_nodes = root.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(3, len(mesh_animation_nodes))
+
+    self.assertNotIn("AniLoopen", mesh_animation_nodes[0].attrib)
+    self.assertEqual("1", mesh_animation_nodes[1].attrib["AniLoopen"])
+    self.assertNotIn("AniLoopen", mesh_animation_nodes[2].attrib)
+
   def test_set_interpolation_linear(self):
     self.open("animation_set_interpolation_linear")
     for fcurve in bpy.data.actions["CubeAction"].fcurves:
@@ -1290,7 +1300,7 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual(6, int(animation_nodes[0].attrib["AniID"]))
 
-  def test_linkd_file_variant_visibility(self):
+  def test_linked_file_variant_visibility(self):
     self.open("linked_file_variant_visibility")
     root = self.export_and_parse({"variants" : [1]})
 

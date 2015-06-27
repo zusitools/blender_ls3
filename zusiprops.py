@@ -1002,6 +1002,12 @@ bpy.types.Action.zusi_animation_names = bpy.props.CollectionProperty(
 
 bpy.types.Action.zusi_animation_names_index = bpy.props.IntProperty()
 
+bpy.types.Action.zusi_animation_loop = bpy.props.BoolProperty(
+    name = _("Loop"),
+    description = _("Set this animation to looping in Zusi"),
+    default = False,
+)
+
 # ===
 # Custom UI
 # ===
@@ -1545,6 +1551,8 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
             ani_speed_enabled = action.zusi_animation_type in ["0", "1"]
             layout.row().prop(action, "name")
             layout.row().prop(action, "zusi_animation_type")
+            if action.zusi_animation_type in ["0", "1"]:
+                layout.prop(action, "zusi_animation_loop")
             row = layout.row()
             row.active = ani_speed_enabled
             row.prop(action, "zusi_animation_speed")

@@ -1161,10 +1161,13 @@ class Ls3Exporter:
 
         # Write mesh subset animations.
         for aninr, subset in animated_subsets:
+            animation = self.animations[subset.identifier.animated_obj]
             meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(subset)))
-            meshAnimationNode.setAttribute("AniGeschw", str(self.animations[subset.identifier.animated_obj].zusi_animation_speed))
+            meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
+            if animation.zusi_animation_loop and animation.zusi_animation_type in ["0", "1"]:
+                meshAnimationNode.setAttribute("AniLoopen", "1")
             landschaftNode.appendChild(meshAnimationNode)
             translation_length = self.write_animation(subset.identifier.animated_obj, meshAnimationNode,
                 write_translation = subset.identifier.animated_obj != ls3file.root_obj,
@@ -1173,10 +1176,13 @@ class Ls3Exporter:
 
         # Write linked animations.
         for aninr, linked_file in animated_linked_files:
+            animation = self.animations[linked_file.root_obj]
             verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
             verknAnimationNode.setAttribute("AniNr", str(aninr))
             verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
-            verknAnimationNode.setAttribute("AniGeschw", str(self.animations[linked_file.root_obj].zusi_animation_speed))
+            verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
+            if animation.zusi_animation_loop and animation.zusi_animation_type in ["0", "1"]:
+                meshAnimationNode.setAttribute("AniLoopen", "1")
             landschaftNode.appendChild(verknAnimationNode)
             translation_length = self.write_animation(linked_file.root_obj, verknAnimationNode,
                 write_translation = has_location_animation(self.animations[linked_file.root_obj]),
