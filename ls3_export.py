@@ -26,7 +26,7 @@ try:
     from . import zusiconfig
 except:
     pass
-from math import ceil, pi, sqrt
+from math import floor, ceil, pi, sqrt
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
@@ -728,8 +728,14 @@ class Ls3Exporter:
         frame0 = self.config.context.scene.frame_start
         frame1 = self.config.context.scene.frame_end
 
-        # Get frame numbers of keyframes.
+        # Get frame numbers of keyframes. Make sure that the start and end keyframes are at at whole number
+        # (because Zusi does not have a continuation mode setting like Blender).
         keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
+        if len(keyframe_nos):
+            min_keyframe = frame0 + floor(float(min(keyframe_nos) - frame0) / (frame1 - frame0)) * (frame1 - frame0)
+            max_keyframe = frame0 + ceil(float(max(keyframe_nos) - frame0) / (frame1 - frame0)) * (frame1 - frame0)
+            keyframe_nos.add(min_keyframe)
+            keyframe_nos.add(max_keyframe)
 
         # Write keyframes.
         original_current_frame = self.config.context.scene.frame_current

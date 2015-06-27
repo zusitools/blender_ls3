@@ -1148,6 +1148,16 @@ class TestLs3Export(unittest.TestCase):
     verknuepfte_node = linkedfile.find("./Landschaft/Verknuepfte")
     self.assertEqual("2", verknuepfte_node.attrib["BoundingR"])
 
+  def test_animation_continuation(self):
+    self.open("animation_continuation")
+    root = self.export_and_parse({"exportAnimations" : True})
+
+    mesh_animation_nodes = root.findall("./Landschaft/MeshAnimation")
+    self.assertEqual(1, len(mesh_animation_nodes))
+
+    keyframes = [float(p.attrib["AniZeit"]) if "AniZeit" in p.attrib else 0.0 for p in mesh_animation_nodes[0].findall("./AniPunkt")]
+    self.assertEqual([0.0, 0.25, 0.7, 1.25, 2.0], keyframes) # should add keyframes at 0.0 and 2.0
+
   def test_set_interpolation_linear(self):
     self.open("animation_set_interpolation_linear")
     for fcurve in bpy.data.actions["CubeAction"].fcurves:
