@@ -168,10 +168,7 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
     )
 
     def draw(self, context):
-        layout = self.layout
-
-        row = layout.row()
-        row.prop(self, "loadLinkedMode")
+        self.layout.prop(self, "loadLinkedMode")
 
     def execute(self, context):
         from . import ls_import
@@ -229,11 +226,8 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     def draw(self, context):
         layout = self.layout
 
-        row = layout.row()
-        row.prop(self, "loadAuthorInformation")
-
-        row = layout.row()
-        row.prop(self, "loadLinkedMode")
+        layout.prop(self, "loadAuthorInformation")
+        layout.prop(self, "loadLinkedMode")
 
         layout.label(_("Import LODs (only embedded linked files)"))
         row = layout.row()
@@ -353,24 +347,23 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
         if not context.scene.zusi_authors or len(context.scene.zusi_authors) == 0:
             self.had_no_author_info = True
-            layout.row().label(_("No author information entered"), icon='ERROR')
-            layout.row().operator("zusi_authors.add_default")
+            layout.label(_("No author information entered"), icon='ERROR')
+            layout.operator("zusi_authors.add_default")
         elif self.had_no_author_info:
-            layout.row().label(_("Author information added"), icon='INFO')
+            layout.label(_("Author information added"), icon='INFO')
             box = layout.box()
-            box.row().label(_("Name: %s" % context.scene.zusi_authors[0].name))
-            box.row().label(_("E-mail: %s" % context.scene.zusi_authors[0].email))
+            box.label(_("Name: %s" % context.scene.zusi_authors[0].name))
+            box.label(_("E-mail: %s" % context.scene.zusi_authors[0].email))
 
         materials_with_intensity_less_1 = [s.identifier.material for f in files for s in f.subsets
             if s.identifier.material is not None and s.identifier.material.diffuse_intensity < 1.]
         if len(materials_with_intensity_less_1):
-            layout.row().label(_("Materials with diffuse intensity < 1"), icon='ERROR')
-            box = layout.row().box()
+            layout.label(_("Materials with diffuse intensity < 1"), icon='ERROR')
+            box = layout.box()
             for m in materials_with_intensity_less_1:
                 box.label(text = m.name)
 
-        row = layout.row()
-        row.label(_("Variants (leave empty to export all)"))
+        layout.label(_("Variants (leave empty to export all)"))
 
         if len(context.scene.zusi_variants) > 0:
             num_rows = min(5, len(self.properties.variant_export_setting))
@@ -383,22 +376,17 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             box = layout.box()
             box.label(_("Variants can be defined in the Scene settings."))
 
-        row = layout.row()
-        row.prop(self, "exportSelected", text = "Export")
-        row = layout.row()
-        row.prop(self, "exportAnimations")
+        layout.prop(self, "exportSelected", text = "Export")
+        layout.prop(self, "exportAnimations")
         if self.properties.exportAnimations:
             if len(files) > 1:
-                row = layout.row()
-                row.label(text=_("The following files will be overwritten:"))
-                row = layout.row()
-                box = row.box()
+                layout.label(text=_("The following files will be overwritten:"))
+                box = layout.box()
                 (name, ext) = os.path.splitext(self.properties.filename)
                 for file in files:
                     if file.filename != self.properties.filename:
                         box.label(text = file.filename)
-        row = layout.row()
-        row.prop(self, "optimizeMesh")
+        layout.prop(self, "optimizeMesh")
         row = layout.row(align = False)
         row.alignment = "RIGHT"
         col = row.column()
@@ -560,8 +548,7 @@ class VIEW_OT_show_variants(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
-        row = layout.row()
-        row.label(_("Variants (leave empty to show all)"))
+        layout.label(_("Variants (leave empty to show all)"))
 
         if len(context.scene.zusi_variants) > 0:
             if bpy.app.version <= (2, 65, 0):
