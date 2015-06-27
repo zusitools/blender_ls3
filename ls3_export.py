@@ -404,9 +404,9 @@ class Ls3Exporter:
             if material.zusi_gf_type != bpy.types.Material.zusi_gf_type[1]["default"]:
                 subsetNode.setAttribute("TypGF", material.zusi_gf_type)
             if material.zusi_force_brightness:
-                subsetNode.setAttribute("Zwangshelligkeit", material.zusi_force_brightness)
+                subsetNode.setAttribute("Zwangshelligkeit", str(material.zusi_force_brightness))
             if material.zusi_signal_magnification:
-                subsetNode.setAttribute("zZoom", material.zusi_signal_magnification)
+                subsetNode.setAttribute("zZoom", str(material.zusi_signal_magnification))
             if material.offset_z:
                 subsetNode.setAttribute("zBias", str(self.z_bias_map[material.offset_z]))
 
@@ -990,7 +990,7 @@ class Ls3Exporter:
         infoNode.setAttribute("MinVersion", "A.1")
 
         if sce.zusi_object_id != bpy.types.Scene.zusi_object_id[1]["default"]:
-            infoNode.setAttribute("ObjektID", sce.zusi_object_id)
+            infoNode.setAttribute("ObjektID", str(sce.zusi_object_id))
         if sce.zusi_license != bpy.types.Scene.zusi_license[1]["default"]:
             infoNode.setAttribute("Lizenz", sce.zusi_license) # Deprecated
         if sce.zusi_description != bpy.types.Scene.zusi_description[1]["default"]:
