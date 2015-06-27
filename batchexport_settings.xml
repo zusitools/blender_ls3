@@ -1,0 +1,18 @@
+<batchexport_settings>
+
+  <!-- Modify and extend this template to your liking. You will need exactly one <setting> node for each Blender file -->
+  <setting blendfile="... full path to Blender file">
+    <export
+        ls3file="... full path to exported LS3 file"
+        exportmode="... one of: AllObjects, SelectedObjects, SubsetsOfSelectedObjects, SelectedMaterials">
+      <select>Name of first object/material to select</select>
+      <select>Name of second object/material to select</select>
+      ...
+      <variant>Name of first visible variant</variant>
+      <variant>Name of second visible variant</variant>
+      ...
+    </export>
+    <export>...</export>
+  </setting>
+
+</batchexport_settings>

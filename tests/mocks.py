@@ -51,6 +51,9 @@ class MockFS():
     self.originalOsPathExists = os.path.exists
 
   def open(self, filename, mode):
+    if not os.path.isabs(filename):
+      filename = os.path.abspath(filename)
+
     if "w" not in mode and filename in self.files:
       f = self.files[filename]
       f.open()

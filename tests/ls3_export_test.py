@@ -1292,6 +1292,52 @@ class TestLs3Export(unittest.TestCase):
     verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
     self.assertEqual(0, len(verknuepfte_nodes))
 
+  # ---
+  # Batch export tests
+  # ---
+
+  def test_batch_export_settings(self):
+    self.open("batchexport")
+    batchexport_xml = """
+      <batchexport_settings>
+        <setting blendfile="{blendfile}">
+          <export ls3file="{ls3file1}" exportmode="SubsetsOfSelectedObjects">
+            <select>Cube</select>
+            <variant>B</variant>
+          </export>
+          <export ls3file="{ls3file2}" exportmode="SelectedMaterials">
+            <select>NonExistingMaterial</select>
+            <variant>NonExistingVariant</variant>
+          </export>
+        </setting>
+      </batchexport_settings>
+    """.format(
+        blendfile = os.path.join(os.getcwd(), "blends", "batchexport.blend"),
+        ls3file1 = os.path.join(ZUSI3_EXPORTPATH, "Test", "export1.ls3"),
+        ls3file2 = os.path.join(ZUSI3_EXPORTPATH, "Test", "export2.ls3"))
+
+    with open(os.path.join(os.path.dirname(sys.modules['io_scene_ls3'].__file__),
+        "batchexport_settings.xml"), "w") as f:
+      f.write(batchexport_xml)
+
+    with patch("io_scene_ls3.ls3_export.Ls3Exporter") as mock:
+      self.assertEqual({'FINISHED'}, bpy.ops.export_scene.ls3_batch())
+      self.assertEqual(2, mock.call_count)
+
+      settings = mock.call_args_list[0][0][0]
+      self.assertEqual(os.path.join(ZUSI3_EXPORTPATH, "Test", "export1.ls3"), settings.filePath)
+      self.assertEqual("export1.ls3", settings.fileName)
+      self.assertEqual(os.path.join(ZUSI3_EXPORTPATH, "Test"), settings.fileDirectory)
+      self.assertEqual("2", settings.exportSelected)
+      self.assertEqual([1], settings.variantIDs)
+      self.assertEqual(["Cube"], settings.selectedObjects)
+
+      settings = mock.call_args_list[1][0][0]
+      self.assertEqual(os.path.join(ZUSI3_EXPORTPATH, "Test", "export2.ls3"), settings.filePath)
+      self.assertEqual("3", settings.exportSelected)
+      self.assertEqual([], settings.variantIDs)
+      self.assertEqual(["NonExistingMaterial"], settings.selectedObjects)
+
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   unittest.TextTestRunner(verbosity=2).run(suite)

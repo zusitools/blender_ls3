@@ -61,6 +61,7 @@ from . import ls3_export
 from . import i18n
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 from math import pi
+import xml.etree.ElementTree as ET
 
 _ = i18n.language.gettext
 
@@ -454,21 +455,55 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
 
     def execute(self, context):
         from . import ls3_export
+
+        batch_export_settings = {}
+        try:
+            root = ET.parse(os.path.join(os.path.dirname(__file__), "batchexport_settings.xml"))
+            for setting_node in root.findall("./setting"):
+                if "blendfile" not in setting_node.attrib:
+                    print('Warning: <setting> node without "blendfile" attribute')
+                    continue
+                exports = []
+                for export_node in setting_node.findall("./export"):
+                    if "ls3file" not in export_node.attrib:
+                        print('Warning: <export> node without "ls3file" attribute')
+                        continue
+                    export_mode = "0"
+                    if "exportmode" in export_node.attrib:
+                        if export_node.attrib["exportmode"] == "SelectedObjects":
+                            export_mode = "1"
+                        elif export_node.attrib["exportmode"] == "SubsetsOfSelectedObjects":
+                            export_mode = "2"
+                        elif export_node.attrib["exportmode"] == "SelectedMaterials":
+                            export_mode = "3"
+
+                    variant_names = set([v.text for v in export_node.findall("./variant")])
+
+                    exports.append((
+                        [e.text for e in export_node.findall("./select")],
+                        [v.id for v in context.scene.zusi_variants if v.name in variant_names],
+                        export_node.attrib["ls3file"],
+                        export_mode))
+                batch_export_settings[setting_node.attrib["blendfile"]] = exports
+        except IOError as e:
+            print('Error opening batchexport_settings.xml: {}'.format(e.message))
+            pass
+
         try:
             from . import batchexport_settings as bs
+            batch_export_settings.update(bs.batch_export_settings)
         except ImportError:
-            self.report({'ERROR'}, _("Batch export settings not found"))
-            return {'CANCELLED'}
+            pass
 
         if not bpy.data.is_saved:
             self.report({'ERROR'}, _("Unsaved file, no file name available"))
             return {'CANCELLED'}
-        if bpy.data.filepath not in bs.batch_export_settings:
+        if bpy.data.filepath not in batch_export_settings:
             self.report({'ERROR'}, _("No batch export settings found for file %s") % bpy.data.filepath)
             return {'CANCELLED'}
 
         def runbatch():
-            for setting in bs.batch_export_settings[bpy.data.filepath]:
+            for setting in batch_export_settings[bpy.data.filepath]:
                 (directory, filename) = os.path.split(setting[2])
         
                 settings = ls3_export.Ls3ExporterSettings(
@@ -500,7 +535,7 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
         # s.print_stats()
         # s.print_callers()
 
-        num_files = len(bs.batch_export_settings[bpy.data.filepath])
+        num_files = len(batch_export_settings[bpy.data.filepath])
         self.report({'INFO'}, i18n.language.ngettext("Successfully exported %d file", "Successfully exported %d files", num_files) % num_files)
         return {'FINISHED'}
 
