@@ -38,4 +38,4 @@ curl -u "zusitools" https://api.github.com/repos/zusitools/blender_ls3/releases 
 echo -n "Release ID: "
 read release_id
 
-curl -H "Content-Type:application/octet-stream" -u "zusitools" "https://uploads.github.com/repos/zusitools/blender_ls3/releases/$release_id/assets?name=release.zip" --data-binary @release/release.zip
+curl -H "Content-Type:application/octet-stream" -u "zusitools" "https://uploads.github.com/repos/zusitools/blender_ls3/releases/$release_id/assets?name=release.zip" --data-binary @release/blender_ls3.zip
