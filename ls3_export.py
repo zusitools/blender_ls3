@@ -26,7 +26,7 @@ try:
     from . import zusiconfig
 except:
     pass
-from math import floor, ceil, pi, sqrt
+from math import floor, ceil, sqrt, radians
 from mathutils import *
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
@@ -43,7 +43,7 @@ default_export_settings = {
     "optimizeMesh" : True,
     "maxCoordDelta" : 0.001,
     "maxUVDelta" : 0.02,
-    "maxNormalAngle" : 10 / 360 * 2 * pi,
+    "maxNormalAngle" : radians(10),
 }
 
 EXPORT_ALL_OBJECTS = "0"
