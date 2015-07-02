@@ -1300,6 +1300,19 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual(6, int(animation_nodes[0].attrib["AniID"]))
 
+  def test_linked_file_animation_parented(self):
+    self.open("linked_file_animation_parented")
+    files = self.export_and_parse_multiple(["Cube", "Cube.001"])[2]
+
+    root = files["Cube.001"]
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
+
+    verkn_animation_nodes = root.findall("./Landschaft/VerknAnimation")
+    self.assertEqual(0, len(verkn_animation_nodes))
+    animation_nodes = root.findall("./Landschaft/Animation")
+    self.assertEqual(0, len(animation_nodes))
+
   def test_linked_file_variant_visibility(self):
     self.open("linked_file_variant_visibility")
     root = self.export_and_parse({"variants" : [1]})

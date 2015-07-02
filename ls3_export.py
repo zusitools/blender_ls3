@@ -316,15 +316,15 @@ class Ls3Exporter:
         if not self.config.exportAnimations:
             return None
 
-        num_animations = 0
-        cur = ob
+        num_animations = 1 if self.is_animated(ob) else 0
+        cur = ob.parent
         while cur is not None:
             if self.is_animated(cur):
                 num_animations += 1
-                if num_animations == 2:
-                    return cur
+                if num_animations == 2 or ob.zusi_is_linked_file:
+                    break
             cur = cur.parent
-        return None
+        return cur
 
     def is_animated(self, ob):
         """Returns whether the object ob has an animation of its own (this is not the case if the object
@@ -814,7 +814,8 @@ class Ls3Exporter:
             if animation is not None:
                 result.add(animation)
         for linked_file in ls3file.linked_files:
-            result |= self.get_animations_for_file(linked_file, True)
+            result |= self.get_animations_for_file(linked_file,
+                linked_file.must_export or self.is_animated(linked_file.root_obj))
         return result
 
     # Build list of files from the scene's objects. The main file will always be the first item in the list.
@@ -834,7 +835,7 @@ class Ls3Exporter:
 
         # Collect all objects that have to be the root of a file.
         # Those are the root objects for all exported objects, then the root objects of those objects, and so on.
-        work_list = [ob for ob in self.config.context.scene.objects.values() if len(self.exported_subset_identifiers[ob])]
+        work_list = [ob for ob in self.config.context.scene.objects.values() if len(self.exported_subset_identifiers[ob]) or ob.zusi_is_linked_file]
         visited = set()
         while len(work_list):
             ob = work_list.pop()
