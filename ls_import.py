@@ -31,6 +31,7 @@ IMPORT_LINKED_EMBED = "2"
 
 # Converts value "BBGGRR" into a Color object
 color_to_rgba = lambda color : mathutils.Color(((color & 0xFF) / 255.0, ((color >> 8) & 0xFF) / 255.0, ((color >> 16) & 0xFF) / 255.0))
+color_to_rgb_int = lambda color : (color & 0xFF, (color >> 8) & 0xFF, (color >> 16) & 0xFF)
 
 def skipLine(fp, count = 1):
     for i in range(0, count):
@@ -120,17 +121,42 @@ class LsImporter:
     def get_material(self, diffuse_color, night_color):
         """Gets a material with the given diffuse and night color, creating one if it does not exist yet, and adds it to the current mesh's materials"""
 
-        diffuse_color_rgb = color_to_rgba(diffuse_color)
-        matname = "R" + str(int(diffuse_color_rgb[0] * 255)) + " G" + str(int(diffuse_color_rgb[1] * 255)) + " B" + str(int(diffuse_color_rgb[2] * 255)) + " (" + str(diffuse_color) + ")"
+        diffuse_color_int = color_to_rgb_int(diffuse_color)
+        diffuse_color = color_to_rgba(diffuse_color)
+
+        night_color_int = color_to_rgb_int(night_color)
+        night_color = color_to_rgba(night_color)
+
+        if night_color_int != (0, 0, 0):
+            matname = "R{} G{} B{} / R{} G{} B{}".format(
+                    diffuse_color_int[0], diffuse_color_int[1], diffuse_color_int[2],
+                    night_color_int[0], night_color_int[1], night_color_int[2])
+        else:
+            matname = "R{} G{} B{}".format(diffuse_color_int[0], diffuse_color_int[1], diffuse_color_int[2])
 
         matindex = bpy.data.materials.find(matname)
         if matindex == -1:
             mat = bpy.data.materials.new(matname)
-            mat.diffuse_color = diffuse_color_rgb
+            mat.diffuse_color = diffuse_color
             mat.diffuse_intensity = 1
-            
-            mat.zusi_use_emit = True
-            mat.zusi_emit_color = color_to_rgba(night_color)
+
+            if night_color_int != (0, 0, 0):
+                mat.zusi_use_emit = True
+                mat.zusi_emit_color = night_color
+                mat.diffuse_color += mat.zusi_emit_color
+
+                if mat.diffuse_color.r > 1.0 or mat.diffuse_color.g > 1.0 or mat.diffuse_color.b > 1.0:
+                    mat.zusi_allow_overexposure = True
+                    mat.zusi_overexposure_addition = mathutils.Color((
+                        max(0.0, mat.diffuse_color.r - 1),
+                        max(0.0, mat.diffuse_color.g - 1),
+                        max(0.0, mat.diffuse_color.b - 1)
+                    ))
+                    mat.diffuse_color = mathutils.Color((
+                        min(mat.diffuse_color.r, 1.0),
+                        min(mat.diffuse_color.g, 1.0),
+                        min(mat.diffuse_color.b, 1.0)
+                    ))
 
         matindex = self.currentmesh.materials.find(matname)
         if matindex == -1:

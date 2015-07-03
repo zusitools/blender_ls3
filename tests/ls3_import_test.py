@@ -317,6 +317,28 @@ class TestLs3Import(unittest.TestCase):
   # LS import tests
   # ---
 
+  def test_ls_import_night_color(self):
+    self.ls_import("nightcolor.ls")
+    mat = bpy.data.objects["nightcolor.ls"].data.materials[0]
+    self.assertColorEqual((0, 1, 0), mat.diffuse_color)
+    self.assertTrue(mat.zusi_use_emit)
+    self.assertColorEqual((0, 127/255.0, 0), mat.zusi_emit_color)
+
+  def test_ls_import_night_color_overexposure(self):
+    self.ls_import("nightcolor_overexposure.ls")
+    mat = bpy.data.objects["nightcolor_overexposure.ls"].data.materials[0]
+    self.assertColorEqual((0, 1, 0), mat.diffuse_color)
+    self.assertTrue(mat.zusi_use_emit)
+    self.assertColorEqual((0, 128/255.0, 0), mat.zusi_emit_color)
+    self.assertTrue(mat.zusi_allow_overexposure)
+    self.assertColorEqual((0, 128/255.0, 0), mat.zusi_overexposure_addition)
+
+  def test_ls_import_night_color_black(self):
+    self.ls_import("nightcolor_black.ls")
+    mat = bpy.data.objects["nightcolor_black.ls"].data.materials[0]
+    self.assertColorEqual((0, 128/255.0, 0), mat.diffuse_color)
+    self.assertFalse(mat.zusi_use_emit)
+
   def test_ls_import_linked_file(self):
     self.ls_import("linked_file.ls")
 
