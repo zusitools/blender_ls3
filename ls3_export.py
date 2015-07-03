@@ -612,7 +612,7 @@ class Ls3Exporter:
                     normal[0], normal[1], normal[2],
                     uvdata1[0], 1 - uvdata1[1],
                     uvdata2[0], 1 - uvdata2[1],
-                    maxvertexindex,
+                    maxvertexindex + vertex_no,
                     vertex_index in face_no_merge_vertices
                 ))
 
