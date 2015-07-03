@@ -1180,13 +1180,23 @@ class Ls3Exporter:
             os.path.realpath(os.path.expanduser(self.config.fileDirectory)),
             ls3file.filename)
 
+        for index, subset in enumerate(ls3file.subsets):
+            if self.config.optimizeMesh:
+                new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
+                subset.facedata = [(new_vidx[entry[0]], new_vidx[entry[1]], new_vidx[entry[2]]) for entry in subset.facedata]
+                num_deleted_vertices = sum(v is None for v in subset.vertexdata)
+                info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
+
+            if self.lsbwriter is not None:
+                self.lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
+
         if self.lsbwriter is not None:
             (basename, ext) = os.path.splitext(filepath)
             lsbpath = basename + ".lsb"
         
-            fp = open(lsbpath, 'wb')
-            info('Exporting LSB file {}', lsbpath)
-            self.lsbwriter.write_to_file(fp)
+            with open(lsbpath, 'wb') as lsb_fp:
+                info('Exporting LSB file {}', lsbpath)
+                self.lsbwriter.write_to_file(lsb_fp)
 
             lsbNode = self.xmldoc.createElement("lsb")
             lsbNode.setAttribute("Dateiname", os.path.basename(lsbpath))
@@ -1196,18 +1206,8 @@ class Ls3Exporter:
         info('Exporting LS3 file {}', filepath)
         with open(filepath, 'wb') as fp:
             prettyxml = self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep)
-
-            # Optimize mesh and write mesh data
-            for index, subset in enumerate(ls3file.subsets):
-                if self.config.optimizeMesh:
-                    new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-                    subset.facedata = [(new_vidx[entry[0]], new_vidx[entry[1]], new_vidx[entry[2]]) for entry in subset.facedata]
-                    num_deleted_vertices = sum(v is None for v in subset.vertexdata)
-                    info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
-
-                if self.lsbwriter is not None:
-                    self.lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
-                else:
+            if self.lsbwriter is None:
+                for index, subset in enumerate(ls3file.subsets):
                     prettyxml = prettyxml.replace(
                             bytearray(SUBSET_XML_PLACEHOLDER.format(index), 'utf-8'),
                             bytearray(self.get_subset_xml(subset), 'utf-8'))
