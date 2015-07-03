@@ -135,9 +135,6 @@ def has_location_animation(action):
 def has_rotation_animation(action):
     return action is not None and any([fcurve.data_path.startswith("rotation") for fcurve in action.fcurves])
 
-def is_root_subset(subset, ls3file):
-    return subset.identifier.animated_obj == ls3file.root_obj
-
 def is_lt_name(a, b):
     """Returns a.name < b.name, taking into account None values (which are smaller than all other values)."""
     if b is None:
@@ -345,6 +342,40 @@ class Ls3Exporter:
         return [aninr for aninr, subset in animated_subsets if self.animations[subset.identifier.animated_obj] in animations] \
             + [aninr for aninr, linked in animated_linked_files if self.animations[linked.root_obj] in animations] \
 
+    def transformation_relative(self, ob, root, scale_root):
+        """Returns a matrix that describes ob's transformation relative to 'scale_root', where location and rotation
+        transformation are only included up to 'root', which must be a descendant of 'scale_root'.
+        For meshes, this is how the mesh will be transformed before writing it to the subset data.
+        For linked files, this is how the coordinates of the <Verknuepfte> node will be specified if the linked file
+        is not animated."""
+
+        # In Blender, the transformation of an object O with parents P_0, ..., P_n is calclulated using:
+        #     P_0.matrix_local * ... * P_n.matrix_local * O.matrix_local
+        # where all transformation matrices are animatable.
+        #
+        # In Zusi, only one layer of animated transformations can be specified per file, and it is relative
+        # to the file's origin (the transformation of the file's root object in Blender)"""
+
+        if root is None: # => then scale_root must also be None
+            return ob.matrix_world
+
+        result = Matrix()
+        found_root = False
+        while ob != scale_root:
+            found_root = found_root or ob == root
+            if found_root:
+                # TODO: Warn if scaling is animated (Zusi does not support this and the export result
+                # will depend on the current frame.
+                loc, rot, scale = ob.matrix_local.decompose()
+                scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
+                scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
+                scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
+                result = scale1 * scale2 * scale3 * result
+            else:
+                result = ob.matrix_local * result
+            ob = ob.parent
+        return result
+
     # Returns a list of the active texture slots of the given material.
     def get_active_texture_slots(self, material):
         if material:
@@ -448,29 +479,7 @@ class Ls3Exporter:
         # Apply modifiers and transform the mesh so that the vertex coordinates
         # are global coordinates. Also recalculate the vertex normals.
         mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
-
-        # Apply the object's transformation only for if the object does not define the root subsets of its file
-        # (else the transformation will be written into the link in the parent file).
-        # For animated subsets, apply only the scale part (the translation and rotation part will be
-        # written as part of the animation).
-        if self.config.exportAnimations:
-            current_ob = ob
-            while current_ob != ls3file.root_obj:
-                if current_ob == self.get_animated_ob(ob):
-                    # TODO: Warn if scaling is animated (Zusi does not support this and the export result
-                    # will depend on the current frame.
-                    scale = current_ob.matrix_local.to_scale()
-                    scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
-                    scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
-                    scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
-                    mesh.transform(scale1 * scale2 * scale3)
-                else:
-                    mesh.transform(current_ob.matrix_local)
-                current_ob = current_ob.parent
-        else:
-            # Ignore everything when animated export is disabled and just apply the global transformation.
-            mesh.transform(ob.matrix_world)
-
+        mesh.transform(self.transformation_relative(ob, self.get_animated_ob(ob), ls3file.root_obj))
         mesh.calc_normals()
         use_auto_smooth = mesh.use_auto_smooth
         if mesh.use_auto_smooth:
@@ -718,7 +727,7 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
-    def write_animation(self, ob, animation_node, write_translation = True, write_rotation = True):
+    def write_animation(self, ob, root, animation_node, write_translation = True, write_rotation = True):
         """Writes an animation into an animation node (<MeshAnimation> or <VerknAnimation>) and
         returns the length of the longest translation vector of the animation
         (or 0 if write_translation is False)."""
@@ -746,7 +755,7 @@ class Ls3Exporter:
             aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
             animation_node.appendChild(aniPunktNode)
             self.config.context.scene.frame_set(keyframe_no)
-            loc, rot, scale = ob.matrix_local.decompose()
+            loc, rot, scale = self.transformation_relative(ob, root, root).decompose()
 
             if write_translation:
                 translationNode = (None if loc == Vector((0.0, 0.0, 0.0))
@@ -1007,7 +1016,7 @@ class Ls3Exporter:
 
         # Write linked files.
         for linked_file in sorted(ls3file.linked_files, key = lambda lf: lf.root_obj.name):
-            translation, rotation_quaternion, scale = linked_file.root_obj.matrix_local.decompose()
+            translation, rotation_quaternion, scale = self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
             rotation = zusi_rotation_from_quaternion(rotation_quaternion)
             max_scale_factor = max(scale.x, scale.y, scale.z)
             scaled_boundingr = linked_file.boundingr * max_scale_factor
@@ -1086,7 +1095,7 @@ class Ls3Exporter:
         # linked animation in the parent file.
         animated_subsets = [(idx + 1, subset)
             for (idx, subset) in enumerate(ls3file.subsets)
-            if subset.identifier.animated_obj is not None and not is_root_subset(subset, ls3file)]
+            if subset.identifier.animated_obj is not None and subset.identifier.animated_obj != ls3file.root_obj]
         animated_linked_files = [(len(ls3file.subsets) + idx + 1, linked)
             for (idx, linked) in enumerate(ls3file.linked_files)
             if self.is_animated(linked_file.root_obj)]
@@ -1155,9 +1164,7 @@ class Ls3Exporter:
             if animation.zusi_animation_loop and animation.zusi_animation_type in ["0", "1"]:
                 meshAnimationNode.setAttribute("AniLoopen", "1")
             landschaftNode.appendChild(meshAnimationNode)
-            translation_length = self.write_animation(subset.identifier.animated_obj, meshAnimationNode,
-                write_translation = subset.identifier.animated_obj != ls3file.root_obj,
-                write_rotation = subset.identifier.animated_obj != ls3file.root_obj)
+            translation_length = self.write_animation(subset.identifier.animated_obj, ls3file.root_obj, meshAnimationNode)
             ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
 
         # Write linked animations.
@@ -1170,7 +1177,7 @@ class Ls3Exporter:
             if animation.zusi_animation_loop and animation.zusi_animation_type in ["0", "1"]:
                 meshAnimationNode.setAttribute("AniLoopen", "1")
             landschaftNode.appendChild(verknAnimationNode)
-            translation_length = self.write_animation(linked_file.root_obj, verknAnimationNode,
+            translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode,
                 write_translation = has_location_animation(self.animations[linked_file.root_obj]),
                 write_rotation = has_rotation_animation(self.animations[linked_file.root_obj]))
             ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr)

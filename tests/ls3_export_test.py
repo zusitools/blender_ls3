@@ -295,6 +295,14 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
+  def test_scaled_object(self):
+    self.open("scale")
+    root = self.export_and_parse()
+    vertex_pos_nodes = root.findall("./Landschaft/SubSet/Vertex/p")
+    self.assertEqual(24, len(vertex_pos_nodes))
+    for v in vertex_pos_nodes:
+        self.assertAlmostEqual(6, abs(float(v.attrib["X"])) + abs(float(v.attrib["Y"])) + abs(float(v.attrib["Z"])), places = 5)
+
   @unittest.skipUnless(bpy.app.version >= (2, 71, 0), "MeshTessFace.split_normals available in Blender >= 2.71")
   def test_split_normals(self):
     self.open("split_normals")
@@ -1279,6 +1287,15 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotIn("Helligkeit", v5.attrib)
     self.assertEqual(10, int(v5.attrib["LODbit"]))
     self.assertEqual(32 + 16, int(v5.attrib["Flags"])) # Detail tile + read only
+
+  def test_linked_file_parented(self):
+    self.open("linked_file_parented")
+    files = self.export_and_parse_multiple(["Cube"])[2]
+
+    root = files["Cube"]
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(1, len(verknuepfte_nodes))
+    self.assertXYZ(verknuepfte_nodes[0].find("./p"), 0, 6, 0)
 
   def test_linked_file_animation(self):
     self.open("linked_file_animation")
