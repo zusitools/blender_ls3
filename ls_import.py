@@ -194,6 +194,8 @@ class LsImporter:
                     empty = bpy.data.objects.new("{}_{}".format(self.config.fileName, filename), None)
                     empty.location = loc
                     empty.rotation_euler = zusi_rot_to_blender(rot)
+                    # Coordinate system conversion
+                    empty.rotation_euler.z += radians(90)
                     empty.parent = self.currentobject
 
                     empty.zusi_is_linked_file = True
