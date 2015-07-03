@@ -91,12 +91,12 @@ def zusi_rotation_from_quaternion(quat, euler_compat=None):
     return Euler((-rot.y, rot.x, rot.z))
 
 def get_used_materials_for_object(ob):
-    """Returns a set of all materials used (i.e. assigned to any face) in the given object."""
+    """Returns a set of pairs (material index, material) for all materials used (i.e. assigned to any face) in the given object."""
     if ob.data and (len(ob.data.materials) > 0):
         used_material_indices = set([poly.material_index for poly in ob.data.polygons])
-        return set([ob.data.materials[i] for i in used_material_indices if ob.data.materials[i] is not None and ob.data.materials[i].name != 'Unsichtbar'])
+        return set([(i, ob.data.materials[i]) for i in used_material_indices if ob.data.materials[i] is not None and ob.data.materials[i].name != 'Unsichtbar'])
     else:
-        return set([None])
+        return set([(0, None)])
 
 # Returns a list of all descendants of the given object.
 def get_children_recursive(ob):
@@ -136,7 +136,7 @@ def has_rotation_animation(action):
     return action is not None and any([fcurve.data_path.startswith("rotation") for fcurve in action.fcurves])
 
 def is_root_subset(subset, ls3file):
-    return ls3file.root_obj in subset.objects
+    return subset.identifier.animated_obj == ls3file.root_obj
 
 def is_lt_name(a, b):
     """Returns a.name < b.name, taking into account None values (which are smaller than all other values)."""
@@ -180,13 +180,14 @@ class Ls3File:
 
 # Stores information about one subset of a LS3 file.
 #     identifier: The internal identifier of the subset. 
-#     objects: The objects to include in this subset.
 #     boundingr: The bounding radius of this subset.
+#     vertexdata, facedata: The mesh data of this subset.
 class Ls3Subset:
     def __init__(self, identifier):
         self.identifier = identifier
-        self.objects = []
         self.boundingr = 0
+        self.vertexdata = []
+        self.facedata = []
 
     def __str__(self):
         return str(self.identifier)
@@ -267,9 +268,6 @@ class Ls3Exporter:
         # The XML document node
         self.xmldoc = None
 
-        # The vertex and face data for each subset to export
-        self.subset_data = []
-
         try:
             self.use_lsb = zusiconfig.use_lsb
         except:
@@ -285,8 +283,9 @@ class Ls3Exporter:
         self.z_bias_map.update(dict((value, idx + 1) for idx, value in enumerate(zbiases_pos)))
         self.z_bias_map.update(dict((value, -(idx + 1)) for idx, value in enumerate(zbiases_neg)))
 
+        # Build file structure
         self.get_animations()
-        self.exported_subset_identifiers = self.get_exported_subsets()
+        self.exported_subsets = self.get_exported_subsets()
 
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
@@ -328,9 +327,17 @@ class Ls3Exporter:
 
     def is_animated(self, ob):
         """Returns whether the object ob has an animation of its own (this is not the case if the object
-        is animated through its parent."""
+        is animated through its parent)."""
         return self.config.exportAnimations and self.animations[ob] is not None and \
             ((ob.animation_data is not None and ob.animation_data.action is not None) or len(ob.constraints) > 0)
+
+    def get_animated_ob(self, ob):
+        """Gets the first object in ob's parent hierarchy that is animated, or None"""
+        while ob is not None:
+            if self.is_animated(ob):
+                return ob
+            ob = ob.parent
+        return None
 
     def get_aninrs(self, animations, animated_linked_files, animated_subsets):
         """Returns the animation numbers for a list of animations. The animation number corresponds to the
@@ -394,8 +401,7 @@ class Ls3Exporter:
 
     # Adds a new subset node to the specified <Landschaft> node. The subset is given by a Ls3Subset object
     # containing the objects and the material to export.
-    # Only the faces of the supplied objects having that particular material will be written.
-    def write_subset(self, landschaftNode, subset, ls3file):
+    def write_subset_node(self, landschaftNode, subset, ls3file):
         subsetNode = self.xmldoc.createElement("SubSet")
         material = subset.identifier.material
         try:
@@ -414,83 +420,93 @@ class Ls3Exporter:
         except (IndexError, AttributeError):
             pass
 
-        info("Exporting subset {}", str(subset.identifier))
-        self.write_subset_mesh(subsetNode, subset, ls3file)
+        if self.lsbwriter is None:
+            # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
+            # Insert a placeholder text node instead and replace that with the manually generated
+            # XML string for the <Vertex> and <Face> nodes after generating the XML string. Yes, this is ugly.
+            placeholder_node = self.xmldoc.createTextNode(SUBSET_XML_PLACEHOLDER.format(ls3file.subsets.index(subset)))
+            subsetNode.appendChild(placeholder_node)
+
         landschaftNode.appendChild(subsetNode)
+        return subsetNode
 
-    # Writes the meshes of the subset's objects to the specified subset node.
-    # Only the faces having the specified material will be written.
-    def write_subset_mesh(self, subsetNode, subset, ls3file):
-        vertexdata = []
-        maxvertexindex = 0 # Current highest index in vertexdata, equal to len(vertexdata)
-        facedata = []
-        material = subset.identifier.material
-        active_texture_slots = self.get_active_texture_slots(material)
-        active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
-        active_uvmaps_count = len(active_uvmaps)
-        max_v_len_squared = 0 # Square of the length of the longest vertex (projected onto the XY plane)
-        
-        for ob in subset.objects:
-            debug("Exporting object {}", ob.name)
-            vgroup_xy = -1 if "Normal constraint XY" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XY"].index
-            vgroup_yz = -1 if "Normal constraint YZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint YZ"].index
-            vgroup_xz = -1 if "Normal constraint XZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XZ"].index
+    # Writes the mesh of the specified object to the appropriate subsets.
+    def write_object_data(self, ob, ls3file):
+        debug("Exporting object {}", ob.name)
+        subsets = self.exported_subsets[ob]
+        if not len(subsets):
+            return
 
-            # Apply modifiers and transform the mesh so that the vertex coordinates
-            # are global coordinates. Also recalculate the vertex normals.
-            mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
+        # For each subset, the square of the length of the longest vertex belonging to that subset (projected onto the XY plane).
+        # Used for bounding radius calculation.
+        max_v_len_squared = dict((x, 0) for x in subsets.keys())
 
-            # Apply the object's transformation only for if the object does not define the root subsets of its file
-            # (else the transformation will be written into the link in the parent file).
-            # For animated subsets, apply only the scale part (the translation and rotation part will be
-            # written as part of the animation).
-            if self.config.exportAnimations:
-                current_ob = ob
-                while current_ob != ls3file.root_obj:
-                    if current_ob == subset.identifier.animated_obj:
-                        # TODO: Warn if scaling is animated (Zusi does not support this and the export result
-                        # will depend on the current frame.
-                        scale = current_ob.matrix_local.to_scale()
-                        scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
-                        scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
-                        scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
-                        mesh.transform(scale1 * scale2 * scale3)
-                    else:
-                        mesh.transform(current_ob.matrix_local)
-                    current_ob = current_ob.parent
-            else:
-                # Ignore everything when animated export is disabled and just apply the global transformation.
-                mesh.transform(ob.matrix_world)
+        vgroup_xy = -1 if "Normal constraint XY" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XY"].index
+        vgroup_yz = -1 if "Normal constraint YZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint YZ"].index
+        vgroup_xz = -1 if "Normal constraint XZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XZ"].index
 
-            mesh.calc_normals()
-            use_auto_smooth = mesh.use_auto_smooth
-            if mesh.use_auto_smooth:
-                if bpy.app.version >= (2, 71, 0): # MeshTessFace.split_normals available in >= 2.71
-                    if bpy.app.version <= (2, 73, 0):
-                        mesh.calc_normals_split(mesh.auto_smooth_angle)
-                    else:
-                        mesh.calc_normals_split()
-                    mesh.calc_tessface()
+        # Apply modifiers and transform the mesh so that the vertex coordinates
+        # are global coordinates. Also recalculate the vertex normals.
+        mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
+
+        # Apply the object's transformation only for if the object does not define the root subsets of its file
+        # (else the transformation will be written into the link in the parent file).
+        # For animated subsets, apply only the scale part (the translation and rotation part will be
+        # written as part of the animation).
+        if self.config.exportAnimations:
+            current_ob = ob
+            while current_ob != ls3file.root_obj:
+                if current_ob == self.get_animated_ob(ob):
+                    # TODO: Warn if scaling is animated (Zusi does not support this and the export result
+                    # will depend on the current frame.
+                    scale = current_ob.matrix_local.to_scale()
+                    scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
+                    scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
+                    scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
+                    mesh.transform(scale1 * scale2 * scale3)
                 else:
-                    print("WARNING: Auto smooth setting will not be honored in Blender < 2.71")
-                    use_auto_smooth = False
+                    mesh.transform(current_ob.matrix_local)
+                current_ob = current_ob.parent
+        else:
+            # Ignore everything when animated export is disabled and just apply the global transformation.
+            mesh.transform(ob.matrix_world)
 
-            # If the object is mirrored/negatively scaled, the normals will come out the wrong way
-            # when applying the transformation. Workaround from:
-            # http://projects.blender.org/tracker/index.php?func=detail&aid=18834&group_id=9&atid=264
-            ma = ob.matrix_world.to_3x3() # gets the rotation part
-            must_flip_normals = Vector.dot(ma[2], Vector.cross(ma[0], ma[1])) >= 0.00001
+        mesh.calc_normals()
+        use_auto_smooth = mesh.use_auto_smooth
+        if mesh.use_auto_smooth:
+            if bpy.app.version >= (2, 71, 0): # MeshTessFace.split_normals available in >= 2.71
+                if bpy.app.version <= (2, 73, 0):
+                    mesh.calc_normals_split(mesh.auto_smooth_angle)
+                else:
+                    mesh.calc_normals_split()
+                mesh.calc_tessface()
+            else:
+                print("WARNING: Auto smooth setting will not be honored in Blender < 2.71")
+                use_auto_smooth = False
 
-            # List vertex indices of edges that are marked as "sharp edges",
-            # which means we won't merge them later during mesh optimization.
-            # The order of the vertices in face.edge_keys does not seem to be consistent,
-            # so we include both (v0,v1) and (v1,v0) in the set.
-            no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp]).union(
-                set([(e.vertices[1], e.vertices[0]) for e in mesh.edges if e.use_edge_sharp]))
+        # If the object is mirrored/negatively scaled, the normals will come out the wrong way
+        # when applying the transformation. Workaround from:
+        # http://projects.blender.org/tracker/index.php?func=detail&aid=18834&group_id=9&atid=264
+        ma = ob.matrix_world.to_3x3() # gets the rotation part
+        must_flip_normals = Vector.dot(ma[2], Vector.cross(ma[0], ma[1])) >= 0.00001
 
-            # For x in {0, 1}, get the UV layers from which the UV coordinates for texture x shall
-            # be taken. Can be None.
-            uvlayers = [None for texindex in range(0, 2)]
+        # List vertex indices of edges that are marked as "sharp edges",
+        # which means we won't merge them later during mesh optimization.
+        # The order of the vertices in face.edge_keys does not seem to be consistent,
+        # so we include both (v0,v1) and (v1,v0) in the set.
+        no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp]).union(
+            set([(e.vertices[1], e.vertices[0]) for e in mesh.edges if e.use_edge_sharp]))
+
+        # For each subset, and i in {0, 1}, get the UV layers from which the UV coordinates
+        # for texture i in the subset shall be taken. Can be None.
+        uvlayers = {}
+        for material_index, subset in subsets.items():
+            material = subset.identifier.material
+            active_texture_slots = self.get_active_texture_slots(material)
+            active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
+            active_uvmaps_count = len(active_uvmaps)
+
+            uvlayers[material_index] = [None, None]
             for texindex in range(0, 2):
                 if texindex >= active_uvmaps_count:
                     break
@@ -500,140 +516,125 @@ class Ls3Exporter:
                 if active_uvmaps[texindex] != "":
                     for uvlayer in mesh.tessface_uv_textures:
                         if uvlayer.name == active_uvmaps[texindex]:
-                            uvlayers[texindex] = uvlayer
+                            uvlayers[material_index][texindex] = uvlayer
                             break
                 else:
-                    uvlayers[texindex] = mesh.tessface_uv_textures.active
+                    uvlayers[material_index][texindex] = mesh.tessface_uv_textures.active
 
-            # Write vertices, faces and UV coordinates.
-            # Access faces via the tessfaces API which provides only triangles and quads.
-            # A vertex that appears in two faces with different normals or different UV coordinates will
-            # have to be exported as two Zusi vertices. Therefore, all vertices are exported once per face,
-            # and mesh optimization will later re-merge vertices that have the same location, normal, and
-            # UV coordinates.
-            for face_index, face in enumerate(mesh.tessfaces):
-                # Check if the face has the right material.
-                if material is not None and ob.data.materials[face.material_index] != material:
-                    continue
+        # Write vertices, faces and UV coordinates.
+        # Access faces via the tessfaces API which provides only triangles and quads.
+        # A vertex that appears in two faces with different normals or different UV coordinates will
+        # have to be exported as two Zusi vertices. Therefore, all vertices are exported once per face,
+        # and mesh optimization will later re-merge vertices that have the same location, normal, and
+        # UV coordinates.
+        for face_index, face in enumerate(mesh.tessfaces):
+            if face.material_index not in subsets:
+                continue
+            subset = subsets[face.material_index]
+            maxvertexindex = len(subset.vertexdata)
 
-                # Write the first triangle of the face
-                # Optionally reverse order of faces to flip normals
+            # Write the first triangle of the face
+            # Optionally reverse order of faces to flip normals
+            if must_flip_normals:
+                subset.facedata.append((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
+            else:
+                subset.facedata.append((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
+
+            # If the face is a quad, write the second triangle too.
+            if len(face.vertices) == 4:
                 if must_flip_normals:
-                    facedata.append((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
+                    subset.facedata.append((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
                 else:
-                    facedata.append((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
+                    subset.facedata.append((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
 
-                # If the face is a quad, write the second triangle too.
-                if len(face.vertices) == 4:
+            # Compile a list of all vertices to mark as "don't merge".
+            # Those are the vertices that form a sharp edge in the current face.
+            face_no_merge_vertex_pairs = set(face.edge_keys).intersection(no_merge_vertex_pairs)
+            face_no_merge_vertices = [pair[0] for pair in face_no_merge_vertex_pairs] + [pair[1] for pair in face_no_merge_vertex_pairs]
+
+            # Write vertex coordinates (location, normal, and UV coordinates)
+            for vertex_no, vertex_index in enumerate(face.vertices):
+                v = mesh.vertices[vertex_index]
+                uvdata1 = (0.0, 1.0)
+                uvdata2 = (0.0, 1.0)
+
+                for texindex in range(0, 2):
+                    if texindex >= active_uvmaps_count:
+                        continue
+
+                    uvlayer = uvlayers[face.material_index][texindex]
+                    if uvlayer is None:
+                        continue
+
+                    uv_raw = uvlayer.data[face_index].uv_raw
+                    uvdata = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
+                    if texindex == 0:
+                        uvdata1 = uvdata
+                    else:
+                        uvdata2 = uvdata
+
+                # Since the vertices are exported per-face, get the vertex normal from the face normal,
+                # except when the face is set to "smooth"
+                if ob.data and ob.data.zusi_is_rail:
+                    normal = (0, 0, 1)
+                else:
+                    if use_auto_smooth:
+                        split_normal = face.split_normals[vertex_no]
+                        normal = Vector((split_normal[1], -split_normal[0], -split_normal[2]))
+                    elif face.use_smooth:
+                        normal = Vector((v.normal[1], -v.normal[0], -v.normal[2]))
+                        for g in v.groups:
+                            if g.weight == 0.0:
+                                continue
+                            if g.group == vgroup_xy:
+                                normal[2] = 0
+                            elif g.group == vgroup_yz:
+                                normal[1] = 0
+                            elif g.group == vgroup_xz:
+                                normal[0] = 0
+                        normal.normalize()
+                    else:
+                        normal = (face.normal[1], -face.normal[0], -face.normal[2])
+
                     if must_flip_normals:
-                        facedata.append((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
-                    else:
-                        facedata.append((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
+                        normal = list(map(lambda x : -x, normal))
 
-                # Compile a list of all vertices to mark as "don't merge".
-                # Those are the vertices that form a sharp edge in the current face.
-                face_no_merge_vertex_pairs = set(face.edge_keys).intersection(no_merge_vertex_pairs)
-                face_no_merge_vertices = [pair[0] for pair in face_no_merge_vertex_pairs] + [pair[1] for pair in face_no_merge_vertex_pairs]
+                # Calculate square of vertex length (projected onto the XY plane)
+                # for the bounding radius.
+                v_len_squared = v.co.x * v.co.x + v.co.y * v.co.y
+                if v_len_squared > max_v_len_squared[face.material_index]:
+                    max_v_len_squared[face.material_index] = v_len_squared
 
-                # Write vertex coordinates (location, normal, and UV coordinates)
-                for vertex_no, vertex_index in enumerate(face.vertices):
-                    v = mesh.vertices[vertex_index]
-                    uvdata1 = (0.0, 1.0)
-                    uvdata2 = (0.0, 1.0)
+                # The coordinates are transformed into the Zusi coordinate system.
+                # The vertex index is appended for reordering vertices
+                subset.vertexdata.append((
+                    -v.co[1], v.co[0], v.co[2],
+                    normal[0], normal[1], normal[2],
+                    uvdata1[0], 1 - uvdata1[1],
+                    uvdata2[0], 1 - uvdata2[1],
+                    maxvertexindex,
+                    vertex_index in face_no_merge_vertices
+                ))
 
-                    for texindex in range(0, 2):
-                        if texindex >= active_uvmaps_count:
-                            continue
+        # Remove the generated preview mesh
+        bpy.data.meshes.remove(mesh)
 
-                        uvlayer = uvlayers[texindex]
-                        if uvlayer is None:
-                            continue
-
-                        uv_raw = uvlayer.data[face_index].uv_raw
-                        uvdata = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
-                        if texindex == 0:
-                            uvdata1 = uvdata
-                        else:
-                            uvdata2 = uvdata
-
-                    # Since the vertices are exported per-face, get the vertex normal from the face normal,
-                    # except when the face is set to "smooth"
-                    if ob.data and ob.data.zusi_is_rail:
-                        normal = (0, 0, 1)
-                    else:
-                        if use_auto_smooth:
-                            split_normal = face.split_normals[vertex_no]
-                            normal = Vector((split_normal[1], -split_normal[0], -split_normal[2]))
-                        elif face.use_smooth:
-                            normal = Vector((v.normal[1], -v.normal[0], -v.normal[2]))
-                            for g in v.groups:
-                                if g.weight == 0.0:
-                                    continue
-                                if g.group == vgroup_xy:
-                                    normal[2] = 0
-                                elif g.group == vgroup_yz:
-                                    normal[1] = 0
-                                elif g.group == vgroup_xz:
-                                    normal[0] = 0
-                            normal.normalize()
-                        else:
-                            normal = (face.normal[1], -face.normal[0], -face.normal[2])
-
-                        if must_flip_normals:
-                            normal = list(map(lambda x : -x, normal))
-
-                    # Calculate square of vertex length (projected onto the XY plane)
-                    # for the bounding radius.
-                    v_len_squared = v.co.x * v.co.x + v.co.y * v.co.y
-                    if v_len_squared > max_v_len_squared:
-                        max_v_len_squared = v_len_squared
-
-                    # The coordinates are transformed into the Zusi coordinate system.
-                    # The vertex index is appended for reordering vertices
-                    vertexdata.append((
-                        -v.co[1], v.co[0], v.co[2],
-                        normal[0], normal[1], normal[2],
-                        uvdata1[0], 1 - uvdata1[1],
-                        uvdata2[0], 1 - uvdata2[1],
-                        maxvertexindex,
-                        vertex_index in face_no_merge_vertices
-                    ))
-                    maxvertexindex += 1
-
-            # Remove the generated preview mesh
-            bpy.data.meshes.remove(mesh)
-
-        subset.boundingr = sqrt(max_v_len_squared)
-
-        # Optimize mesh
-        if self.config.optimizeMesh:
-            new_vidx = zusicommon.optimize_mesh(vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-            facedata = [(new_vidx[entry[0]], new_vidx[entry[1]], new_vidx[entry[2]]) for entry in facedata]
-            num_deleted_vertices = sum(v is None for v in vertexdata)
-            info("Mesh optimization: {} of {} vertices deleted", num_deleted_vertices, len(vertexdata))
-
-        if self.lsbwriter is not None:
-            self.lsbwriter.add_subset_data(subsetNode, vertexdata, facedata)
-        else:
-            # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
-            # Insert a placeholder text node instead and replace that with the manually generated
-            # XML string for the <Vertex> and <Face> nodes. Yes, this is ugly.
-            placeholder_node = self.xmldoc.createTextNode(SUBSET_XML_PLACEHOLDER.format(len(self.subset_data)))
-            subsetNode.appendChild(placeholder_node)
-            self.subset_data.append((vertexdata, facedata))
+        for matidx, boundingr_squared in max_v_len_squared.items():
+            subset = subsets[matidx]
+            subset.boundingr = max(subset.boundingr, sqrt(boundingr_squared))
 
     # Returns a string containing the <Vertex> and <Face> nodes for the given vertex and face data.
-    def get_subset_xml(self, vertexdata, facedata):
+    def get_subset_xml(self, subset):
         return (os.linesep + "      ").join([
             '<Vertex U="' + str(entry[6]) + '" V="' + str(entry[7])
             + '" U2="' + str(entry[8]) + '" V2="' + str(entry[9]) + '">'
             + '<p X="' + str(entry[0]) + '" Y="' + str(entry[1]) + '" Z="' + str(entry[2]) + '"/>'
             + '<n X="' + str(entry[3]) + '" Y="' + str(entry[4]) + '" Z="' + str(entry[5]) + '"/>'
             + '</Vertex>'
-            for entry in vertexdata if entry is not None
+            for entry in subset.vertexdata if entry is not None
         ] + [
             '<Face i="' + ";".join(map(str, entry)) + '"/>'
-            for entry in facedata
+            for entry in subset.facedata
         ])
 
     def write_subset_material(self, subsetNode, material):
@@ -835,7 +836,7 @@ class Ls3Exporter:
 
         # Collect all objects that have to be the root of a file.
         # Those are the root objects for all exported objects, then the root objects of those objects, and so on.
-        work_list = [ob for ob in self.config.context.scene.objects.values() if len(self.exported_subset_identifiers[ob]) or ob.zusi_is_linked_file]
+        work_list = [ob for ob in self.config.context.scene.objects.values() if len(self.exported_subsets[ob]) or ob.zusi_is_linked_file]
         visited = set()
         while len(work_list):
             ob = work_list.pop()
@@ -856,7 +857,7 @@ class Ls3Exporter:
             if ob in result:
                 result[ob].objects.add(ob)
                 result[self.get_file_root(ob)].linked_files.append(result[ob])
-            elif len(self.exported_subset_identifiers[ob]):
+            elif len(self.exported_subsets[ob]):
                 cur = ob.parent
                 while cur is not None and cur not in result:
                     cur = cur.parent
@@ -882,25 +883,29 @@ class Ls3Exporter:
                 result[self.get_file_root(ob)].linked_files.append(linked_file)
 
         for root_obj, ls3file in result.items():
-            ls3file.subsets = self.get_subsets(ls3file)
+            ls3file.subsets = sorted(set([s for ob in ls3file.objects for s in self.exported_subsets[ob].values()]),
+                    key = lambda s: s.identifier)
 
         debug("Files:")
         for root_obj, ls3file in result.items():
-            debug("{} (root object {}, linked files {})", ls3file.filename,
+            debug("{} (root object {}, objects {}, linked files {})", ls3file.filename,
                 root_obj.name if root_obj is not None else "None",
+                ", ".join(ob.name for ob in ls3file.objects),
                 ", ".join(linkedfile.filename for linkedfile in ls3file.linked_files))
             for sub in ls3file.subsets:
-                debug("   {} - {}", str(sub.identifier), str(sub.objects))
+                debug("   {}", str(sub.identifier))
 
         # Main file is the first item in the list.
         return [result[None]] + [ls3file for ls3file in result.values() if ls3file.root_obj is not None]
 
     def get_exported_subsets(self):
-        """Builds a list of exported subset identifiers for every object in the scene. The export settings
-        (e.g. "export only selected objects") are taken into account."""
+        """Builds a dictionary that maps exported material indices to the appropriate subset
+        for every object in the scene. The export settings (e.g. "export only selected objects") are taken into account.
+        Also builds the self.subsets dictionary that maps subset identifiers to Ls3Subset objects."""
 
         result = {}
-        # A set of all subset identifiers that will be exported. It is only filled when
+        self.subsets = {}
+        # A set of all subset identifiers that will be exported. It is only filled if
         # self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS.
         all_exported_identifiers = set()
 
@@ -909,24 +914,29 @@ class Ls3Exporter:
             if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS and ob.name not in self.config.selectedObjects:
                 continue
 
+            result[ob] = {}
             # If export setting is "export only selected objects", filter out unselected objects
             # from the beginning. Also, non-mesh objects are not exported.
             if (ob.type != 'MESH' or
                     (self.config.exportSelected == EXPORT_SELECTED_OBJECTS and
                             ob.name not in self.config.selectedObjects)):
-                result[ob] = []
                 continue
 
-            result[ob] = [SubsetIdentifier(ob.zusi_subset_name, mat,
-                    ob if self.is_animated(ob) else None)
-                    for mat in get_used_materials_for_object(ob)
-                    if self.config.exportSelected != EXPORT_SELECTED_MATERIALS or (mat is not None and mat.name in self.config.selectedObjects)]
-            if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS:
-                all_exported_identifiers |= set(result[ob])
-            # Selected objects that are not visible in the current variants can still influence
-            # the exported subsets.
-            if not zusicommon.is_object_visible(ob, self.config.variantIDs):
-                result[ob] = []
+            for matidx, mat in get_used_materials_for_object(ob):
+                if self.config.exportSelected != EXPORT_SELECTED_MATERIALS or (mat is not None and mat.name in self.config.selectedObjects):
+                    identifier = SubsetIdentifier(ob.zusi_subset_name, mat, self.get_animated_ob(ob))
+                    if identifier not in self.subsets:
+                        subset = Ls3Subset(identifier)
+                        self.subsets[identifier] = subset
+                    else:
+                        subset = self.subsets[identifier]
+
+                    # Selected objects that are not visible in the current variants can still influence
+                    # the exported subsets (via all_exported_identifiers), but they themselves are not exported.
+                    if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS:
+                        all_exported_identifiers.add(identifier)
+                    if zusicommon.is_object_visible(ob, self.config.variantIDs):
+                        result[ob][matidx] = subset
 
         # For "export subsets of selected objects" mode, we need a second pass
         # for all unselected objects which might have a subset in common with
@@ -934,43 +944,19 @@ class Ls3Exporter:
         if self.config.exportSelected == EXPORT_SUBSETS_OF_SELECTED_OBJECTS:
             for ob in self.config.context.scene.objects:
                 if ob.type != 'MESH' or not zusicommon.is_object_visible(ob, self.config.variantIDs):
-                    result[ob] = []
+                    result[ob] = {}
                     continue
                 if ob.name in self.config.selectedObjects:
                     continue
-                result[ob] = []
-                for mat in get_used_materials_for_object(ob):
-                    identifier = SubsetIdentifier(ob.zusi_subset_name, mat,
-                        ob if self.is_animated(ob) else None)
+                result[ob] = {}
+                for matidx, mat in get_used_materials_for_object(ob):
+                    identifier = SubsetIdentifier(ob.zusi_subset_name, mat, self.get_animated_ob(ob))
                     if identifier in all_exported_identifiers:
-                        result[ob].append(identifier)
- 
+                        result[ob][matidx] = self.subsets[identifier]
+
         return result
 
-    # Build list of subsets from a file's objects. The subsets are ordered by name.
-    def get_subsets(self, ls3file):
-        subset_dict = dict()
-
-        # Build list of subsets according to material and subset name settings.
-        for ob in ls3file.objects:
-            for subset_identifier in self.exported_subset_identifiers[ob]:
-                # XXX
-                if subset_identifier.animated_obj is None:
-                    p = ob.parent
-                    while p is not None:
-                        if self.is_animated(p):
-                            subset_identifier.animated_obj = p
-                            break
-                        p = p.parent
-                if subset_identifier not in subset_dict:
-                    subset_dict[subset_identifier] = Ls3Subset(subset_identifier)
-                subset_dict[subset_identifier].objects.append(ob)
- 
-        # Sort subsets by name and filter out empty subsets and subsets that won't be visible due
-        # to variant export settings (when exportSelected mode is "2").
-        return [subset_dict[name] for name in sorted(subset_dict.keys())]
-
-    def write_ls3(self, ls3file):
+    def write_ls3_file(self, ls3file):
         sce = self.config.context.scene
 
         if self.use_lsb:
@@ -981,8 +967,6 @@ class Ls3Exporter:
 
         # Create a new XML document
         self.xmldoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
-
-        self.subset_data = []
 
         # Write file info
         infoNode = self.xmldoc.createElement("Info")
@@ -1082,8 +1066,9 @@ class Ls3Exporter:
             self.write_anchor_points(landschaftNode)
 
         # Write subsets.
+        subset_nodes = []
         for subset in ls3file.subsets:
-            self.write_subset(landschaftNode, subset, ls3file)
+            subset_nodes.append(self.write_subset_node(landschaftNode, subset, ls3file))
             ls3file.boundingr = max(ls3file.boundingr, subset.boundingr)
 
         # Get animations and their animation numbers.
@@ -1211,18 +1196,28 @@ class Ls3Exporter:
         info('Exporting LS3 file {}', filepath)
         with open(filepath, 'wb') as fp:
             prettyxml = self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep)
-            if self.lsbwriter is None:
-                for index, (vertexdata, facedata) in enumerate(self.subset_data):
+
+            # Optimize mesh and write mesh data
+            for index, subset in enumerate(ls3file.subsets):
+                if self.config.optimizeMesh:
+                    new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
+                    subset.facedata = [(new_vidx[entry[0]], new_vidx[entry[1]], new_vidx[entry[2]]) for entry in subset.facedata]
+                    num_deleted_vertices = sum(v is None for v in subset.vertexdata)
+                    info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
+
+                if self.lsbwriter is not None:
+                    self.lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
+                else:
                     prettyxml = prettyxml.replace(
                             bytearray(SUBSET_XML_PLACEHOLDER.format(index), 'utf-8'),
-                            bytearray(self.get_subset_xml(vertexdata, facedata), 'utf-8'))
+                            bytearray(self.get_subset_xml(subset), 'utf-8'))
             fp.write(prettyxml)
 
         info("Bounding radius: {} m", int(ceil(ls3file.boundingr)))
 
     def export_ls3(self):
         debug("Exported subset IDs:")
-        debug("{}", str(self.exported_subset_identifiers))
+        debug("{}", str(self.exported_subsets))
         ls3files = self.get_files()
 
         # ls3files forms a tree, traverse it in postorder so that each file has all information (bounding radius)
@@ -1232,8 +1227,11 @@ class Ls3Exporter:
 
         while len(work_list):
             cur_file = work_list.pop()
+            for ob in cur_file.objects:
+                self.write_object_data(ob, cur_file)
+
             write_list.insert(0, cur_file)
             work_list.extend([f for f in cur_file.linked_files if f.must_export])
 
         for ls3file in write_list:
-            self.write_ls3(ls3file)
+            self.write_ls3_file(ls3file)
