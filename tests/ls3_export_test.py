@@ -1317,6 +1317,14 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual(6, int(animation_nodes[0].attrib["AniID"]))
 
+  def test_linked_file_boundingr(self):
+    self.open("linked_file_boundingr")
+    files = self.export_and_parse_multiple(["Cube"])[2]
+
+    root = files[""]
+    verknuepfte_node = root.find("./Landschaft/Verknuepfte")
+    self.assertEqual(16, int(verknuepfte_node.attrib["BoundingR"]))
+
   def test_linked_file_animation_parented(self):
     self.open("linked_file_animation_parented")
     files = self.export_and_parse_multiple(["Cube", "Cube.001"])[2]
