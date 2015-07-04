@@ -435,7 +435,9 @@ class Ls3Exporter:
     def write_subset_node(self, landschaftNode, subset, ls3file):
         subsetNode = self.xmldoc.createElement("SubSet")
         material = subset.identifier.material
-        try:
+
+        self.write_subset_material(subsetNode, material)
+        if material is not None:
             if material.zusi_landscape_type != bpy.types.Material.zusi_landscape_type[1]["default"]:
                 subsetNode.setAttribute("TypLs3", material.zusi_landscape_type)
             if material.zusi_gf_type != bpy.types.Material.zusi_gf_type[1]["default"]:
@@ -446,10 +448,6 @@ class Ls3Exporter:
                 subsetNode.setAttribute("zZoom", str(material.zusi_signal_magnification))
             if material.offset_z:
                 subsetNode.setAttribute("zBias", str(self.z_bias_map[material.offset_z]))
-
-            self.write_subset_material(subsetNode, material)
-        except (IndexError, AttributeError):
-            pass
 
         if self.lsbwriter is None:
             # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
@@ -647,6 +645,13 @@ class Ls3Exporter:
         ])
 
     def write_subset_material(self, subsetNode, material):
+        renderFlagsNode = self.xmldoc.createElement("RenderFlags")
+        subsetNode.appendChild(renderFlagsNode)
+
+        if material is None:
+            renderFlagsNode.setAttribute("TexVoreinstellung", "1")
+            return
+
         # Set ambient, diffuse, and emit color.
         # Zusi's lighting model works as follows:
         # An object will always have its night color (day and night).
@@ -682,9 +687,7 @@ class Ls3Exporter:
             # Emit alpha is ignored in Zusi.
             subsetNode.setAttribute("Ce", rgba_to_rgb_hex_string(emit_color, 0))
 
-        renderFlagsNode = self.xmldoc.createElement("RenderFlags")
         renderFlagsNode.setAttribute("TexVoreinstellung", material.zusi_texture_preset)
-        
         if material.zusi_texture_preset == "0":
             # Custom texture preset
             renderFlagsNode.setAttribute("SHADEMODE", material.result_stage.D3DRS_SHADEMODE)
@@ -712,8 +715,6 @@ class Ls3Exporter:
                 texflagsNode.setAttribute("ALPHAARG0", texstage.D3DTSS_ALPHAARG0)
                 texflagsNode.setAttribute("RESULTARG", texstage.D3DTSS_RESULTARG)
                 renderFlagsNode.appendChild(texflagsNode)
-        
-        subsetNode.appendChild(renderFlagsNode)
 
         # Write textures
         for idx, texture_slot in enumerate(self.get_active_texture_slots(material)):

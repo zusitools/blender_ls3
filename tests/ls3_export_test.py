@@ -408,6 +408,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(25.5, float(subset.attrib["MeterProTex"]))
     self.assertEqual(35, float(subset.attrib["MeterProTex2"]))
 
+  def test_no_material(self):
+    self.open("no_material")
+    root = self.export_and_parse()
+    subset = root.find("./Landschaft/SubSet")
+    renderflags = subset.find("./RenderFlags")
+    self.assertEqual("1", renderflags.attrib["TexVoreinstellung"])
+
   def test_night_color(self):
     self.open("nightcolor")
     root = self.export_and_parse()
