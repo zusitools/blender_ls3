@@ -504,16 +504,27 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
                 exporter = ls3_export.Ls3Exporter(settings)
                 exporter.export_ls3()
 
-        runbatch()
+        if True:
+            runbatch()
 
-        # import profile, pstats
-        # p = profile.Profile()
-        # p.runctx('runbatch()', {}, {'runbatch': runbatch})
-        # s = pstats.Stats(p)
-        # s.strip_dirs()
-        # s.sort_stats('cumtime')
-        # s.print_stats()
-        # s.print_callers()
+        elif False:
+            # Profiling with LineProfiler
+            import line_profiler
+            p = line_profiler.LineProfiler(runbatch)
+            p.add_function(zusicommon.optimize_mesh)
+            p.runctx('runbatch()', {}, {'runbatch': runbatch})
+            p.print_stats()
+
+        elif False:
+            # Profiling with Profile
+            import profile, pstats
+            p = profile.Profile()
+            p.runctx('runbatch()', {}, {'runbatch': runbatch})
+            s = pstats.Stats(p)
+            s.strip_dirs()
+            s.sort_stats('cumtime')
+            s.print_stats()
+            s.print_callers()
 
         num_files = len(batch_export_settings[bpy.data.filepath])
         self.report({'INFO'}, i18n.language.ngettext("Successfully exported %d file", "Successfully exported %d files", num_files) % num_files)
