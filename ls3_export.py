@@ -476,6 +476,8 @@ class Ls3Exporter:
         vgroup_yz = -1 if "Normal constraint YZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint YZ"].index
         vgroup_xz = -1 if "Normal constraint XZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XZ"].index
 
+        use_rail_normals = ob.data and ob.data.zusi_is_rail
+
         # Apply modifiers and transform the mesh so that the vertex coordinates
         # are global coordinates. Also recalculate the vertex normals.
         mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
@@ -564,27 +566,25 @@ class Ls3Exporter:
             # Write vertex coordinates (location, normal, and UV coordinates)
             for vertex_no, vertex_index in enumerate(face.vertices):
                 v = mesh.vertices[vertex_index]
-                uvdata1 = (0.0, 1.0)
-                uvdata2 = (0.0, 1.0)
+                face_uv_layers = uvlayers[face.material_index]
 
-                for texindex in range(0, 2):
-                    if texindex >= active_uvmaps_count:
-                        continue
+                # Retrieve UV data. The loop over range(0, min(active_uvmaps_count, 2)) is
+                # unrolled for performance reasons.
+                if face_uv_layers[0] is not None:
+                    uv_raw = face_uv_layers[0].data[face_index].uv_raw
+                    uvdata1 = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
+                else:
+                    uvdata1 = (0.0, 1.0)
 
-                    uvlayer = uvlayers[face.material_index][texindex]
-                    if uvlayer is None:
-                        continue
-
-                    uv_raw = uvlayer.data[face_index].uv_raw
-                    uvdata = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
-                    if texindex == 0:
-                        uvdata1 = uvdata
-                    else:
-                        uvdata2 = uvdata
+                if face_uv_layers[1] is not None:
+                    uv_raw = face_uv_layers[1].data[face_index].uv_raw
+                    uvdata2 = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
+                else:
+                    uvdata2 = (0.0, 1.0)
 
                 # Since the vertices are exported per-face, get the vertex normal from the face normal,
                 # except when the face is set to "smooth"
-                if ob.data and ob.data.zusi_is_rail:
+                if use_rail_normals:
                     normal = (0, 0, 1)
                 else:
                     if use_auto_smooth:
@@ -606,7 +606,7 @@ class Ls3Exporter:
                         normal = (face.normal[1], -face.normal[0], -face.normal[2])
 
                     if must_flip_normals:
-                        normal = list(map(lambda x : -x, normal))
+                        normal = (-normal[0], -normal[1], -normal[2])
 
                 # Calculate square of vertex length (projected onto the XY plane)
                 # for the bounding radius.
