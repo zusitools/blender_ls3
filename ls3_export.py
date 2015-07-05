@@ -19,6 +19,7 @@
 
 import bpy
 import os
+import array
 import xml.dom.minidom as dom
 from . import zusiprops
 from .zusicommon import zusicommon
@@ -184,7 +185,7 @@ class Ls3Subset:
         self.identifier = identifier
         self.boundingr = 0
         self.vertexdata = []
-        self.facedata = []
+        self.facedata = array.array('H')
 
     def __str__(self):
         return str(self.identifier)
@@ -449,7 +450,7 @@ class Ls3Exporter:
             if material.offset_z:
                 subsetNode.setAttribute("zBias", str(self.z_bias_map[material.offset_z]))
 
-        if self.lsbwriter is None:
+        if not self.use_lsb:
             # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
             # Insert a placeholder text node instead and replace that with the manually generated
             # XML string for the <Vertex> and <Face> nodes after generating the XML string. Yes, this is ugly.
@@ -545,16 +546,16 @@ class Ls3Exporter:
             # Write the first triangle of the face
             # Optionally reverse order of faces to flip normals
             if must_flip_normals:
-                subset.facedata.append((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
+                subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
             else:
-                subset.facedata.append((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
+                subset.facedata.extend((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
 
             # If the face is a quad, write the second triangle too.
             if len(face.vertices) == 4:
                 if must_flip_normals:
-                    subset.facedata.append((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
+                    subset.facedata.extend((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
                 else:
-                    subset.facedata.append((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
+                    subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
 
             # Compile a list of all vertices to mark as "don't merge".
             # Those are the vertices that form a sharp edge in the current face.
@@ -640,8 +641,8 @@ class Ls3Exporter:
             + '</Vertex>'
             for entry in subset.vertexdata if entry is not None
         ] + [
-            '<Face i="' + ";".join(map(str, entry)) + '"/>'
-            for entry in subset.facedata
+            '<Face i="' + str(subset.facedata[3*i]) + ";" + str(subset.facedata[3*i+1]) + ";" + str(subset.facedata[3*i+2]) + '"/>'
+            for i in range(0, len(subset.facedata) // 3)
         ])
 
     def write_subset_material(self, subsetNode, material):
@@ -969,12 +970,6 @@ class Ls3Exporter:
     def write_ls3_file(self, ls3file):
         sce = self.config.context.scene
 
-        if self.use_lsb:
-            from . import lsb
-            self.lsbwriter = lsb.LsbWriter()
-        else:
-            self.lsbwriter = None
-
         # Create a new XML document
         self.xmldoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
 
@@ -1188,33 +1183,37 @@ class Ls3Exporter:
             os.path.realpath(os.path.expanduser(self.config.fileDirectory)),
             ls3file.filename)
 
-        for index, subset in enumerate(ls3file.subsets):
-            if self.config.optimizeMesh:
-                new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-                subset.facedata = [(new_vidx[entry[0]], new_vidx[entry[1]], new_vidx[entry[2]]) for entry in subset.facedata]
-                num_deleted_vertices = sum(v is None for v in subset.vertexdata)
-                info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
-
-            if self.lsbwriter is not None:
-                self.lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
-
-        if self.lsbwriter is not None:
+        if self.use_lsb:
             (basename, ext) = os.path.splitext(filepath)
             lsbpath = basename + ".lsb"
         
-            with open(lsbpath, 'wb') as lsb_fp:
-                info('Exporting LSB file {}', lsbpath)
-                self.lsbwriter.write_to_file(lsb_fp)
+            lsb_fp = open(lsbpath, 'wb')
+            from . import lsb
+            lsbwriter = lsb.LsbWriter(lsb_fp)
+            info('Exporting LSB file {}', lsbpath)
 
             lsbNode = self.xmldoc.createElement("lsb")
             lsbNode.setAttribute("Dateiname", os.path.basename(lsbpath))
             landschaftNode.appendChild(lsbNode)
 
+        for index, subset in enumerate(ls3file.subsets):
+            if self.config.optimizeMesh:
+                new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
+                subset.facedata = array.array('H', [new_vidx[x] for x in subset.facedata])
+                num_deleted_vertices = sum(v is None for v in subset.vertexdata)
+                info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
+
+            if self.use_lsb:
+                lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
+
+        if self.use_lsb:
+            lsb_fp.close()
+
         # Write XML document to file
         info('Exporting LS3 file {}', filepath)
         with open(filepath, 'wb') as fp:
             prettyxml = self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep)
-            if self.lsbwriter is None:
+            if not self.use_lsb:
                 for index, subset in enumerate(ls3file.subsets):
                     prettyxml = prettyxml.replace(
                             bytearray(SUBSET_XML_PLACEHOLDER.format(index), 'utf-8'),
