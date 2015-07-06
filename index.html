@@ -8,62 +8,60 @@
   <body>
 
 <h1>Installation</h1>
-<p>siehe Readme unter <a href="https://github.com/zusi/zusitools">https://github.com/zusi/zusitools</a></p>
+<p>siehe Readme unter <a href="https://github.com/zusitools/blender_ls3">https://github.com/zusitools/blender_ls3</a></p>
 
-<p>Es wird Blender Version 2.63a oder höher vorausgesetzt.</p>
+<p>Es wird Blender Version 2.66 oder höher vorausgesetzt.</p>
 
 <h1>LS3-Export</h1>
 
-<p>Der LS3-Export kann unter „File → Export → Zusi Landscape (.ls3)“ oder unter „<em>Leertaste</em> → Export LS3“ aufgerufen werden.</p>
+<p>Der LS3-Export kann unter „File → Export → Zusi-Landschaft (.ls3)“ oder unter „<em>Leertaste</em> → LS3 exportieren“ aufgerufen werden.</p>
 
 <h2>Export-Einstellungen</h2>
 
 <img src="exporteinstellungen.png" />
 
 <dl>
-	<dt>Variants</dt><dd>Wird <a href="#varianten-export">weiter unten</a> erklärt</dd>
+	<dt>Varianten</dt><dd>Wird <a href="#varianten-export">weiter unten</a> erklärt</dd>
 	<dt>Export</dt><dd>Legt fest, welche Objekte exportiert werden sollen.
 		<dl>
-			<dt>All objects</dt><dd>Alle in der Szene befindlichen Objekte werden exportiert</dd>
-			<dt>Selected objects</dt><dd>Nur die ausgewählten Objekte werden exportiert.</dd>
-			<dt>Subsets containing selected objects</dt><dd>Alle Subsets, die mindestens ein ausgewähltes Objekt enthalten, werden exportiert. Für den Export eines Subsets genügt es also, ein Objekt aus diesem Subset auszuwählen und als Exportmodus „Subsets containing selected objects“ einzustellen.</dd>
+			<dt>Alle Objekte</dt><dd>Alle in der Szene befindlichen Objekte werden exportiert</dd>
+			<dt>Ausgewählte Objekte</dt><dd>Nur die in Blender ausgewählten Objekte werden exportiert.</dd>
+			<dt>Subsets der ausgewählten Objekte</dt><dd>Alle Subsets, die mindestens ein ausgewähltes Objekt enthalten, werden exportiert. Für den Export eines einzelnen Subsets genügt es also, ein Objekt aus diesem Subset auszuwählen und diesen Exportmodus einzustellen.</dd>
 		</dl>
-		Dabei ist zu beachten, dass die Auswahl nach Varianten Priorität hat, d.h. ein ausgewähltes Objekt, das in der zu exportierenden Variante nicht sichtbar ist, wird auch in der Einstellung „Selected objects“ nicht exportiert.
+		Die Varianten-Sichtbarkeit hat Priorität, d.h. ein ausgewähltes Objekt, das in keiner der zu exportierenden Varianten sichtbar ist, wird auch in der Einstellung „Selected objects“ nicht exportiert.
 	</dd>
-	<dt>Optimize mesh</dt><dd>Aktiviert eine Optimierung zur Reduzierung der Knotenanzahl eines Subsets. Das Aktivieren dieser Option ist dringend zu empfehlen, da die exportierte Datei sonst sehr viele Knoten enthält.
-	 
-	 <p class="klein">Technische Erklärung: In Blender kann ein Knoten mehrere UV-Koordinaten haben (eine pro Fläche, zu der er gehört). Im Bild sieht man, dass der markierte Knoten im UV-Editor drei Mal auftaucht: zweimal zwischen „01“ und „02“ (beide UV-Knoten liegen dabei übereinander) und einmal bei „14“.</p>
-	
-	<p class="klein"><img src="optimierung.png" /></p>
-	
-	<p class="klein">In Zusi kann ein Knoten dagegen nur eine UV-Koordinate haben. Daher wird der markierte Knoten für jede Fläche, zu der er gehört, als separater Knoten exportiert. Die Optimierung erkent nun, dass zwei der exportierten Vektoren (der markierte Knoten als Teil der Fläche 01 und der markierte Knoten als Teil der Fläche 02) die gleiche Position, den gleichen Normalenvektor und die gleiche UV-Koordinate haben, und führt sie zusammen. Dies geschieht mit einer gewissen Toleranz, da man die UV-Koordinaten im Allgemeinen nicht exakt einstellt. Diese Toleranz lässt sich mit den drei Schiebereglern unterhalb von „Optimize mesh“ einstellen.</p></dd>
+	<dt>Mesh optimieren</dt><dd>Aktiviert eine Optimierung zur Reduzierung der Vertexzahl eines Subsets. Das Aktivieren dieser Option ist dringend zu empfehlen, da die exportierte Datei sonst unnötig viele Vertices enthält.
 </dl>
 
 <h2>Subset-Export</h2>
 
 <img src="objekteinstellungen.png" />
 
-<p>Es kann manchmal nötig sein, ein Zusi-Subset als mehrere Objekte anzulegen. Beispielsweise kann ein Wagenkasten zum größten Teil symmetrisch sein, sodass man mit dem Mirror-Modifier arbeiten kann. Einige Teile wie Beschriftungen können jedoch auch nur einseitig vorkommen. In diesem Falle kann man die beiden Objekte getrennt anlegen und sie beim Export zu einem Subset verschmelzen.</p>
+<p>Es kann manchmal nötig sein, ein Zusi-Mesh-Subset als mehrere Objekte in Blender anzulegen. Beispielsweise könnte ein Wagenkasten zum größten Teil symmetrisch sein, sodass man mit dem Mirror-Modifier arbeiten kann, aber einige Teile wie Beschriftungen könnten nur einseitig vorkommen. In diesem Fall kann man Wagenkasten und Beschriftungen als getrennte Objekte anlegen, ihnen aber dasselbe Material zuweisen. Dann werden sie beim Export automatisch zu einem Subset verschmelzen.</p>
 
-<p>Standardmäßig werden alle Objekte, die ein gemeinsames Material besitzen, zu einem Subset zusammengefasst. Der Name des Subsets entspricht dem Materialnamen, für Objekte ohne Material lautet er „no_material“. Manchmal ist es jedoch nötig, ein oder mehrere Objekte in ein separates Subset zu packen, beispielsweise für Subset-Animationen. In diesem Falle trägt man in den Objekteigenschaften unter „Subset name“ den Namen des Subsets ein. Alle Objekte innerhalb eines Subsets müssen dasselbe Material besitzen.</p>
+<p>Alle Faces, denen dasselbe Material zugeordnet ist, landen beim Export in demselben Subset. Das ist normalerweise die gewünschte Variante; es entspricht der Funktion „Mesh-Subsets zusammenführen“ im Zusi-3D-Editor. In Spezialfällen kann man in den Eigenschaften eines Objektes einen Subset-Namen vergeben, dann wird dieses Objekt immer in einem anderen Subset als Objekte mit anderem oder leerem Subset-Namen exportiert werden. Normalerweise sollte man aber keinen Subset-Namen vergeben müssen.</p>
 
-<p>Beim Export werden die Subsets aufsteigend nach Namen geordnet.</p>
+<p>Beim Export werden die Subsets sortiert, und zwar erst alphabetisch aufsteigend nach dem Subsetnamen, dann alphabetisch aufsteigend nach dem Materialnamen. Transparente Materialien sollte man also so benennen, dass sie als letztes exportiert werden, beispielsweise „zz_Transparent“.</p>
 
 <h2><a name="varianten-export" />Varianten-Export</h2>
 
-<p>Mehrere Varianten eines Objekts unterscheiden sich oft nur in Details. Ein Beispiel sind unterschiedliche Lackierungen, bei denen im Idealfall nur die Textur ausgetauscht werden muss. Um solche Varianten effizient bauen zu können, wird die Bauweise unterstützt, alle Varianten in einer Datei zu bauen. Gerade nicht benötigte Objekte kann man in Blender mit der Taste „H“ unsichtbar machen, mit „Alt+H“ werden sie wieder sichtbar. Die Funktion <a href="#varianten-anzeigen">„Varianten anzeigen“</a> automatisiert dieses Verstecken und Zeigen von Objekten.</p>
+<p>Mehrere Varianten eines Objekts unterscheiden sich oft nur in Details. Ein Beispiel sind unterschiedliche Lackierungen, bei denen im Idealfall nur die Textur ausgetauscht werden muss. Der Exporter unterstützt deshalb die Bauweise, alle Varianten in einer Datei zu bauen. Für Objekte und Texturen kann man festlegen, ob sie in der gerade exportierten Variante sichtbar sein sollen.</p>
+    
+<p>Beim Bau kann man mit der Taste „H“ Objekte unsichtbar machen, mit „Alt+H“ werden sie wieder sichtbar. Die Funktion <a href="#varianten-anzeigen">„Varianten anzeigen“</a> versteckt und zeigt Objekte und Texturen abhängig von der ausgewählten Variante.</p>
 
 <p>Varianten müssen zunächst global für die Szene definiert werden. Dies geschieht in den Szeneneinstellungen: Über die Knöpfe „+“ und „-“ können Varianten hinzugefügt und gelöscht werden.</p>
 
 <img src="varianteneinstellungen.png" />
 
-<p>Für jedes Objekt und jede Textur kann nun die Sichtbarkeit festgelegt werden. Dazu ist für jede Variante ein Ankreuzfeld vorgesehen (siehe Screenshot weiter oben). Standardmäßig sind Objekte und Texturen immer sichtbar. Es kann nun festgelegt werden, dass das Objekt/die Textur nur in den ausgewählten Varianten sichtbar sein soll („Visible only in selected variants“) oder nur in den ausgewählten Varianten unsichtbar sein soll („Visible in all but the selected variants“).</p>
+<p>Für jedes Objekt und jede Textur kann eine Varianten-Sichtbarkeit festgelegt werden. Dazu ist für jede Variante ein Ankreuzfeld vorgesehen (siehe Screenshot weiter oben). Standardmäßig sind Objekte und Texturen immer sichtbar. Es kann festgelegt werden, dass das Objekt/die Textur nur in den ausgewählten Varianten sichtbar sein soll oder nur in den ausgewählten Varianten unsichtbar sein soll.</p>
 
-<p>Beim Export kann nun ausgewählt werden, welche Varianten in die exportierte Datei übernommen werden sollen. Die objekt- und texturspezifischen Varianteneinstellungen haben nur dann einen Effekt, wenn hier eine oder mehrere Varianten ausgewählt werden, ansonsten sind alle Objekte und Texturen sichtbar.</p>
+<p>Beim Export kann man auswählen, welche Varianten in die exportierte Datei übernommen werden sollen. Wenn man keine Variante ankreuzt, werden die Einstellungen zur Varianten-Sichtbarkeit ignoriert.</p>
+
+<p>In Blender kann man in den Materialeinstellungen Texturen über das Ankreuzkästchen sichtbar und unsichtbar schalten. Normalerweise berücksichtigt das der Exporter, benutzt also die ersten beiden Texturen, die angekreuzt sind. Wenn jedoch beim Export Varianten ausgewählt wurden, werden stattdessen die ersten beiden Texturen genutzt, die in den gewählten Varianten sichtbar sind.</p>
 
 <h2><a name="varianten-anzeigen"/>Varianten anzeigen</h2>
 
-<p>Diese Funktion erlaubt die Auswahl einer oder mehrerer Varianten (wie beim Export) und blendet die Objekte und Texturen aus, die in den ausgewählten Varianten nicht sichtbar sind. Aufzurufen ist sie im Menü des 3D-Fensters unter „View → Show Variants …“. Die Varianten-Auswahlliste wird dann im „Tool Shelf“-Bereich auf der linken Seite des 3D-Fensters (Taste T) gezeigt.</p>
+<p>Diese Funktion erlaubt die Auswahl einer oder mehrerer Varianten (wie beim Export) und blendet die Objekte und Texturen aus, die in den ausgewählten Varianten nicht sichtbar sind. Aufzurufen ist sie im Menü des 3D-Fensters unter „View → Varianten anzeigen …“. Die Varianten-Auswahlliste wird dann im „Tool Shelf“-Bereich auf der linken Seite des 3D-Fensters (Taste T) gezeigt.</p>
 
 <img src="variantenanzeigen.png" />
 
@@ -83,9 +81,9 @@
 
 <h2>Scharfe Kanten</h2>
 
-<p>Es besteht die Möglichkeit, Kanten explizit als scharf zu markieren. Dann werden die Knoten, aus denen diese Kanten bestehen, von der Mesh-Optimierung unabhängig vom Winkel zwischen den Normalen niemals zusammengefasst.</p>
+<p>Es besteht die Möglichkeit, Kanten explizit als scharf zu markieren. Dann werden die Vertices, aus denen diese Kanten bestehen, von der Mesh-Optimierung unabhängig vom Winkel zwischen den Normalen niemals zusammengefasst.</p>
 
-<p>In Blender kann eine Kante unter „Mesh → Edges → Mark sharp“ als scharf markiert werden. Sie wird dann im Editmode blau markiert:</p>
+<p>In Blender kann eine Kante unter „Mesh → Edges → Mark sharp“ als scharf markiert werden. (Wenn man im „Tool Shelf“-Bereich auf der linken Seite des 3D-Fensters (Taste T) einen Haken vor „Clear“ setzt, wird die Markierung wieder gelöscht). Scharfe Kanten werden im Editmode blau dargestellt:</p>
 
 <img src="sharpedges.png" />
 
@@ -93,21 +91,21 @@
 
 <img src="sharpedges2.png" />
 
-<p>Im Zusi-Modellbetrachter wird der Unterschied deutlich: Der linke Zylinder wirkt glatt und rund, beim rechten kann man die einzelnen Flächen erkennen:</p>
+<p>Diese Objekte werden beide mit aktivierter Mesh-Optimierung exportiert, und zwar so, dass der Normalen-Grenzwinkel größer ist als der Winkel zwischen den Seitenflächen der Zylinder. Der linke Zylinder wirkt daher im Modellbetrachter glatt und rund, beim rechten wurden die Vertices nicht zusammengeführt und man kann man die einzelnen Flächen erkennen:</p>
 
 <img src="sharpedges3.png" />
 
-<h2>Batch-Export</h2>
+<h2>Stapel-Export</h2>
 
-<p>Sind in einem Modell mehrere Varianten enthalten, kann es unter Umständen mühsam sein, sie nach einer Änderung alle einzeln zu exportieren. Für diesen Zweck gibt es die Funktion „Batch export LS3“, die mehrere Varianten auf einmal in vorher festgelegte Dateien exportiert.</p>
+<p>Sind in einem Modell mehrere Varianten enthalten, kann es unter Umständen mühsam sein, sie nach einer Änderung alle einzeln zu exportieren. Für diesen Zweck gibt es die Funktion „Stapelexport LS3“, die mehrere Varianten auf einmal in vorher festgelegte Dateien exportiert.</p>
 
-<p>Dazu muss die Datei <code>batchexport_settings.py.default</code> in <code>batchexport_settings.py</code> umbenannt werden. In dieser Datei müssen die Einstellungen abgelegt werden; deren Aufbau ist in der Datei beschrieben.</p>
+<p>Dazu muss in der Datei <code>batchexport_settings.xml</code> ein Eintrag für die Blender-Datei angelegt werden. Das Dateiformat ist in der Datei selbst beschrieben.</p>
 
-<h1>LS3-Import</h1>
+<h1>LS-/LS3-Import</h1>
 
-<p>Der LS3-Import kann unter „File → Import → Zusi Landscape (.ls3)“ oder unter „<em>Leertaste</em> → Import LS3“ aufgerufen werden. Er dürfte selbsterklärend (und wahrscheinlich nicht ganz fehlerfrei) sein.</p>
+<p>Der LS3-Import kann unter „File → Import → Zusi-Landschaft (.ls3)“ oder unter „<em>Leertaste</em> → LS3 importieren“ aufgerufen werden. Ebenso kann man unter „File → Import → Zusi-2-Landschaft (.ls)“ oder unter „<em>Leertaste</em> → LS importieren“ Zusi-2-Landschaftsdateien importieren</p>
 
-<p>Der Pfad zum Zusi-Datenverzeichnis muss momentan noch manuell eingestellt werden, um relative Pfadangaben korrekt auflösen zu können. Eine Anleitung dazu findet sich in der Datei <tt>zusiconfig.py.default</tt>.</p>
+<p>Der Pfad zum Zusi-Datenverzeichnis wird unter Windows aus der Registry ausgelesen. Unter anderen Betriebssystemen muss man den Pfad manuell einstellen. Eine Anleitung dazu findet sich in der Datei <tt>zusiconfig.py.default</tt>.</p>
 
   </body>
 </html>
