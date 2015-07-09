@@ -157,6 +157,8 @@ class Ls3Importer:
         # Each item contains a tuple of three vertex indices.
         self.currentfaces = []
 
+        self.current_meters_per_tex = [0, 0]
+
         # Path to Zusi data dir
         self.datapath = zusicommon.get_zusi_data_path()
 
@@ -220,6 +222,9 @@ class Ls3Importer:
         # Assign material to object
         mat = bpy.data.materials.new(self.config.fileName + "." + str(self.subsetno))
         self.currentmesh.materials.append(mat)
+
+        self.current_meters_per_tex[0] = float(node.getAttribute("MeterProTex")) if len(node.getAttribute("MeterProTex")) else 0
+        self.current_meters_per_tex[1] = float(node.getAttribute("MeterProTex2")) if len(node.getAttribute("MeterProTex2")) else 0
 
         # Set ambient/diffuse colors of mesh
         (ambient_bgr, ambient_color) = (True, node.getAttribute("CA")) if node.hasAttribute("CA") else (False, node.getAttribute("Ca"))
@@ -680,6 +685,7 @@ class Ls3Importer:
 
             # Add texture to current object
             mat = self.currentmesh.materials[0]
+            slotidx = sum(s is not None for s in mat.texture_slots)
 
             imgpath = zusicommon.resolve_file_path(dateinode.getAttribute("Dateiname"),
                     self.config.fileDirectory, self.datapath) # may raise RuntimeError
@@ -688,10 +694,13 @@ class Ls3Importer:
             tex = bpy.data.textures.new(self.config.fileName + "." + str(self.subsetno),  type='IMAGE')
             tex.image = img
 
-            texslot = mat.texture_slots.add()
+            texslot = mat.texture_slots.create(slotidx)
             texslot.texture = tex
             texslot.texture_coords = 'UV'
             texslot.blend_type = 'COLOR'
+
+            if slotidx < 2:
+                tex.zusi_meters_per_texture = self.current_meters_per_tex[slotidx]
 
         except(IndexError,  RuntimeError):
             pass

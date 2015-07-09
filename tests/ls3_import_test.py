@@ -118,6 +118,19 @@ class TestLs3Import(unittest.TestCase):
     for normal in tuple(zip(*(iter(vertex_normals),) * 3)):
       self.assertVectorEqual((1, 0, 0), normal, places = 3) # normals are less accurate
 
+  def test_import_meters_per_tex(self):
+    self.ls3_import("meters_per_tex.ls3")
+
+    ob = bpy.data.objects["meters_per_tex.ls3.0"]
+    mat = ob.data.materials[0]
+    self.assertEqual(0.0, mat.texture_slots[0].texture.zusi_meters_per_texture)
+    self.assertEqual(5.0, mat.texture_slots[1].texture.zusi_meters_per_texture)
+
+    ob = bpy.data.objects["meters_per_tex.ls3.1"]
+    mat = ob.data.materials[0]
+    self.assertEqual(5.0, mat.texture_slots[0].texture.zusi_meters_per_texture)
+    self.assertEqual(42.0, mat.texture_slots[1].texture.zusi_meters_per_texture)
+
   def test_night_color(self):
     self.ls3_import("nightcolor1.ls3")
     mat = bpy.data.objects["nightcolor1.ls3.0"].data.materials[0]
