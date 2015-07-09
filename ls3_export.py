@@ -229,6 +229,57 @@ class SubsetIdentifier:
                 return is_lt_name(self.animated_obj, other.animated_obj)
         return False
 
+class OrderedAttrElement(dom.Element):
+    """An XML element that writes its attributes in a defined order per tag name"""
+
+    # This is the order in which Zusi writes the file. This is to minimize diffs when editing a file with Zusi afterwards.
+    orders = {
+        "Info": ["DateiTyp", "Version", "MinVersion", "ObjektID", "Beschreibung", "EinsatzAb", "EinsatzBis", "DateiKategorie"],
+        "SubSet": ["Cd", "Ca", "Ce", "TypLs3", "TypGF", "GruppenName", "BeleuchtungTyp", "Zwangshelligkeit", "Blink", "MeterProTex", "MeterProTex2", "zBias", "zZoom", "DoppeltRendern", "Nachtumschaltung", "NachtEinstellung", "MeshV", "MeshI"],
+        "AutorEintrag": ["AutorID", "AutorName", "AutorEmail", "AutorAufwand", "AutorLizenz", "AutorBeschreibung"],
+        "Verknuepfte": ["Flags", "GruppenName", "BoundingR", "SichtbarAb", "SichtbarBis", "Vorlade", "LODbit", "Helligkeit"],
+        "RenderFlags": ["TexVoreinstellung", "SHADEMODE", "DESTBLEND", "SRCBLEND", "ALPHABLENDENABLE", "ALPHATESTENABLE", "ALPHAREF"],
+        "SubSetTexFlags": ["MINFILTER", "MAGFILTER", "COLOROP", "COLORARG1", "COLORARG2", "COLORARG0", "ALPHAOP", "ALPHAARG1", "ALPHAARG2", "ALPHAARG0", "RESULTARG"],
+        "SubSetTexFlags2": ["MINFILTER", "MAGFILTER", "COLOROP", "COLORARG1", "COLORARG2", "COLORARG0", "ALPHAOP", "ALPHAARG1", "ALPHAARG2", "ALPHAARG0", "RESULTARG"],
+        "SubSetTexFlags3": ["MINFILTER", "MAGFILTER", "COLOROP", "COLORARG1", "COLORARG2", "COLORARG0", "ALPHAOP", "ALPHAARG1", "ALPHAARG2", "ALPHAARG0", "RESULTARG"],
+        "Ankerpunkt": ["AnkerTyp", "AnkerKat", "Beschreibung"],
+        "MeshAnimation": ["AniIndex", "AniNr", "AniGeschw"],
+        "AniPunkt": ["AniZeit", "AniDimmung"],
+        "VerknAnimation": ["AniIndex", "AniNr", "AniGeschw"],
+        "q": ["X", "Y", "Z", "W"],
+    }
+
+    def writexml(self, writer, indent="", addindent="", newl=""):
+        # Copied from xml.dom.minidom except attribute writing code.
+
+        writer.write(indent+"<" + self.tagName)
+
+        attrs = self._get_attributes()
+        try:
+            for attr_name in self.orders[self.tagName]:
+                if attr_name in attrs:
+                    writer.write(" %s=\"" % attr_name)
+                    dom._write_data(writer, attrs[attr_name].value)
+                    writer.write("\"")
+        except KeyError:
+            for a_name in sorted(attrs.keys()):
+                writer.write(" %s=\"" % a_name)
+                dom._write_data(writer, attrs[a_name].value)
+                writer.write("\"")
+        if self.childNodes:
+            writer.write(">")
+            if (len(self.childNodes) == 1 and
+                self.childNodes[0].nodeType == dom.Node.TEXT_NODE):
+                self.childNodes[0].writexml(writer, '', '', '')
+            else:
+                writer.write(newl)
+                for node in self.childNodes:
+                    node.writexml(writer, indent+addindent, addindent, newl)
+                writer.write(indent)
+            writer.write("</%s>%s" % (self.tagName, newl))
+        else:
+            writer.write("/>%s"%(newl))
+
 class SubsetDataElement(dom.Text):
     """An XML node that, when writing to XML, generates XML for <Vertex> and <Face> nodes of a subset."""
     def __init__(self, ownerDocument, subset):
@@ -302,6 +353,11 @@ class Ls3Exporter:
         # Build file structure
         self.get_animations()
         self.exported_subsets = self.get_exported_subsets()
+
+    def create_element(self, tag_name):
+        e = OrderedAttrElement(tag_name)
+        e.ownerDocument = self.xmldoc
+        return e
 
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
@@ -418,7 +474,7 @@ class Ls3Exporter:
         anchor_points = {}
         for ob in self.config.context.scene.objects:
             if ob.zusi_is_anchor_point and zusicommon.is_object_visible(ob, self.config.variantIDs):
-                ankerpunktNode = self.xmldoc.createElement("Ankerpunkt")
+                ankerpunktNode = self.create_element("Ankerpunkt")
                 anchor_points[ob.name] = ankerpunktNode
 
                 if ob.zusi_anchor_point_category != bpy.types.Object.zusi_anchor_point_category[1]["default"]:
@@ -431,18 +487,18 @@ class Ls3Exporter:
                 translation, rotation_quaternion, scale = ob.matrix_world.decompose()
 
                 if translation != Vector((0.0, 0.0, 0.0)):
-                    pNode = self.xmldoc.createElement("p")
+                    pNode = self.create_element("p")
                     fill_node_xyz(pNode, -translation[1], translation[0], translation[2])
                     ankerpunktNode.appendChild(pNode)
 
                 rotation = zusi_rotation_from_quaternion(rotation_quaternion)
                 if rotation != Vector((0.0, 0.0, 0.0)):
-                    phiNode = self.xmldoc.createElement("phi")
+                    phiNode = self.create_element("phi")
                     fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
                     ankerpunktNode.appendChild(phiNode)
 
                 for entry in ob.zusi_anchor_point_files:
-                    dateiNode = self.xmldoc.createElement("Datei")
+                    dateiNode = self.create_element("Datei")
                     dateiNode.setAttribute("Dateiname", self.relpath(entry.name_realpath))
                     ankerpunktNode.appendChild(dateiNode)
 
@@ -452,7 +508,7 @@ class Ls3Exporter:
     # Adds a new subset node to the specified <Landschaft> node. The subset is given by a Ls3Subset object
     # containing the objects and the material to export.
     def write_subset_node(self, landschaftNode, subset, ls3file):
-        subsetNode = self.xmldoc.createElement("SubSet")
+        subsetNode = self.create_element("SubSet")
         material = subset.identifier.material
 
         self.write_subset_material(subsetNode, material)
@@ -649,7 +705,7 @@ class Ls3Exporter:
             subset.boundingr = max(subset.boundingr, sqrt(boundingr_squared))
 
     def write_subset_material(self, subsetNode, material):
-        renderFlagsNode = self.xmldoc.createElement("RenderFlags")
+        renderFlagsNode = self.create_element("RenderFlags")
         subsetNode.appendChild(renderFlagsNode)
 
         if material is None:
@@ -706,7 +762,7 @@ class Ls3Exporter:
             renderFlagsNode.setAttribute("ALPHAREF", str(material.result_stage.alpha_ref))
 
             for (texstage, node_name) in [(material.texture_stage_1, "SubSetTexFlags"), (material.texture_stage_2, "SubSetTexFlags2"), (material.texture_stage_3, "SubSetTexFlags3")]:
-                texflagsNode = self.xmldoc.createElement(node_name)
+                texflagsNode = self.create_element(node_name)
                 texflagsNode.setAttribute("MINFILTER", texstage.D3DSAMP_MINFILTER)
                 texflagsNode.setAttribute("MAGFILTER", texstage.D3DSAMP_MAGFILTER)
                 texflagsNode.setAttribute("COLOROP", texstage.D3DTSS_COLOROP)
@@ -724,10 +780,10 @@ class Ls3Exporter:
         for idx, texture_slot in enumerate(self.get_active_texture_slots(material)):
             if idx >= 2:
                 break
-            texture_node = self.xmldoc.createElement("Textur")
+            texture_node = self.create_element("Textur")
             if texture_slot.texture.zusi_meters_per_texture != 0:
               subsetNode.setAttribute("MeterProTex" if idx == 0 else "MeterProTex2", str(texture_slot.texture.zusi_meters_per_texture))
-            datei_node = self.xmldoc.createElement("Datei")
+            datei_node = self.create_element("Datei")
             datei_node.setAttribute("Dateiname", self.relpath(texture_slot.texture.image.filepath))
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
@@ -756,7 +812,7 @@ class Ls3Exporter:
         original_current_frame = self.config.context.scene.frame_current
         rotation_euler = None
         for keyframe_no in sorted(keyframe_nos):
-            aniPunktNode = self.xmldoc.createElement("AniPunkt")
+            aniPunktNode = self.create_element("AniPunkt")
             aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
             animation_node.appendChild(aniPunktNode)
             self.config.context.scene.frame_set(keyframe_no)
@@ -764,7 +820,7 @@ class Ls3Exporter:
 
             if write_translation:
                 translationNode = (None if loc == Vector((0.0, 0.0, 0.0))
-                    else self.xmldoc.createElement("p"))
+                    else self.create_element("p"))
                 if translationNode is not None:
                     fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
                     aniPunktNode.appendChild(translationNode)
@@ -775,7 +831,7 @@ class Ls3Exporter:
                 rotation_euler = zusi_rotation_from_quaternion(rot, rotation_euler)
                 rotation_quaternion = rotation_euler.to_quaternion()
 
-                rotationNode = self.xmldoc.createElement("q")
+                rotationNode = self.create_element("q")
                 if abs(rotation_quaternion.x) > 0.0001:
                     rotationNode.setAttribute("X", str(rotation_quaternion.x))
                 if abs(rotation_quaternion.y) > 0.0001:
@@ -988,7 +1044,7 @@ class Ls3Exporter:
         self.xmldoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
 
         # Write file info
-        infoNode = self.xmldoc.createElement("Info")
+        infoNode = self.create_element("Info")
         infoNode.setAttribute("DateiTyp", "Landschaft")
         infoNode.setAttribute("Version", "A.1")
         infoNode.setAttribute("MinVersion", "A.1")
@@ -1003,7 +1059,7 @@ class Ls3Exporter:
         self.xmldoc.documentElement.appendChild(infoNode)
 
         for author in sce.zusi_authors:
-            autorEintragNode = self.xmldoc.createElement("AutorEintrag")
+            autorEintragNode = self.create_element("AutorEintrag")
 
             if author.id != 0:
                 autorEintragNode.setAttribute("AutorID", str(author.id))
@@ -1021,7 +1077,7 @@ class Ls3Exporter:
             infoNode.appendChild(autorEintragNode)
 
         # Write the Landschaft node.
-        landschaftNode = self.xmldoc.createElement("Landschaft")
+        landschaftNode = self.create_element("Landschaft")
         self.xmldoc.documentElement.appendChild(landschaftNode)
 
         # Write linked files.
@@ -1031,12 +1087,12 @@ class Ls3Exporter:
             max_scale_factor = max(scale.x, scale.y, scale.z)
             scaled_boundingr = linked_file.boundingr * max_scale_factor
 
-            verknuepfteNode = self.xmldoc.createElement("Verknuepfte")
+            verknuepfteNode = self.create_element("Verknuepfte")
 
             boundingr = int(ceil(scaled_boundingr))
             if boundingr != 0:
                 verknuepfteNode.setAttribute("BoundingR", str(boundingr))
-            dateiNode = self.xmldoc.createElement("Datei")
+            dateiNode = self.create_element("Datei")
             dateiNode.setAttribute("Dateiname", linked_file.filename)
             verknuepfteNode.appendChild(dateiNode)
             landschaftNode.appendChild(verknuepfteNode)
@@ -1059,7 +1115,7 @@ class Ls3Exporter:
 
             # Include location and rotation in the link information if they are
             # not animated.
-            pNode = self.xmldoc.createElement("p")
+            pNode = self.create_element("p")
             verknuepfteNode.appendChild(pNode)
             write_translation = not has_location_animation(self.animations[linked_file.root_obj])
             if write_translation:
@@ -1068,14 +1124,14 @@ class Ls3Exporter:
                 ls3file.boundingr = max(ls3file.boundingr,
                     max_scale_factor * scaled_boundingr + vector_xy_length(translation))
 
-            phiNode = self.xmldoc.createElement("phi")
+            phiNode = self.create_element("phi")
             verknuepfteNode.appendChild(phiNode)
             write_rotation = not has_rotation_animation(self.animations[linked_file.root_obj])
             if write_rotation and any([abs(rotation[i]) > 0.00001 for i in range(0, 3)]):
                 fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
 
             # Always include scale in the link information because this cannot be animated.
-            skNode = self.xmldoc.createElement("sk")
+            skNode = self.create_element("sk")
             verknuepfteNode.appendChild(skNode)
             if any([abs(scale[i] - 1.0) > 0.00001 for i in range(0, 3)]):
                 fill_node_xyz(skNode, scale.y, scale.x, scale.z)
@@ -1111,7 +1167,7 @@ class Ls3Exporter:
         for ani_key in sorted(animations_by_key.keys()):
             animations = animations_by_key[ani_key]
 
-            animationNode = self.xmldoc.createElement("Animation")
+            animationNode = self.create_element("Animation")
             animationNode.setAttribute("AniID", str(ani_key[0]))
             animationNode.setAttribute("AniBeschreibung", ani_key[1])
             if ani_key[2]:
@@ -1121,7 +1177,7 @@ class Ls3Exporter:
             # Write <AniNrs> nodes.
             aninrs = self.get_aninrs(animations, animated_linked_files, animated_subsets)
             for aninr in aninrs:
-                aniNrsNode = self.xmldoc.createElement("AniNrs")
+                aniNrsNode = self.create_element("AniNrs")
                 aniNrsNode.setAttribute("AniNr", str(aninr))
                 animationNode.appendChild(aniNrsNode)
 
@@ -1130,7 +1186,7 @@ class Ls3Exporter:
         # Write mesh subset animations.
         for aninr, subset in animated_subsets:
             animation = self.animations[subset.identifier.animated_obj]
-            meshAnimationNode = self.xmldoc.createElement("MeshAnimation")
+            meshAnimationNode = self.create_element("MeshAnimation")
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(subset)))
             meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
@@ -1141,7 +1197,7 @@ class Ls3Exporter:
         # Write linked animations.
         for aninr, linked_file in animated_linked_files:
             animation = self.animations[linked_file.root_obj]
-            verknAnimationNode = self.xmldoc.createElement("VerknAnimation")
+            verknAnimationNode = self.create_element("VerknAnimation")
             verknAnimationNode.setAttribute("AniNr", str(aninr))
             verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
             verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
@@ -1165,7 +1221,7 @@ class Ls3Exporter:
             lsbwriter = lsb.LsbWriter(lsb_fp)
             info('Exporting LSB file {}', lsbpath)
 
-            lsbNode = self.xmldoc.createElement("lsb")
+            lsbNode = self.create_element("lsb")
             lsbNode.setAttribute("Dateiname", os.path.basename(lsbpath))
             landschaftNode.appendChild(lsbNode)
 
