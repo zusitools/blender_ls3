@@ -179,6 +179,11 @@ class TestLs3Import(unittest.TestCase):
     mat = bpy.data.objects["zbias.ls3.0"].data.materials[0]
     self.assertEqual(-1, mat.offset_z)
 
+  def test_ls3typ(self):
+    self.ls3_import("ls3typ.ls3")
+    mat = bpy.data.objects["ls3typ.ls3.0"].data.materials[0]
+    self.assertEqual('3', mat.zusi_landscape_type)
+
   def test_import_multiple_files(self):
     bpy.ops.import_scene.ls3(bpy.context.copy(),
       files=[{"name":"nightcolor1.ls3"}, {"name":"zbias.ls3"}],

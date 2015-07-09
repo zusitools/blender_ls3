@@ -275,6 +275,8 @@ class Ls3Importer:
         # Set some other properties
         if node.getAttribute("TypLs3") != "":
             mat.zusi_landscape_type = node.getAttribute("TypLs3")
+        elif node.getAttribute("ls3Typ") != "": # older file format versions
+            mat.zusi_landscape_type = node.getAttribute("ls3Typ")
         if node.getAttribute("TypGF") != "":
             mat.zusi_gf_type = node.getAttribute("TypGF")
         if node.getAttribute("Zwangshelligkeit") != "":
