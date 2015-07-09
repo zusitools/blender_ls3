@@ -1176,12 +1176,12 @@ class TestLs3Export(unittest.TestCase):
   def test_animation_loop(self):
     self.open("animation_loop")
     root = self.export_and_parse({"exportAnimations" : True})
-    mesh_animation_nodes = root.findall("./Landschaft/MeshAnimation")
-    self.assertEqual(3, len(mesh_animation_nodes))
+    animation_nodes = root.findall("./Landschaft/Animation")
+    self.assertEqual(3, len(animation_nodes))
 
-    self.assertNotIn("AniLoopen", mesh_animation_nodes[0].attrib)
-    self.assertEqual("1", mesh_animation_nodes[1].attrib["AniLoopen"])
-    self.assertNotIn("AniLoopen", mesh_animation_nodes[2].attrib)
+    self.assertNotIn("AniLoopen", animation_nodes[0].attrib)
+    self.assertEqual("1", animation_nodes[1].attrib["AniLoopen"])
+    self.assertNotIn("AniLoopen", animation_nodes[2].attrib)
 
   def test_set_interpolation_linear(self):
     self.open("animation_set_interpolation_linear")

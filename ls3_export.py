@@ -29,6 +29,7 @@ except:
     pass
 from math import floor, ceil, sqrt, radians
 from mathutils import *
+from collections import defaultdict
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
 # to a hex string "AARRGGBB"
@@ -969,6 +970,17 @@ class Ls3Exporter:
 
         return result
 
+    def get_animation_keys(self, animation):
+        """Returns the keys (AniID, AniBeschreibung, AniLoopen) of the <Animation> nodes this animation has to be entered in."""
+        if animation.zusi_animation_type == "0":
+            if len(animation.zusi_animation_names) == 0:
+                return [(0, get_ani_description(animation.zusi_animation_type), animation.zusi_animation_loop)]
+            else:
+                return [(0, name_wrapper.name, animation.zusi_animation_loop) for name_wrapper in animation.zusi_animation_names]
+        else:
+            return [(int(animation.zusi_animation_type), get_ani_description(animation.zusi_animation_type),
+                    animation.zusi_animation_loop if animation.zusi_animation_type == "1" else False)]
+
     def write_ls3_file(self, ls3file):
         sce = self.config.context.scene
 
@@ -1080,13 +1092,10 @@ class Ls3Exporter:
 
         # Get animations and their animation numbers.
         animations = self.get_animations_for_file(ls3file) if self.config.exportAnimations else []
-        animations_by_type = dict()
+        animations_by_key = defaultdict(list)
         for animation in animations:
-            ani_type = animation.zusi_animation_type
-            if ani_type not in animations_by_type:
-                animations_by_type[ani_type] = [animation]
-            else:
-                animations_by_type[ani_type].append(animation)
+            for animation_key in self.get_animation_keys(animation):
+                animations_by_key[animation_key].append(animation)
 
         # Collect mesh animations and linked animations as tuples (ani no., subset/linked file).
         # The root subset of a file is not animated via a subset animation, but rather via a
@@ -1099,56 +1108,22 @@ class Ls3Exporter:
             if self.is_animated(linked_file.root_obj)]
 
         # Write animation declarations for this file and any linked file.
-        for ani_type in sorted(animations_by_type.keys()):
-            animations = animations_by_type[ani_type]
+        for ani_key in sorted(animations_by_key.keys()):
+            animations = animations_by_key[ani_key]
 
-            # For animation type 0, the animation name is relevant. A separate <Animation> node is written for
-            # each animation name. For all other animation types, only one <Animation> node is written for
-            # all animations of this type, using a generic name.
-            if ani_type == "0":
-                # For each animation name, collect the actions that participate in this animation.
-                animations_by_name = dict()
-                for animation in animations:
-                    if len(animation.zusi_animation_names) == 0:
-                        name = get_ani_description(ani_type)
-                        if name not in animations_by_name:
-                            animations_by_name[name] = set()
-                        animations_by_name[name].add(animation)
-                    else:
-                        for name_wrapper in animation.zusi_animation_names:
-                            name = name_wrapper.name
-                            if name not in animations_by_name:
-                                animations_by_name[name] = set()
-                            animations_by_name[name].add(animation)
+            animationNode = self.xmldoc.createElement("Animation")
+            animationNode.setAttribute("AniID", str(ani_key[0]))
+            animationNode.setAttribute("AniBeschreibung", ani_key[1])
+            if ani_key[2]:
+                animationNode.setAttribute("AniLoopen", "1")
+            landschaftNode.appendChild(animationNode)
 
-                # Write the animations ordered by name.
-                for name in sorted(animations_by_name.keys()):
-                    aninrs = self.get_aninrs(animations_by_name[name], animated_linked_files, animated_subsets)
-
-                    animationNode = self.xmldoc.createElement("Animation")
-                    animationNode.setAttribute("AniID", ani_type)
-                    animationNode.setAttribute("AniBeschreibung", name)
-                    landschaftNode.appendChild(animationNode)
-
-                    # Write <AniNrs> nodes.
-                    aninrs = self.get_aninrs(animations_by_name[name], animated_linked_files, animated_subsets)
-                    for aninr in aninrs:
-                        aniNrsNode = self.xmldoc.createElement("AniNrs")
-                        aniNrsNode.setAttribute("AniNr", str(aninr))
-                        animationNode.appendChild(aniNrsNode)
-
-            else:
-                animationNode = self.xmldoc.createElement("Animation")
-                animationNode.setAttribute("AniID", ani_type)
-                animationNode.setAttribute("AniBeschreibung", get_ani_description(ani_type))
-                landschaftNode.appendChild(animationNode)
-
-                # Write <AniNrs> nodes.
-                aninrs = self.get_aninrs(animations, animated_linked_files, animated_subsets)
-                for aninr in aninrs:
-                    aniNrsNode = self.xmldoc.createElement("AniNrs")
-                    aniNrsNode.setAttribute("AniNr", str(aninr))
-                    animationNode.appendChild(aniNrsNode)
+            # Write <AniNrs> nodes.
+            aninrs = self.get_aninrs(animations, animated_linked_files, animated_subsets)
+            for aninr in aninrs:
+                aniNrsNode = self.xmldoc.createElement("AniNrs")
+                aniNrsNode.setAttribute("AniNr", str(aninr))
+                animationNode.appendChild(aniNrsNode)
 
         # Write animation definitions for subsets and links in this file.
 
@@ -1159,8 +1134,6 @@ class Ls3Exporter:
             meshAnimationNode.setAttribute("AniNr", str(aninr))
             meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(subset)))
             meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
-            if animation.zusi_animation_loop and animation.zusi_animation_type in ["0", "1"]:
-                meshAnimationNode.setAttribute("AniLoopen", "1")
             landschaftNode.appendChild(meshAnimationNode)
             translation_length = self.write_animation(subset.identifier.animated_obj, ls3file.root_obj, meshAnimationNode)
             ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
@@ -1172,8 +1145,6 @@ class Ls3Exporter:
             verknAnimationNode.setAttribute("AniNr", str(aninr))
             verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
             verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
-            if animation.zusi_animation_loop and animation.zusi_animation_type in ["0", "1"]:
-                meshAnimationNode.setAttribute("AniLoopen", "1")
             landschaftNode.appendChild(verknAnimationNode)
             translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode,
                 write_translation = has_location_animation(self.animations[linked_file.root_obj]),
