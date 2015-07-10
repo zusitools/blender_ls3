@@ -174,6 +174,7 @@ class Ls3File:
         self.is_billboard = False
         self.is_readonly = False
         self.must_export = True  # set to False for links to existing files
+        self.animation_keys = set()
 
 # Stores information about one subset of a LS3 file.
 #     identifier: The internal identifier of the subset. 
@@ -875,20 +876,6 @@ class Ls3Exporter:
 
         return self.animations[ob]
 
-    # Returns a set of all animations of objects in this file and linked files.
-    def get_animations_for_file(self, ls3file, include_root = False):
-        result = set()
-        for ob in ls3file.objects:
-            if ob == ls3file.root_obj and not include_root:
-                continue
-            animation = self.animations[ob]
-            if animation is not None:
-                result.add(animation)
-        for linked_file in ls3file.linked_files:
-            result |= self.get_animations_for_file(linked_file,
-                linked_file.must_export or self.is_animated(linked_file.root_obj))
-        return result
-
     # Build list of files from the scene's objects. The main file will always be the first item in the list.
     def get_files(self):
         split_file_name = self.config.fileName.split(os.extsep, 1)
@@ -904,9 +891,16 @@ class Ls3Exporter:
         # The resulting files are indexed by their root object. The main file is the only file without a root object.
         result = { None : main_file }
 
+        def is_object_exported(ob):
+            return ((
+                len(self.exported_subsets[ob]) or
+                ob.zusi_is_linked_file and
+                    (ob.name in self.config.selectedObjects or self.config.exportSelected in [EXPORT_ALL_OBJECTS, EXPORT_SELECTED_MATERIALS])
+                ) and zusicommon.is_object_visible(ob, self.config.variantIDs))
+
         # Collect all objects that have to be the root of a file.
         # Those are the root objects for all exported objects, then the root objects of those objects, and so on.
-        work_list = [ob for ob in self.config.context.scene.objects.values() if len(self.exported_subsets[ob]) or ob.zusi_is_linked_file]
+        work_list = [ob for ob in self.config.context.scene.objects.values() if is_object_exported(ob)]
         visited = set()
         while len(work_list):
             ob = work_list.pop()
@@ -927,13 +921,13 @@ class Ls3Exporter:
             if ob in result:
                 result[ob].objects.add(ob)
                 result[self.get_file_root(ob)].linked_files.append(result[ob])
-            elif len(self.exported_subsets[ob]):
+            elif is_object_exported(ob):
                 cur = ob.parent
                 while cur is not None and cur not in result:
                     cur = cur.parent
                 result[cur].objects.add(ob)
 
-            if ob.zusi_is_linked_file and zusicommon.is_object_visible(ob, self.config.variantIDs):
+            if ob.zusi_is_linked_file and is_object_exported(ob):
                 linked_file = Ls3File()
                 linked_file.filename = self.relpath(ob.zusi_link_file_name_realpath)
                 linked_file.root_obj = ob
@@ -1146,27 +1140,51 @@ class Ls3Exporter:
             subset_nodes.append(self.write_subset_node(landschaftNode, subset, ls3file))
             ls3file.boundingr = max(ls3file.boundingr, subset.boundingr)
 
-        # Get animations and their animation numbers.
-        animations = self.get_animations_for_file(ls3file) if self.config.exportAnimations else []
-        animations_by_key = defaultdict(list)
-        for animation in animations:
-            for animation_key in self.get_animation_keys(animation):
-                animations_by_key[animation_key].append(animation)
+        # Write animation definitions for this file and any linked file.
+        ani_nr = 0
+        ani_nrs_by_key = defaultdict(list)
+        animation_nodes = []
 
-        # Collect mesh animations and linked animations as tuples (ani no., subset/linked file).
-        # The root subset of a file is not animated via a subset animation, but rather via a
-        # linked animation in the parent file.
-        animated_subsets = [(idx + 1, subset)
-            for (idx, subset) in enumerate(ls3file.subsets)
-            if subset.identifier.animated_obj is not None and subset.identifier.animated_obj != ls3file.root_obj]
-        animated_linked_files = [(len(ls3file.subsets) + idx + 1, linked)
-            for (idx, linked) in enumerate(ls3file.linked_files)
-            if self.is_animated(linked_file.root_obj)]
+        for idx, subset in enumerate(ls3file.subsets):
+            # The root subset of a file is not animated via subset animation, but rather through a
+            # linked animation in the parent file.
+            if subset.identifier.animated_obj is not None and subset.identifier.animated_obj != ls3file.root_obj:
+                animation = self.animations[subset.identifier.animated_obj]
+                meshAnimationNode = self.create_element("MeshAnimation")
+                meshAnimationNode.setAttribute("AniNr", str(ani_nr))
+                meshAnimationNode.setAttribute("AniIndex", str(idx))
+                meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
+                animation_nodes.append(meshAnimationNode)
+                translation_length = self.write_animation(subset.identifier.animated_obj, ls3file.root_obj, meshAnimationNode)
+                ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
+
+                for key in self.get_animation_keys(animation):
+                    ls3file.animation_keys.add(key)
+                    ani_nrs_by_key[key].append(ani_nr)
+                ani_nr += 1
+
+        for idx, linked_file in enumerate(ls3file.linked_files):
+            ls3file.animation_keys.update(linked_file.animation_keys)
+
+            if self.is_animated(linked_file.root_obj):
+                animation = self.animations[linked_file.root_obj]
+                verknAnimationNode = self.create_element("VerknAnimation")
+                verknAnimationNode.setAttribute("AniNr", str(ani_nr))
+                verknAnimationNode.setAttribute("AniIndex", str(idx))
+                verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
+                animation_nodes.append(verknAnimationNode)
+                translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode,
+                    write_translation = has_location_animation(animation),
+                    write_rotation = has_rotation_animation(animation))
+                ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr)
+
+                for key in self.get_animation_keys(animation):
+                    ls3file.animation_keys.add(key)
+                    ani_nrs_by_key[key].append(ani_nr)
+                ani_nr += 1
 
         # Write animation declarations for this file and any linked file.
-        for ani_key in sorted(animations_by_key.keys()):
-            animations = animations_by_key[ani_key]
-
+        for ani_key in sorted(ls3file.animation_keys):
             animationNode = self.create_element("Animation")
             animationNode.setAttribute("AniID", str(ani_key[0]))
             animationNode.setAttribute("AniBeschreibung", ani_key[1])
@@ -1175,37 +1193,13 @@ class Ls3Exporter:
             landschaftNode.appendChild(animationNode)
 
             # Write <AniNrs> nodes.
-            aninrs = self.get_aninrs(animations, animated_linked_files, animated_subsets)
-            for aninr in aninrs:
+            for aninr in ani_nrs_by_key[ani_key]:
                 aniNrsNode = self.create_element("AniNrs")
                 aniNrsNode.setAttribute("AniNr", str(aninr))
                 animationNode.appendChild(aniNrsNode)
 
-        # Write animation definitions for subsets and links in this file.
-
-        # Write mesh subset animations.
-        for aninr, subset in animated_subsets:
-            animation = self.animations[subset.identifier.animated_obj]
-            meshAnimationNode = self.create_element("MeshAnimation")
-            meshAnimationNode.setAttribute("AniNr", str(aninr))
-            meshAnimationNode.setAttribute("AniIndex", str(ls3file.subsets.index(subset)))
-            meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
-            landschaftNode.appendChild(meshAnimationNode)
-            translation_length = self.write_animation(subset.identifier.animated_obj, ls3file.root_obj, meshAnimationNode)
-            ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
-
-        # Write linked animations.
-        for aninr, linked_file in animated_linked_files:
-            animation = self.animations[linked_file.root_obj]
-            verknAnimationNode = self.create_element("VerknAnimation")
-            verknAnimationNode.setAttribute("AniNr", str(aninr))
-            verknAnimationNode.setAttribute("AniIndex", str(ls3file.linked_files.index(linked_file)))
-            verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
-            landschaftNode.appendChild(verknAnimationNode)
-            translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode,
-                write_translation = has_location_animation(self.animations[linked_file.root_obj]),
-                write_rotation = has_rotation_animation(self.animations[linked_file.root_obj]))
-            ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr)
+        for node in animation_nodes:
+            landschaftNode.appendChild(node)
 
         # Get path names
         filepath = os.path.join(
