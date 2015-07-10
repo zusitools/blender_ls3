@@ -69,9 +69,12 @@ def get_exporter_setting(key):
         return default_export_settings[key]
 
 def fill_node_xyz(node, x, y, z):
-    node.setAttribute("X", str(x))
-    node.setAttribute("Y", str(y))
-    node.setAttribute("Z", str(z))
+    if x != 0.0:
+        node.setAttribute("X", str(x))
+    if y != 0.0:
+        node.setAttribute("Y", str(y))
+    if z != 0.0:
+        node.setAttribute("Z", str(z))
 
 def normalize_color(color):
     """Returns a normalized version (RGB components between 0.0 and 1.0) of a color."""
@@ -128,12 +131,6 @@ def get_ani_description(ani_id):
         }[ani_id]
     except KeyError:
         return ""
-
-def has_location_animation(action):
-    return action is not None and any([fcurve.data_path == "location" for fcurve in action.fcurves])
-
-def has_rotation_animation(action):
-    return action is not None and any([fcurve.data_path.startswith("rotation") for fcurve in action.fcurves])
 
 def is_lt_name(a, b):
     """Returns a.name < b.name, taking into account None values (which are smaller than all other values)."""
@@ -789,7 +786,7 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
-    def write_animation(self, ob, root, animation_node, write_translation = True, write_rotation = True):
+    def write_animation(self, ob, root, animation_node):
         """Writes an animation into an animation node (<MeshAnimation> or <VerknAnimation>) and
         returns the length of the longest translation vector of the animation
         (or 0 if write_translation is False)."""
@@ -819,30 +816,28 @@ class Ls3Exporter:
             self.config.context.scene.frame_set(keyframe_no)
             loc, rot, scale = self.transformation_relative(ob, root, root).decompose()
 
-            if write_translation:
-                translationNode = (None if loc == Vector((0.0, 0.0, 0.0))
-                    else self.create_element("p"))
-                if translationNode is not None:
-                    fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
-                    aniPunktNode.appendChild(translationNode)
-                    translation_length = max(translation_length, vector_xy_length(loc))
+            translationNode = (None if loc == Vector((0.0, 0.0, 0.0))
+                else self.create_element("p"))
+            if translationNode is not None:
+                fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
+                aniPunktNode.appendChild(translationNode)
+                translation_length = max(translation_length, vector_xy_length(loc))
 
-            if write_rotation:
-                # Make rotation Euler compatible with the previous frame to prevent axis flipping.
-                rotation_euler = zusi_rotation_from_quaternion(rot, rotation_euler)
-                rotation_quaternion = rotation_euler.to_quaternion()
+            # Make rotation Euler compatible with the previous frame to prevent axis flipping.
+            rotation_euler = zusi_rotation_from_quaternion(rot, rotation_euler)
+            rotation_quaternion = rotation_euler.to_quaternion()
 
-                rotationNode = self.create_element("q")
-                if abs(rotation_quaternion.x) > 0.0001:
-                    rotationNode.setAttribute("X", str(rotation_quaternion.x))
-                if abs(rotation_quaternion.y) > 0.0001:
-                    rotationNode.setAttribute("Y", str(rotation_quaternion.y))
-                if abs(rotation_quaternion.z) > 0.0001:
-                    rotationNode.setAttribute("Z", str(rotation_quaternion.z))
-                if abs(rotation_quaternion.w) > 0.0001:
-                    rotationNode.setAttribute("W", str(rotation_quaternion.w))
-                if len(rotationNode.attributes):
-                    aniPunktNode.appendChild(rotationNode)
+            rotationNode = self.create_element("q")
+            if abs(rotation_quaternion.x) > 0.0001:
+                rotationNode.setAttribute("X", str(rotation_quaternion.x))
+            if abs(rotation_quaternion.y) > 0.0001:
+                rotationNode.setAttribute("Y", str(rotation_quaternion.y))
+            if abs(rotation_quaternion.z) > 0.0001:
+                rotationNode.setAttribute("Z", str(rotation_quaternion.z))
+            if abs(rotation_quaternion.w) > 0.0001:
+                rotationNode.setAttribute("W", str(rotation_quaternion.w))
+            if len(rotationNode.attributes):
+                aniPunktNode.appendChild(rotationNode)
         self.config.context.scene.frame_set(original_current_frame)
         return translation_length
 
@@ -1080,7 +1075,6 @@ class Ls3Exporter:
             rotation = zusi_rotation_from_quaternion(rotation_quaternion)
             max_scale_factor = max(scale.x, scale.y, scale.z)
             scaled_boundingr = linked_file.boundingr * max_scale_factor
-
             verknuepfteNode = self.create_element("Verknuepfte")
 
             boundingr = int(ceil(scaled_boundingr))
@@ -1107,21 +1101,16 @@ class Ls3Exporter:
             if flags != 0:
                 verknuepfteNode.setAttribute("Flags", str(flags))
 
-            # Include location and rotation in the link information if they are
-            # not animated.
+            # Include location and rotation in the link information if they are not animated.
             pNode = self.create_element("p")
             verknuepfteNode.appendChild(pNode)
-            write_translation = not has_location_animation(self.animations[linked_file.root_obj])
-            if write_translation:
-                if any([abs(translation[i]) > 0.00001 for i in range(0, 3)]):
-                    fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
-                ls3file.boundingr = max(ls3file.boundingr,
-                    max_scale_factor * scaled_boundingr + vector_xy_length(translation))
+            if (not self.is_animated(linked_file.root_obj)):
+                fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
+                ls3file.boundingr = max(ls3file.boundingr, scaled_boundingr + vector_xy_length(translation))
 
             phiNode = self.create_element("phi")
             verknuepfteNode.appendChild(phiNode)
-            write_rotation = not has_rotation_animation(self.animations[linked_file.root_obj])
-            if write_rotation and any([abs(rotation[i]) > 0.00001 for i in range(0, 3)]):
+            if (not self.is_animated(linked_file.root_obj)):
                 fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
 
             # Always include scale in the link information because this cannot be animated.
@@ -1173,10 +1162,13 @@ class Ls3Exporter:
                 verknAnimationNode.setAttribute("AniIndex", str(idx))
                 verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
                 animation_nodes.append(verknAnimationNode)
-                translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode,
-                    write_translation = has_location_animation(animation),
-                    write_rotation = has_rotation_animation(animation))
-                ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr)
+
+                # TODO: Warn if scaling is animated
+                translation, rotation_quaternion, scale = self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
+                max_scale_factor = max(scale.x, scale.y, scale.z)
+
+                translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode)
+                ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr * max_scale_factor)
 
                 for key in self.get_animation_keys(animation):
                     ls3file.animation_keys.add(key)

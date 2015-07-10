@@ -790,10 +790,10 @@ class TestLs3Export(unittest.TestCase):
     self.open("animation_child_with_constraint")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
-    # Check for correct position of linked file #1.
+    # Although the position of linked file #1 is not animated, it is included
+    # in the animation because the rotation is animated.
     verknuepfte_node = files[""].find("./Landschaft/Verknuepfte")
-    p_node = verknuepfte_node.find("./p")
-    self.assertXYZ(p_node, 0, 1, 0)
+    self.assertEqual(0, len( verknuepfte_node.find("./p").attrib))
     self.assertEqual(0, len(verknuepfte_node.find('sk').attrib))
 
     # Check for <AniNrs> node in <Animation> node.
@@ -806,7 +806,6 @@ class TestLs3Export(unittest.TestCase):
 
     # Check for keyframes.
     self.assertKeyframes(verkn_animation_node, [0, 0.25, 0.5, 0.75, 1.0])
-    self.assertEqual([], verkn_animation_node.findall("./AniPunkt/p"))
     q_nodes = verkn_animation_node.findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
@@ -815,6 +814,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZW(q_nodes[2], 0, 1, 0, 0)
     self.assertXYZW(q_nodes[3], 0, 0.707107, 0, -0.707107)
     self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
+
+    p_nodes = verkn_animation_node.findall("./AniPunkt/p")
+    self.assertEqual(5, len(p_nodes))
+    for p_node in p_nodes:
+        self.assertXYZ(p_node, 0, 1, 0)
 
     # Check linked file #1.
     # Check for correct <VerknAnimation> node.
@@ -1141,9 +1145,10 @@ class TestLs3Export(unittest.TestCase):
     basename, ext, files = self.export_and_parse_multiple(["Planet", "Mond"])
 
     # Check bounding radius of file "Planet".
+    # Not the original bounding radius of the linked file, but the scaled radius has to be specified.
     verknuepfte_nodes = files[""].findall(".//Verknuepfte")
     self.assertEqual(1, len(verknuepfte_nodes))
-    self.assertEqual("9", verknuepfte_nodes[0].attrib["BoundingR"])
+    self.assertEqual("10", verknuepfte_nodes[0].attrib["BoundingR"])
 
     # Check bounding radius of file "Mond".
     verknuepfte_nodes = files["Planet"].findall(".//Verknuepfte")
@@ -1249,19 +1254,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(5, len(verknuepfte_nodes))
 
     v1phi = verknuepfte_nodes[0].find("phi")
-    self.assertAlmostEqual(radians(0), float(v1phi.attrib["X"]), places = 5)
-    self.assertAlmostEqual(radians(40), float(v1phi.attrib["Y"]), places = 5)
-    self.assertAlmostEqual(radians(0), float(v1phi.attrib["Z"]), places = 5)
+    self.assertXYZ(v1phi, 0, radians(40), 0)
 
     v2phi = verknuepfte_nodes[1].find("phi")
-    self.assertAlmostEqual(radians(-30), float(v2phi.attrib["X"]), places = 5)
-    self.assertAlmostEqual(radians(0), float(v2phi.attrib["Y"]), places = 5)
-    self.assertAlmostEqual(radians(0), float(v2phi.attrib["Z"]), places = 5)
+    self.assertXYZ(v2phi, radians(-30), 0, 0)
 
     v3phi = verknuepfte_nodes[2].find("phi")
-    self.assertAlmostEqual(radians(0), float(v3phi.attrib["X"]), places = 5)
-    self.assertAlmostEqual(radians(0), float(v3phi.attrib["Y"]), places = 5)
-    self.assertAlmostEqual(radians(20), float(v3phi.attrib["Z"]), places = 5)
+    self.assertXYZ(v3phi, 0, 0, radians(20))
 
     v4 = verknuepfte_nodes[3]
     self.assertEqual(r"RollingStock\Diverse\Blindlok\Blindlok.ls3", v4.find("Datei").attrib["Dateiname"])
