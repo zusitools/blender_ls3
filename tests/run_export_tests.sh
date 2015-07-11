@@ -1,2 +1,2 @@
 #!/bin/sh
-blender -P ./ls3_export_test.py
+blender -b -P ./ls3_export_test.py
