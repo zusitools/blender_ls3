@@ -293,6 +293,15 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(landschaft_node.getchildren().index(subset_node) - 1,
         landschaft_node.getchildren().index(lsb_node))
 
+  @unittest.skipUnless(os.path.exists(os.path.join("..", "lsb.py")), "LSB support disabled")
+  def test_no_lsb_on_empty(self):
+    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
+    self.clear_scene()
+    root = self.export_and_parse()
+
+    self.assertFalse(os.path.exists(os.path.join(ZUSI3_EXPORTPATH, "export.lsb")))
+    self.assertEqual([], root.findall("./Landschaft/lsb"))
+
   # ---
   # Mesh and texture export tests
   # ---

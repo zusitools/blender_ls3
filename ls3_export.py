@@ -1198,7 +1198,8 @@ class Ls3Exporter:
             os.path.realpath(os.path.expanduser(self.config.fileDirectory)),
             ls3file.filename)
 
-        if self.use_lsb:
+        lsbwriter = None
+        if self.use_lsb and sum(len(subset.vertexdata) + len(subset.facedata) for subset in ls3file.subsets) > 0:
             (basename, ext) = os.path.splitext(filepath)
             lsbpath = basename + ".lsb"
         
@@ -1218,10 +1219,10 @@ class Ls3Exporter:
                 num_deleted_vertices = sum(v is None for v in subset.vertexdata)
                 info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
 
-            if self.use_lsb:
+            if lsbwriter:
                 lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
 
-        if self.use_lsb:
+        if lsbwriter:
             lsb_fp.close()
 
         # Write XML document to file
