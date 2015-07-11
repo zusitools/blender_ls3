@@ -1209,7 +1209,7 @@ class Ls3Exporter:
 
             lsbNode = self.create_element("lsb")
             lsbNode.setAttribute("Dateiname", os.path.basename(lsbpath))
-            landschaftNode.appendChild(lsbNode)
+            landschaftNode.insertBefore(lsbNode, subset_nodes[0])
 
         for index, subset in enumerate(ls3file.subsets):
             if self.config.optimizeMesh:

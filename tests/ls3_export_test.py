@@ -281,6 +281,18 @@ class TestLs3Export(unittest.TestCase):
         for a in root.findall("./Info/AutorEintrag")])
     self.assertEqual(set([("Author 1", "0"), ("Author 2", "5")]), licenses)
 
+  @unittest.skipUnless(os.path.exists(os.path.join("..", "lsb.py")), "LSB support disabled")
+  def test_lsb_node_pos(self):
+    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
+    root = self.export_and_parse()
+
+    landschaft_node = root.find("./Landschaft")
+    lsb_node = root.find("./Landschaft/lsb")
+    subset_node = root.find("./Landschaft/SubSet")
+
+    self.assertEqual(landschaft_node.getchildren().index(subset_node) - 1,
+        landschaft_node.getchildren().index(lsb_node))
+
   # ---
   # Mesh and texture export tests
   # ---
