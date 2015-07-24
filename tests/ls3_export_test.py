@@ -1210,6 +1210,18 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("1", animation_nodes[1].attrib["AniLoopen"])
     self.assertNotIn("AniLoopen", animation_nodes[2].attrib)
 
+  def test_animation_with_and_without_loop(self):
+    self.open("animation_with_and_without_loop")
+    root = self.export_and_parse({"exportAnimations" : True})
+    animation_nodes = root.findall("./Landschaft/Animation")
+    self.assertEqual(2, len(animation_nodes))
+
+    self.assertEqual("Zeitlich kontinuierlich (loop)", animation_nodes[1].attrib["AniBeschreibung"])
+    self.assertEqual("1", animation_nodes[1].attrib["AniLoopen"])
+
+    self.assertEqual("Zeitlich kontinuierlich", animation_nodes[0].attrib["AniBeschreibung"])
+    self.assertNotIn("AniLoopen", animation_nodes[0].attrib)
+
   def test_set_interpolation_linear(self):
     self.open("animation_set_interpolation_linear")
     for fcurve in bpy.data.actions["CubeAction"].fcurves:

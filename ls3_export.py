@@ -1017,14 +1017,16 @@ class Ls3Exporter:
 
     def get_animation_keys(self, animation):
         """Returns the keys (AniID, AniBeschreibung, AniLoopen) of the <Animation> nodes this animation has to be entered in."""
+        loop = animation.zusi_animation_loop if animation.zusi_animation_type in ["0", "1"] else False
         if animation.zusi_animation_type == "0":
             if len(animation.zusi_animation_names) == 0:
-                return [(0, get_ani_description(animation.zusi_animation_type), animation.zusi_animation_loop)]
+                return [(0, get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop else ""), loop)]
             else:
-                return [(0, name_wrapper.name, animation.zusi_animation_loop) for name_wrapper in animation.zusi_animation_names]
+                return [(0, name_wrapper.name, loop) for name_wrapper in animation.zusi_animation_names]
         else:
-            return [(int(animation.zusi_animation_type), get_ani_description(animation.zusi_animation_type),
-                    animation.zusi_animation_loop if animation.zusi_animation_type == "1" else False)]
+            return [(int(animation.zusi_animation_type),
+                    get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop else ""),
+                    loop)]
 
     def write_ls3_file(self, ls3file):
         sce = self.config.context.scene
