@@ -260,7 +260,41 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-        
+
+class OBJECT_OT_embed_linked(bpy.types.Operator):
+    bl_idname = "zusi_linked_file.embed"
+    bl_label = _('Embed linked file')
+    bl_description = _('Load the contents of the linked file specified at this object and insert them as children of this object')
+
+    ob = bpy.props.StringProperty(options={'HIDDEN'})
+
+    def execute(self, context):
+        ob = bpy.data.objects[self.ob]
+        path = bpy.path.abspath(ob.zusi_link_file_name_realpath)
+
+        if not os.path.exists(path):
+            return {'ERROR'}
+
+        (directory, filename) = os.path.split(path)
+        if filename.lower().endswith(".ls"):
+            from . import ls_import
+            settings = ls_import.LsImporterSettings(
+                context,
+                path,
+                filename,
+                directory,
+                ls_import.IMPORT_LINKED_AS_EMPTYS,
+                parent = ob,
+                parent_is_ls3 = True,
+            )
+            importer = ls_import.LsImporter(settings)
+            importer.import_ls()
+            ob.zusi_is_linked_file = False
+        else:
+            pass
+
+        return {'FINISHED'}
+
 # ---
 #    Export menu
 # ---

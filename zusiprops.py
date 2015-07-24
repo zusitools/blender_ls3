@@ -1055,6 +1055,9 @@ class OBJECT_PT_data_linked_file(bpy.types.Panel):
 
         layout.active = ob.zusi_is_linked_file
 
+        op = layout.operator("zusi_linked_file.embed")
+        op.ob = ob.name
+
         layout.prop(ob, "zusi_link_file_name_realpath")
         layout.prop(ob, "zusi_link_group")
         layout.prop(ob, "zusi_link_visible_from")

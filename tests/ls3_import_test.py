@@ -385,9 +385,45 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual(Vector((10, 20, 30)), ob1.location)
     self.assertVectorEqual(Vector((0, 0, 0)), ob1.rotation_euler)
     ob2 = bpy.data.objects["empty.ls"]
-    self.assertVectorEqual(Vector((10, 20, 30)), ob1.location)
-    self.assertVectorEqual(Vector((0, 0, 0)), ob1.rotation_euler)
+    self.assertVectorEqual(Vector((10, 20, 30)), ob2.location)
+    self.assertVectorEqual(Vector((0, 0, 0)), ob2.rotation_euler)
     self.assertEqual(ob1, ob2.parent)
+
+  def test_embed_imported_linked_ls_file(self):
+    # make sure the linked files exist (in the mock file system)
+    for filename in ["linked_file_nesting_2.ls", "empty.ls"]:
+      with open(os.path.join(ZUSI2_DATAPATH, filename), 'w') as f:
+        with open(os.path.join("ls", filename), 'r') as f2:
+          f.write(f2.read())
+
+    self.ls_import("linked_file_nesting.ls")
+    self.assertEqual(
+            {"linked_file_nesting.ls", "linked_file_nesting.ls_linked_file_nesting_2.ls"},
+            set(bpy.data.objects.keys()))
+
+    ob1 = bpy.data.objects["linked_file_nesting.ls_linked_file_nesting_2.ls"]
+    self.assertTrue(ob1.zusi_is_linked_file)
+
+    self.assertEqual({'FINISHED'}, bpy.ops.zusi_linked_file.embed(
+        ob = "linked_file_nesting.ls_linked_file_nesting_2.ls"))
+
+    self.assertEqual(
+            {"linked_file_nesting.ls", "linked_file_nesting.ls_linked_file_nesting_2.ls",
+             "linked_file_nesting_2.ls", "linked_file_nesting_2.ls_empty.ls"},
+            set(bpy.data.objects.keys()))
+    ob2 = bpy.data.objects["linked_file_nesting_2.ls"]
+    ob3 = bpy.data.objects["linked_file_nesting_2.ls_empty.ls"]
+
+    self.assertFalse(ob1.zusi_is_linked_file)
+
+    self.assertEqual(ob1, ob2.parent)
+    self.assertEqual(ob2, ob3.parent)
+    self.assertVectorEqual(Vector((10, 20, 30)), ob1.location)
+    self.assertVectorEqual(Vector((0, 0, radians(90))), ob1.rotation_euler)
+    self.assertVectorEqual(Vector((0, 0, 0)), ob2.location)
+    self.assertVectorEqual(Vector((0, 0, radians(-90))), ob2.rotation_euler)
+    self.assertVectorEqual(Vector((10, 20, 30)), ob3.location)
+    self.assertVectorEqual(Vector((0, 0, radians(90))), ob3.rotation_euler)
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Import)
