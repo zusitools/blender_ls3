@@ -252,11 +252,11 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         return {'FINISHED'}
  
     def invoke(self, context, event):
-        self.properties.lod_import_setting.clear()
-        for i in range(0, 4):
-            setting = self.properties.lod_import_setting.add()
-            setting.name = _("LOD %d") % i
-            setting.lod_bit = 2**(3 - i)
+        if not len(self.properties.lod_import_setting):
+            for i in range(0, 4):
+                setting = self.properties.lod_import_setting.add()
+                setting.name = _("LOD %d") % i
+                setting.lod_bit = 2**(3 - i)
     
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
