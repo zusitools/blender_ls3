@@ -291,8 +291,20 @@ class OBJECT_OT_embed_linked(bpy.types.Operator):
             importer = ls_import.LsImporter(settings)
             importer.import_ls()
             ob.zusi_is_linked_file = False
-        else:
-            pass
+        elif filename.lower().endswith(".ls3"):
+            from . import ls3_import
+            settings = ls3_import.Ls3ImporterSettings(
+                context,
+                path,
+                filename,
+                directory,
+                False,
+                ls3_import.IMPORT_LINKED_AS_EMPTYS,
+                parent = ob,
+            )
+            importer = ls3_import.Ls3Importer(settings)
+            importer.import_ls3()
+            ob.zusi_is_linked_file = False
 
         return {'FINISHED'}
 

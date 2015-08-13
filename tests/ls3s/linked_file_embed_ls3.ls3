@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+  <Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+  <Landschaft>
+    <Verknuepfte Flags="48" LODbit="10">
+      <Datei Dateiname="RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3"/>
+      <p X="-1.0" Y="2.0" Z="-3.0"/>
+      <phi X="-0.3490658700466156" Y="0.174532949924469" Z="-0.523598849773407"/>
+      <sk X="1.4999998807907104" Y="2.5" Z="3.5"/>
+    </Verknuepfte>
+    <Verknuepfte>
+      <Datei Dateiname="..\..\Zusi2\Daten\Loks\Elektrotriebwagen\450\AVG_803_Front.ls"/>
+      <p/>
+      <phi/>
+      <sk/>
+    </Verknuepfte>
+  </Landschaft>
+</Zusi>

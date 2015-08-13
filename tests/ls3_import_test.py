@@ -331,6 +331,47 @@ class TestLs3Import(unittest.TestCase):
     self.assertTrue(ob.zusi_is_linked_file)
     self.assertEqual(r'zusi2:Loks\Elektrotriebwagen\450\AVG_803_Front.ls', ob.zusi_link_file_name)
 
+  def test_embed_imported_linked_ls3_file(self):
+    # Make sure the linked files actually exist
+    with open(os.path.join(ZUSI2_DATAPATH, "Loks", "Elektrotriebwagen", "450", "AVG_803_Front.ls"), 'w') as f:
+      with open(os.path.join("ls", "cube.ls"), 'r') as f2:
+        f.write(f2.read())
+    with open(os.path.join(ZUSI3_DATAPATH, "RollingStock", "Deutschland", "Epoche5", "Elektroloks", "101", "3D-Daten", "101_vr.lod.ls3"), 'w') as f:
+      with open(os.path.join("ls3s", "cube.ls3"), 'r') as f2:
+        f.write(f2.read())
+
+    self.ls3_import("linked_file_embed_ls3.ls3")
+    parent_ls3 = bpy.data.objects["linked_file_embed_ls3.ls3_101_vr.lod.ls3.001"]
+    parent_ls = bpy.data.objects["linked_file_embed_ls3.ls3_AVG_803_Front.ls.002"]
+
+    self.assertEqual({parent_ls3.name, parent_ls.name},
+            set(bpy.data.objects.keys()))
+
+    self.assertTrue(parent_ls3.zusi_is_linked_file)
+    self.assertEqual({'FINISHED'}, bpy.ops.zusi_linked_file.embed(
+        ob = parent_ls3.name))
+    self.assertFalse(parent_ls3.zusi_is_linked_file)
+
+    child_ls3 = bpy.data.objects["101_vr.lod.ls3.0"]
+
+    self.assertEqual({parent_ls3.name, parent_ls.name, child_ls3.name},
+            set(bpy.data.objects.keys()))
+    self.assertEqual(parent_ls3, child_ls3.parent)
+    self.assertVectorEqual(Vector((0, 0, 0)), child_ls3.location)
+    self.assertVectorEqual(Vector((0, 0, 0)), child_ls3.rotation_euler)
+
+    self.assertTrue(parent_ls.zusi_is_linked_file)
+    self.assertEqual({'FINISHED'}, bpy.ops.zusi_linked_file.embed(
+        ob = parent_ls.name))
+    self.assertFalse(parent_ls.zusi_is_linked_file)
+
+    child_ls = bpy.data.objects["AVG_803_Front.ls"]
+    self.assertEqual({parent_ls3.name, parent_ls.name, child_ls3.name, child_ls.name},
+            set(bpy.data.objects.keys()))
+    self.assertEqual(parent_ls, child_ls.parent)
+    self.assertVectorEqual(Vector((0, 0, 0)), child_ls.location)
+    self.assertVectorEqual(Vector((0, 0, radians(-90))), child_ls.rotation_euler)
+
   # ---
   # LS import tests
   # ---
