@@ -265,6 +265,7 @@ class OBJECT_OT_embed_linked(bpy.types.Operator):
     bl_idname = "zusi_linked_file.embed"
     bl_label = _('Embed linked file')
     bl_description = _('Load the contents of the linked file specified at this object and insert them as children of this object')
+    bl_options = {'UNDO', 'INTERNAL'}
 
     ob = bpy.props.StringProperty(options={'HIDDEN'})
 
