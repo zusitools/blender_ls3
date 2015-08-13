@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+<Landschaft>
+<SubSet Cd="FFFFFFFF">
+<RenderFlags TexVoreinstellung="1"/>
+<Textur>
+<Datei Dateiname="_Setup\lib\milepost\hektometertafeln_DB\Texturen\hektometertafel.dds"/>
+</Textur>
+<Vertex U="0.06">
+<p Y="0.24"/>
+<n X="-1"/>
+</Vertex>
+<Vertex U="0.06" V="0.5">
+<p Y="0.24" Z="-0.8"/>
+<n X="-1"/>
+</Vertex>
+<Vertex U="0.38" V="0.5">
+<p Y="-0.24" Z="-0.8"/>
+<n X="-1"/>
+</Vertex>
+<Vertex U="0.38">
+<p Y="-0.24"/>
+<n X="-1"/>
+</Vertex>
+<Vertex U="0.52">
+<p Y="0.24"/>
+<n X="1"/>
+</Vertex>
+<Vertex U="0.52" V="0.5">
+<p Y="0.24" Z="-0.8"/>
+<n X="1"/>
+</Vertex>
+<Vertex U="0.84" V="0.5">
+<p Y="-0.24" Z="-0.8"/>
+<n X="1"/>
+</Vertex>
+<Vertex U="0.84">
+<p Y="-0.24"/>
+<n X="1"/>
+</Vertex>
+<Face i="0;3;2"/>
+<Face i="0;2;1"/>
+<Face i="4;6;7"/>
+<Face i="4;5;6"/>
+</SubSet>
+</Landschaft>
+</Zusi>
