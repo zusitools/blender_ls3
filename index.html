@@ -3,7 +3,12 @@
   <head>
 <title>Dokumentation für den Blender-LS3-Import/Export</title>
 <meta http-equiv="content-type" content="text/html; charset=utf8">
-<style type="text/css">dt { font-weight: bold } .klein { font-size: 80% }</style>
+<style type="text/css">
+dt { font-weight: bold }
+.klein { font-size: 80% }
+table { border: 1px solid gray; border-collapse: collapse; margin: 1em 0; }
+td, th { border: 1px solid gray; padding: 0.2em; }
+</style>
   </head>
   <body>
 
@@ -78,6 +83,26 @@
 <h3>Materialeinstellungen</h3>
 
 <img src="subseteditor.png" />
+
+<h4>Hinweis zu Nachtfarben</h4>
+
+<p>Die Einstellung für die Tagfarben (Ambient und Diffuse) werden in Blender anders vorgenommen als im Zusi-3D-Editor. Auswirkungen hat das bei Objekten, die nachts leuchten sollen. Beispiel: Ein Objekt soll tagsüber weiß sein (#FFFFFF) und nachts gelb leuchten (#FFFF00). Dann müsste man im Zusi-3D-Editor und in Blender jeweils die folgenden Farben einstellen:</p>
+
+<table>
+    <thead><tr><th></th><th>Zusi</th><th>Blender</th></tr></thead>
+    <tbody>
+        <tr><td>Diffuse</td><td>blau (#0000FF)</td><td>weiß (#FFFFFF)</td></tr>
+        <tr><td>Nachtfarbe</td><td>gelb (#FFFF00)</td><td>gelb (#FFFF00)</td></tr>
+    </tbody>
+<table>
+
+    <p>Zusi addiert Nachtfarbe und Diffuse, um die Farbe bei Tag zu erhalten. Wenn das Exportskript genauso vorgehen würde, müsste man in Blender ein blaues Objekt erstellen, was das Arbeiten erschweren würde. Stattdessen gibt man in Blender die intuitiv richtige Tagfarbe ein, beim Export wird dann in die Zusi-Konvention umgerechnet.</p>
+
+<h4>Hinweis zur hexadezimalen Eingabe von Farben</h4>
+
+<p>Im Farbwähler von Blender können Farben auch in RGB-Hexadezimalschreibweise eingegeben werden. Die Farbverwaltung Blender sorgt aber dafür, dass sich die Werte aus Zusi nicht direkt übernehmen lassen. Will man das tun, so muss man in den Szeneneinstellungen unter "Color management" das "Display Device" auf "None" stellen.</p>
+
+<p><img src="color_management.png" /></p>
 
 <h2>Scharfe Kanten</h2>
 
