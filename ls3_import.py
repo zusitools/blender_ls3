@@ -674,7 +674,7 @@ class Ls3Importer:
         # - Convert the values to integers
         # - Convert this to a tuple
         # - As above, reverse vertex order for Blender to get the normals correct
-        self.currentfaces.append(tuple(map(int, node.getAttribute("i").split(";")))[::-1])
+        self.currentfaces.append(tuple(map(int, node.getAttribute("i").rstrip(";").split(";")))[::-1])
 
     #
     # Visits a <Textur> node.

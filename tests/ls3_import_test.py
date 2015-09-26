@@ -105,6 +105,11 @@ class TestLs3Import(unittest.TestCase):
 
     self.assertEqual(expected, actual)
 
+  def test_import_trailing_semicolon(self):
+    """Tests trailing semicolon in "i" attributes of <Face> nodes (occur in some older files)"""
+    self.ls3_import("cube_trailing_semicolon.ls3")
+    self.assertEqual(12, len(bpy.data.objects["cube_trailing_semicolon.ls3.0"].data.polygons))
+
   @unittest.skipUnless(bpy.app.version >= (2, 74, 0), "Normal import available in Blender >= 2.74")
   def test_import_normals(self):
     self.ls3_import("custom_normals.ls3")
