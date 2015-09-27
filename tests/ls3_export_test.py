@@ -650,6 +650,26 @@ class TestLs3Export(unittest.TestCase):
     vertices = root.findall("./Landschaft/SubSet/Vertex")
     self.assertEqual(6, len(vertices))
 
+  def test_mesh_optimization_normal0(self):
+    """Tests mesh optimization when the normal of a vertex is 0. Such vertices should not be merged."""
+    self.open("mesh_optimization_normal0")
+    root = self.export_and_parse({
+      "optimizeMesh" : True,
+      "maxCoordDelta" : 0.001,
+      "maxUVDelta" : 0.001,
+      "maxNormalAngle" : 0.17,
+    })
+    subset = root.find("./Landschaft/SubSet")
+    vertices = [v for v in subset if v.tag == "Vertex"]
+    for idx, f in enumerate(subset.findall("./Face")):
+      # Check that all normal vectors of the face point in the same direction.
+      face_vertices = [vertices[i] for i in map(int, f.attrib["i"].split(";"))]
+      face_normals = [v.find("n") for v in face_vertices]
+      for to_compare in face_normals[1:]:
+        self.assertXYZ(face_normals[0],
+            float(to_compare.attrib["X"]), float(to_compare.attrib["Y"]), float(to_compare.attrib["Z"]),
+            msg = "Face {}, vertices {}".format(idx, f.attrib["i"]))
+
   # ---
   # Animation tests - Basic
   # ---
