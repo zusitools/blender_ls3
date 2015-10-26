@@ -206,7 +206,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     loadAuthorInformation = bpy.props.BoolProperty(
         name = _("Load author information"),
         description = _("Insert author information from the imported file into the .blend file"),
-        default = True
+        default = False
     )
 
     loadLinkedMode = bpy.props.EnumProperty(

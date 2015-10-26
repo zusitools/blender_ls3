@@ -86,8 +86,8 @@ class TestLs3Import(unittest.TestCase):
   # ---
 
   def test_import_author_info(self):
-    self.ls3_import("author_info_1.ls3")
-    self.ls3_import("author_info_2.ls3")
+    self.ls3_import("author_info_1.ls3", {"loadAuthorInformation": True})
+    self.ls3_import("author_info_2.ls3", {"loadAuthorInformation": True})
 
     expected = set([
         # name, id, aufwand, lizenz, email, beschreibung
