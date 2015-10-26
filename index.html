@@ -87,7 +87,7 @@ td, th { border: 1px solid gray; padding: 0.2em; }
 
 <h4>Hinweis zu Nachtfarben</h4>
 
-<p>Die Einstellung für die Tagfarben (Ambient und Diffuse) werden in Blender anders vorgenommen als im Zusi-3D-Editor. Auswirkungen hat das bei Objekten, die nachts leuchten sollen. Beispiel: Ein Objekt soll tagsüber weiß sein (#FFFFFF) und nachts gelb leuchten (#FFFF00). Dann müsste man im Zusi-3D-Editor und in Blender jeweils die folgenden Farben einstellen:</p>
+<p>Die Einstellung für die Tagfarben (Ambient und Diffuse) werden in Blender anders vorgenommen als im Zusi-3D-Editor. Auswirkungen hat das bei Objekten, die nachts leuchten sollen. Beispiel: Ein Objekt soll tagsüber weiß sein (#FFFFFF) und nachts gelb leuchten (#FFFF00). Dann muss man im Zusi-3D-Editor und in Blender unterschiedliche Farben einstellen:</p>
 
 <table>
     <thead><tr><th></th><th>Zusi</th><th>Blender</th></tr></thead>
@@ -97,7 +97,7 @@ td, th { border: 1px solid gray; padding: 0.2em; }
     </tbody>
 <table>
 
-    <p>Zusi addiert Nachtfarbe und Diffuse, um die Farbe bei Tag zu erhalten. Wenn das Exportskript genauso vorgehen würde, müsste man in Blender ein blaues Objekt erstellen, was das Arbeiten erschweren würde. Stattdessen gibt man in Blender die intuitiv richtige Tagfarbe ein, beim Export wird dann in die Zusi-Konvention umgerechnet.</p>
+    <p>Der Grund dafür ist, dass Zusi Nachtfarbe und Diffuse addiert, um die Tagfarbe erhalten. Wenn das Exportskript die Farben genauso verwenden würde wie Zusi, müsste man in Blender ein blaues Objekt erstellen. Stattdessen gibt man in Blender die intuitiv richtige Tagfarbe ein, beim Export wird dann in die Zusi-Konvention umgerechnet.</p>
 
 <h4>Hinweis zur hexadezimalen Eingabe von Farben</h4>
 
