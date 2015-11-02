@@ -635,7 +635,7 @@ class VIEW_OT_show_variants(bpy.types.Operator):
 # ---
 
 def menu_func_import_ls(self, context):
-    self.layout.operator(IMPORT_OT_ls3.bl_idname, text=_("Zusi 2 Scenery (.ls) ..."))
+    self.layout.operator(IMPORT_OT_ls.bl_idname, text=_("Zusi 2 Scenery (.ls) ..."))
  
 def menu_func_import(self, context):
     self.layout.operator(IMPORT_OT_ls3.bl_idname, text=_("Zusi Scenery (.ls3) ..."))
