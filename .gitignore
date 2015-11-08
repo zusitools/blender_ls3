@@ -4,6 +4,7 @@ zusiconfig.py.__backup
 release/*
 TODO
 callstats.txt
+*.swp
 
 *.py[co]
 
