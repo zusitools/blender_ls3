@@ -76,6 +76,11 @@ def fill_node_xyz(node, x, y, z):
     if z != 0.0:
         node.setAttribute("Z", str(z))
 
+def fill_node_wxyz(node, w, x, y, z):
+    fill_node_xyz(node, x, y, z)
+    if w != 0.0:
+        node.setAttribute("W", str(w))
+
 def normalize_color(color):
     """Returns a normalized version (RGB components between 0.0 and 1.0) of a color."""
     return Color((
@@ -515,16 +520,14 @@ class Ls3Exporter:
 
                 translation, rotation_quaternion, scale = ob.matrix_world.decompose()
 
-                if translation != Vector((0.0, 0.0, 0.0)):
-                    pNode = self.create_element("p")
-                    fill_node_xyz(pNode, -translation[1], translation[0], translation[2])
-                    ankerpunktNode.appendChild(pNode)
+                pNode = self.create_element("p")
+                fill_node_xyz(pNode, -translation[1], translation[0], translation[2])
+                ankerpunktNode.appendChild(pNode)
 
                 rotation = zusi_rotation_from_quaternion(rotation_quaternion)
-                if rotation != Vector((0.0, 0.0, 0.0)):
-                    phiNode = self.create_element("phi")
-                    fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
-                    ankerpunktNode.appendChild(phiNode)
+                phiNode = self.create_element("phi")
+                fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
+                ankerpunktNode.appendChild(phiNode)
 
                 for entry in ob.zusi_anchor_point_files:
                     dateiNode = self.create_element("Datei")
@@ -824,23 +827,13 @@ class Ls3Exporter:
             aniPunktNode.setAttribute("AniZeit", str(keyframe.time))
             animation_node.appendChild(aniPunktNode)
 
-            translationNode = (None if keyframe.loc == Vector((0.0, 0.0, 0.0))
-                else self.create_element("p"))
-            if translationNode is not None:
-                fill_node_xyz(translationNode, -keyframe.loc.y, keyframe.loc.x, keyframe.loc.z)
-                aniPunktNode.appendChild(translationNode)
+            translationNode = self.create_element("p")
+            fill_node_xyz(translationNode, -keyframe.loc.y, keyframe.loc.x, keyframe.loc.z)
+            aniPunktNode.appendChild(translationNode)
 
             rotationNode = self.create_element("q")
-            if abs(keyframe.rotation_quaternion.x) > 0.0001:
-                rotationNode.setAttribute("X", str(keyframe.rotation_quaternion.x))
-            if abs(keyframe.rotation_quaternion.y) > 0.0001:
-                rotationNode.setAttribute("Y", str(keyframe.rotation_quaternion.y))
-            if abs(keyframe.rotation_quaternion.z) > 0.0001:
-                rotationNode.setAttribute("Z", str(keyframe.rotation_quaternion.z))
-            if abs(keyframe.rotation_quaternion.w) > 0.0001:
-                rotationNode.setAttribute("W", str(keyframe.rotation_quaternion.w))
-            if len(rotationNode.attributes):
-                aniPunktNode.appendChild(rotationNode)
+            fill_node_wxyz(rotationNode, *keyframe.rotation_quaternion)
+            aniPunktNode.appendChild(rotationNode)
 
     def minimize_translation_length(self, keyframes):
         """Changes the translation vectors in a list of keyframes (which are relative to (0,0,0))

@@ -856,9 +856,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZW(q_nodes[3], 0, 0.707107, 0, -0.707107)
     self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
-    p_nodes = verkn_animation_node.findall("./AniPunkt/p")
-    self.assertEqual(0, len(p_nodes))
-    for p_node in p_nodes:
+    for p_node in verkn_animation_node.findall("./AniPunkt/p"):
         self.assertXYZ(p_node, 0, 0, 0)
 
     # Check linked file #1.
@@ -914,7 +912,10 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("0", meshAnimationNodes[0].attrib["AniNr"])
 
     self.assertKeyframes(meshAnimationNodes[0], [0.0, 0.25, 0.5, 0.75, 1.0])
-    self.assertEqual([], meshAnimationNodes[0].findall("./AniPunkt/p"))
+    p_nodes = meshAnimationNodes[0].findall("./AniPunkt/p")
+    for p_node in p_nodes:
+        self.assertXYZ(p_node, 0, 0, 0)
+
     q_nodes = meshAnimationNodes[0].findall("./AniPunkt/q")
     self.assertEqual(5, len(q_nodes))
 
@@ -1235,9 +1236,8 @@ class TestLs3Export(unittest.TestCase):
     self.assertAlmostEqual(10.0, float(verknuepfte_node.find("./p").attrib["X"]))
 
     ani_punkt_p_nodes = root.findall("./Landschaft/VerknAnimation/AniPunkt/p")
-    self.assertEqual(len(ani_punkt_p_nodes), 0)
     for node in ani_punkt_p_nodes:
-      self.assertEqual(0, len(node.attrib))
+      self.assertXYZ(node, 0, 0, 0)
 
   def test_animation_continuation(self):
     self.open("animation_continuation")
