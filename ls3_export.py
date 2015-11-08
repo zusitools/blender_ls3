@@ -21,6 +21,7 @@ import bpy
 import os
 import array
 import xml.dom.minidom as dom
+import logging
 from . import zusiprops
 from .zusicommon import zusicommon
 try:
@@ -30,6 +31,17 @@ except:
 from math import floor, ceil, sqrt, radians
 from mathutils import *
 from collections import defaultdict
+
+logLevel = logging.INFO
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logLevel)
+logger.propagate = False
+
+if not logger.hasHandlers():
+    ch = logging.StreamHandler()
+    ch.setLevel(logLevel)
+    logger.addHandler(ch)
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
 # to a hex string "AARRGGBB"
@@ -56,11 +68,10 @@ EXPORT_SELECTED_MATERIALS = "3"
 EPSILON = 0.00001
 
 def debug(msg, *args, **kwargs):
-    pass
-    # print(msg.format(*args, **kwargs))
+    logger.debug(msg.format(*args, **kwargs))
 
 def info(msg, *args, **kwargs):
-    print(msg.format(*args, **kwargs))
+    logger.info(msg.format(*args, **kwargs))
 
 # Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py
 # or the default value specified above if an error occurs.
