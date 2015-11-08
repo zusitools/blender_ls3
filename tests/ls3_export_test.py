@@ -1033,6 +1033,12 @@ class TestLs3Export(unittest.TestCase):
     mesh_animation_node = mainfile.find("./Landschaft/MeshAnimation")
     self.assertKeyframes(mesh_animation_node, [0, 1, 2])
 
+  def test_frame_start_equals_frame_end(self):
+    self.open("frame_start_equals_frame_end")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    mesh_animation_node = mainfile.find("./Landschaft/MeshAnimation")
+    self.assertKeyframes(mesh_animation_node, [0])
+
   def test_animation_speed(self):
     self.open("animation_speed")
     mainfile = self.export_and_parse({"exportAnimations" : True})

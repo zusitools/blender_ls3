@@ -865,7 +865,7 @@ class Ls3Exporter:
         # Get frame numbers of keyframes. Make sure that the start and end keyframes are at an integer
         # (because Zusi does not have a continuation mode setting like Blender).
         keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
-        if len(keyframe_nos):
+        if len(keyframe_nos) and frame0 != frame1:
             min_keyframe = frame0 + floor(float(min(keyframe_nos) - frame0) / (frame1 - frame0)) * (frame1 - frame0)
             max_keyframe = frame0 + ceil(float(max(keyframe_nos) - frame0) / (frame1 - frame0)) * (frame1 - frame0)
             keyframe_nos.add(min_keyframe)
@@ -876,7 +876,7 @@ class Ls3Exporter:
         rotation_euler = None
         result = []
         for keyframe_no in sorted(keyframe_nos):
-            time = float(keyframe_no - frame0) / (frame1 - frame0)
+            time = float(keyframe_no - frame0) / (frame1 - frame0) if frame0 != frame1 else 0
             self.config.context.scene.frame_set(keyframe_no)
             loc, rot, scale = self.transformation_relative(ob, root, root).decompose()
 
