@@ -203,10 +203,10 @@ class Ls3File:
             i.e. with applied scale and taking into account translation animations."""
 
         self.location = None
-        """The location of this file within the parent file."""
+        """The location of this file within the parent file, without animation"""
 
         self.rotation_euler = None
-        """The rotation of this file within the parent file."""
+        """The rotation of this file within the parent file, without animation"""
 
         self.scale = None
         """The scale of this file within the parent file."""
@@ -1154,7 +1154,7 @@ class Ls3Exporter:
 
             linked_file.location, rotation_quaternion, linked_file.scale = \
                     self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
-            linked_file.rotation = zusi_rotation_from_quaternion(rotation_quaternion)
+            linked_file.rotation_euler = zusi_rotation_from_quaternion(rotation_quaternion)
             # TODO: Warn if scaling is animated
             max_scale_factor = max(linked_file.scale.x, linked_file.scale.y, linked_file.scale.z)
 
@@ -1168,6 +1168,7 @@ class Ls3Exporter:
 
                 keyframes = self.get_ani_keyframes(linked_file.root_obj, ls3file.root_obj, animation)
                 linked_file.location = self.minimize_translation_length(keyframes)
+                linked_file.rotation_euler = Vector((0, 0, 0))
                 linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor + self.get_max_xy_translation_length(keyframes)
                 self.write_ani_keyframes(keyframes, verknAnimationNode)
 
@@ -1221,13 +1222,7 @@ class Ls3Exporter:
                 verknuepfteNode.setAttribute("Flags", str(flags))
 
             fill_node_xyz(self.create_child_element(verknuepfteNode, "p"), -linked_file.location.y, linked_file.location.x, linked_file.location.z)
-
-            # Include rotation in the link information if it is not animated.
-            phiNode = self.create_child_element(verknuepfteNode, "phi")
-            if (not self.is_animated(linked_file.root_obj)):
-                fill_node_xyz(phiNode, linked_file.rotation.x, linked_file.rotation.y, linked_file.rotation.z)
-
-            # Always include scale in the link information because this cannot be animated.
+            fill_node_xyz(self.create_child_element(verknuepfteNode, "phi"), linked_file.rotation_euler.x, linked_file.rotation_euler.y, linked_file.rotation_euler.z)
             fill_node_xyz(self.create_child_element(verknuepfteNode, "sk"), linked_file.scale.y, linked_file.scale.x, linked_file.scale.z, default = 1)
 
         # Get path names
