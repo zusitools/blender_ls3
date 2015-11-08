@@ -141,25 +141,44 @@ def is_lt_name(a, b):
     else:
         return a.name < b.name
 
-# Stores all the things that later go into one LS3 file.
-#     file_name: The file name (without path) of this file.
-#     subsets: The subsets in this file.
-#     linked_files: The files linked to this file
-#     animation: The animation of this file in the parent file.
-#     boundingr: The bounding radius of this file in meters.
-#     objects: The objects that will be exported into this file.
-#     root_obj: The object that caused this file to be created (e.g.
-#         because it has an animation).
+class Keyframe:
+    """A keyframe of a Zusi animation (corresponding to an <AniPunkt> node)."""
+    def __init__(self, time, loc, rotation_quaternion):
+        self.time = time
+        self.loc = loc
+        self.rotation_quaternion = rotation_quaternion
+
 class Ls3File:
+    """Stores all the things that later go into one LS3 file, as well as the relation to its parent file."""
     def __init__(self):
         self.is_main_file = False
+        """Whether this is the main exported file whose file name is specified by the user."""
+
+        self.must_export = True 
+        """Whether this file must be processed. Set this to False for links to existing files."""
+
         self.filename = ""
+        """The file name of this file. For files with must_export = False, this does not contain the path."""
+
         self.subsets = []
+        """A list of Ls3Subset objects contained in this file."""
+
         self.linked_files = []
-        self.animation = None
+        """A list of Ls3File objects linked to this file."""
+
         self.boundingr = 0
+        """The bounding radius (in meters) of this file."""
+
         self.objects = set()
+        """The objects that will be exported into this file."""
+
         self.root_obj = None
+        """The object that caused this file to be created (e.g. because it is animated)."""
+
+        self.animation_keys = set()
+        """Animation keys (AniID, AniBeschreibung, AniLoopen) of the animation contained in this file or its children."""
+
+        # Settings for linked files
         self.group_name = ""
         self.visible_from = 0.0
         self.visible_to = 0.0
@@ -170,8 +189,20 @@ class Ls3File:
         self.is_detail_tile = False
         self.is_billboard = False
         self.is_readonly = False
-        self.must_export = True  # set to False for links to existing files
-        self.animation_keys = set()
+
+        # Relation to the parent file
+        self.boundingr_in_parent = 0
+        """The bounding radius of this file as included in the parent file --
+            i.e. with applied scale and taking into account translation animations."""
+
+        self.location = None
+        """The location of this file within the parent file."""
+
+        self.rotation_euler = None
+        """The rotation of this file within the parent file."""
+
+        self.scale = None
+        """The scale of this file within the parent file."""
 
 # Stores information about one subset of a LS3 file.
 #     identifier: The internal identifier of the subset. 
@@ -786,18 +817,70 @@ class Ls3Exporter:
             texture_node.appendChild(datei_node)
             subsetNode.appendChild(texture_node)
 
-    def write_animation(self, ob, root, animation_node):
-        """Writes an animation into an animation node (<MeshAnimation> or <VerknAnimation>) and
-        returns the length of the longest translation vector of the animation
-        (or 0 if write_translation is False)."""
-        animation = self.animations[ob]
+    def write_ani_keyframes(self, keyframes, animation_node):
+        """Writes a list of keyframes into an animation node (<MeshAnimation> or <VerknAnimation>)"""
+        for keyframe in keyframes:
+            aniPunktNode = self.create_element("AniPunkt")
+            aniPunktNode.setAttribute("AniZeit", str(keyframe.time))
+            animation_node.appendChild(aniPunktNode)
+
+            translationNode = (None if keyframe.loc == Vector((0.0, 0.0, 0.0))
+                else self.create_element("p"))
+            if translationNode is not None:
+                fill_node_xyz(translationNode, -keyframe.loc.y, keyframe.loc.x, keyframe.loc.z)
+                aniPunktNode.appendChild(translationNode)
+
+            rotationNode = self.create_element("q")
+            if abs(keyframe.rotation_quaternion.x) > 0.0001:
+                rotationNode.setAttribute("X", str(keyframe.rotation_quaternion.x))
+            if abs(keyframe.rotation_quaternion.y) > 0.0001:
+                rotationNode.setAttribute("Y", str(keyframe.rotation_quaternion.y))
+            if abs(keyframe.rotation_quaternion.z) > 0.0001:
+                rotationNode.setAttribute("Z", str(keyframe.rotation_quaternion.z))
+            if abs(keyframe.rotation_quaternion.w) > 0.0001:
+                rotationNode.setAttribute("W", str(keyframe.rotation_quaternion.w))
+            if len(rotationNode.attributes):
+                aniPunktNode.appendChild(rotationNode)
+
+    def minimize_translation_length(self, keyframes):
+        """Changes the translation vectors in a list of keyframes (which are relative to (0,0,0))
+        so that the maximum translation length is minimized. Returns a vector to which the new
+        translation vectors are relative."""
+        if not len(keyframes):
+            return Vector((0, 0, 0))
+
+        min_translation = keyframes[0].loc.copy()
+        max_translation = keyframes[0].loc.copy()
+
+        for keyframe in keyframes[1:]:
+            min_translation.x = min(min_translation.x, keyframe.loc.x)
+            min_translation.y = min(min_translation.y, keyframe.loc.y)
+            min_translation.z = min(min_translation.z, keyframe.loc.z)
+            max_translation.x = max(max_translation.x, keyframe.loc.x)
+            max_translation.y = max(max_translation.y, keyframe.loc.y)
+            max_translation.z = max(max_translation.z, keyframe.loc.z)
+
+        new_origin = (max_translation + min_translation) / 2
+
+        for keyframe in keyframes:
+            keyframe.loc -= new_origin
+
+        return new_origin
+
+    def get_max_xy_translation_length(self, keyframes):
+        """Returns the length of the longest translation vector (projected onto the xy plane) in a keyframe list."""
+        return max(vector_xy_length(keyframe.loc) for keyframe in keyframes) if len(keyframes) else 0
+
+    def get_ani_keyframes(self, ob, root, animation):
+        """Returns a sorted list of keyframes (translation and rotation relative to `root`) for `ob`
+        where the keyframe times are taken from `animation`."""
         translation_length = 0
 
         # Get frame numbers of the 0.0 and 1.0 frames.
         frame0 = self.config.context.scene.frame_start
         frame1 = self.config.context.scene.frame_end
 
-        # Get frame numbers of keyframes. Make sure that the start and end keyframes are at at whole number
+        # Get frame numbers of keyframes. Make sure that the start and end keyframes are at an integer
         # (because Zusi does not have a continuation mode setting like Blender).
         keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
         if len(keyframe_nos):
@@ -806,40 +889,23 @@ class Ls3Exporter:
             keyframe_nos.add(min_keyframe)
             keyframe_nos.add(max_keyframe)
 
-        # Write keyframes.
+        # Compute keyframes.
         original_current_frame = self.config.context.scene.frame_current
         rotation_euler = None
+        result = []
         for keyframe_no in sorted(keyframe_nos):
-            aniPunktNode = self.create_element("AniPunkt")
-            aniPunktNode.setAttribute("AniZeit", str(float(keyframe_no - frame0) / (frame1 - frame0)))
-            animation_node.appendChild(aniPunktNode)
+            time = float(keyframe_no - frame0) / (frame1 - frame0)
             self.config.context.scene.frame_set(keyframe_no)
             loc, rot, scale = self.transformation_relative(ob, root, root).decompose()
-
-            translationNode = (None if loc == Vector((0.0, 0.0, 0.0))
-                else self.create_element("p"))
-            if translationNode is not None:
-                fill_node_xyz(translationNode, -loc.y, loc.x, loc.z)
-                aniPunktNode.appendChild(translationNode)
-                translation_length = max(translation_length, vector_xy_length(loc))
 
             # Make rotation Euler compatible with the previous frame to prevent axis flipping.
             rotation_euler = zusi_rotation_from_quaternion(rot, rotation_euler)
             rotation_quaternion = rotation_euler.to_quaternion()
 
-            rotationNode = self.create_element("q")
-            if abs(rotation_quaternion.x) > 0.0001:
-                rotationNode.setAttribute("X", str(rotation_quaternion.x))
-            if abs(rotation_quaternion.y) > 0.0001:
-                rotationNode.setAttribute("Y", str(rotation_quaternion.y))
-            if abs(rotation_quaternion.z) > 0.0001:
-                rotationNode.setAttribute("Z", str(rotation_quaternion.z))
-            if abs(rotation_quaternion.w) > 0.0001:
-                rotationNode.setAttribute("W", str(rotation_quaternion.w))
-            if len(rotationNode.attributes):
-                aniPunktNode.appendChild(rotationNode)
+            result.append(Keyframe(time, loc, rotation_quaternion))
+
         self.config.context.scene.frame_set(original_current_frame)
-        return translation_length
+        return result
 
     def get_animations(self):
         """Creates the dictionary self.animations, which contains for every object in the scene
@@ -1071,65 +1137,12 @@ class Ls3Exporter:
         landschaftNode = self.create_element("Landschaft")
         self.xmldoc.documentElement.appendChild(landschaftNode)
 
-        # Write linked files.
-        for linked_file in sorted(ls3file.linked_files, key = lambda lf: lf.root_obj.name):
-            translation, rotation_quaternion, scale = self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
-            rotation = zusi_rotation_from_quaternion(rotation_quaternion)
-            max_scale_factor = max(scale.x, scale.y, scale.z)
-            scaled_boundingr = linked_file.boundingr * max_scale_factor
-            verknuepfteNode = self.create_element("Verknuepfte")
-
-            boundingr = int(ceil(scaled_boundingr))
-            if boundingr != 0:
-                verknuepfteNode.setAttribute("BoundingR", str(boundingr))
-            dateiNode = self.create_element("Datei")
-            dateiNode.setAttribute("Dateiname", linked_file.filename)
-            verknuepfteNode.appendChild(dateiNode)
-            landschaftNode.appendChild(verknuepfteNode)
-
-            if len(linked_file.group_name):
-                verknuepfteNode.setAttribute("GruppenName", linked_file.group_name)
-            if linked_file.visible_from != 0.0:
-                verknuepfteNode.setAttribute("SichtbarAb", str(linked_file.visible_from))
-            if linked_file.visible_to != 0.0:
-                verknuepfteNode.setAttribute("SichtbarBis", str(linked_file.visible_to))
-            if linked_file.preload_factor != 0.0:
-                verknuepfteNode.setAttribute("Vorlade", str(linked_file.preload_factor))
-            if linked_file.forced_brightness != 0.0:
-                verknuepfteNode.setAttribute("Helligkeit", str(linked_file.forced_brightness))
-            if linked_file.lod != 0.0:
-                verknuepfteNode.setAttribute("LODbit", str(linked_file.lod))
-            flags = linked_file.is_tile * 4 + linked_file.is_detail_tile * 32 + linked_file.is_billboard * 8 + linked_file.is_readonly * 16
-            if flags != 0:
-                verknuepfteNode.setAttribute("Flags", str(flags))
-
-            # Include location and rotation in the link information if they are not animated.
-            pNode = self.create_element("p")
-            verknuepfteNode.appendChild(pNode)
-            if (not self.is_animated(linked_file.root_obj)):
-                fill_node_xyz(pNode, -translation.y, translation.x, translation.z)
-                ls3file.boundingr = max(ls3file.boundingr, scaled_boundingr + vector_xy_length(translation))
-
-            phiNode = self.create_element("phi")
-            verknuepfteNode.appendChild(phiNode)
-            if (not self.is_animated(linked_file.root_obj)):
-                fill_node_xyz(phiNode, rotation.x, rotation.y, rotation.z)
-
-            # Always include scale in the link information because this cannot be animated.
-            skNode = self.create_element("sk")
-            verknuepfteNode.appendChild(skNode)
-            if any([abs(scale[i] - 1.0) > 0.00001 for i in range(0, 3)]):
-                fill_node_xyz(skNode, scale.y, scale.x, scale.z)
-
         # Write anchor points (into the main file)
         if ls3file.is_main_file:
             self.write_anchor_points(landschaftNode)
 
         # Write subsets.
-        subset_nodes = []
-        for subset in ls3file.subsets:
-            subset_nodes.append(self.write_subset_node(landschaftNode, subset, ls3file))
-            ls3file.boundingr = max(ls3file.boundingr, subset.boundingr)
+        subset_nodes = [self.write_subset_node(landschaftNode, subset, ls3file) for subset in ls3file.subsets]
 
         # Write animation definitions for this file and any linked file.
         ani_nr = 0
@@ -1146,16 +1159,26 @@ class Ls3Exporter:
                 meshAnimationNode.setAttribute("AniIndex", str(idx))
                 meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
                 animation_nodes.append(meshAnimationNode)
-                translation_length = self.write_animation(subset.identifier.animated_obj, ls3file.root_obj, meshAnimationNode)
-                ls3file.boundingr = max(ls3file.boundingr, translation_length + subset.boundingr)
+                keyframes = self.get_ani_keyframes(subset.identifier.animated_obj, ls3file.root_obj, animation)
+                self.write_ani_keyframes(keyframes, meshAnimationNode)
 
                 for key in self.get_animation_keys(animation):
                     ls3file.animation_keys.add(key)
                     ani_nrs_by_key[key].append(ani_nr)
                 ani_nr += 1
 
+                ls3file.boundingr = max(ls3file.boundingr, subset.boundingr + self.get_max_xy_translation_length(keyframes))
+            else:
+                ls3file.boundingr = max(ls3file.boundingr, subset.boundingr)
+
         for idx, linked_file in enumerate(ls3file.linked_files):
             ls3file.animation_keys.update(linked_file.animation_keys)
+
+            linked_file.location, rotation_quaternion, linked_file.scale = \
+                    self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
+            linked_file.rotation = zusi_rotation_from_quaternion(rotation_quaternion)
+            # TODO: Warn if scaling is animated
+            max_scale_factor = max(linked_file.scale.x, linked_file.scale.y, linked_file.scale.z)
 
             if self.is_animated(linked_file.root_obj):
                 animation = self.animations[linked_file.root_obj]
@@ -1165,17 +1188,19 @@ class Ls3Exporter:
                 verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
                 animation_nodes.append(verknAnimationNode)
 
-                # TODO: Warn if scaling is animated
-                translation, rotation_quaternion, scale = self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
-                max_scale_factor = max(scale.x, scale.y, scale.z)
-
-                translation_length = self.write_animation(linked_file.root_obj, ls3file.root_obj, verknAnimationNode)
-                ls3file.boundingr = max(ls3file.boundingr, translation_length + linked_file.boundingr * max_scale_factor)
+                keyframes = self.get_ani_keyframes(linked_file.root_obj, ls3file.root_obj, animation)
+                linked_file.location = self.minimize_translation_length(keyframes)
+                linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor + self.get_max_xy_translation_length(keyframes)
+                self.write_ani_keyframes(keyframes, verknAnimationNode)
 
                 for key in self.get_animation_keys(animation):
                     ls3file.animation_keys.add(key)
                     ani_nrs_by_key[key].append(ani_nr)
                 ani_nr += 1
+            else:
+                linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor
+
+            ls3file.boundingr = max(ls3file.boundingr, linked_file.boundingr_in_parent + vector_xy_length(linked_file.location))
 
         # Write animation declarations for this file and any linked file.
         for ani_key in sorted(ls3file.animation_keys):
@@ -1194,6 +1219,49 @@ class Ls3Exporter:
 
         for node in animation_nodes:
             landschaftNode.appendChild(node)
+
+        # Write linked files (*after* writing the animations because that computes loc/rot/scale/boundingr_in_parent for each linked file).
+        for linked_file in sorted(ls3file.linked_files, key = lambda lf: lf.root_obj.name, reverse = True):
+            verknuepfteNode = self.create_element("Verknuepfte")
+            boundingr = int(ceil(linked_file.boundingr_in_parent))
+            if boundingr != 0:
+                verknuepfteNode.setAttribute("BoundingR", str(boundingr))
+            dateiNode = self.create_element("Datei")
+            dateiNode.setAttribute("Dateiname", linked_file.filename)
+            verknuepfteNode.appendChild(dateiNode)
+            landschaftNode.insertBefore(verknuepfteNode, landschaftNode.childNodes[0] if len(landschaftNode.childNodes) else None)
+
+            if len(linked_file.group_name):
+                verknuepfteNode.setAttribute("GruppenName", linked_file.group_name)
+            if linked_file.visible_from != 0.0:
+                verknuepfteNode.setAttribute("SichtbarAb", str(linked_file.visible_from))
+            if linked_file.visible_to != 0.0:
+                verknuepfteNode.setAttribute("SichtbarBis", str(linked_file.visible_to))
+            if linked_file.preload_factor != 0.0:
+                verknuepfteNode.setAttribute("Vorlade", str(linked_file.preload_factor))
+            if linked_file.forced_brightness != 0.0:
+                verknuepfteNode.setAttribute("Helligkeit", str(linked_file.forced_brightness))
+            if linked_file.lod != 0.0:
+                verknuepfteNode.setAttribute("LODbit", str(linked_file.lod))
+            flags = linked_file.is_tile * 4 + linked_file.is_detail_tile * 32 + linked_file.is_billboard * 8 + linked_file.is_readonly * 16
+            if flags != 0:
+                verknuepfteNode.setAttribute("Flags", str(flags))
+
+            pNode = self.create_element("p")
+            verknuepfteNode.appendChild(pNode)
+            fill_node_xyz(pNode, -linked_file.location.y, linked_file.location.x, linked_file.location.z)
+
+            # Include rotation in the link information if it is not animated.
+            phiNode = self.create_element("phi")
+            verknuepfteNode.appendChild(phiNode)
+            if (not self.is_animated(linked_file.root_obj)):
+                fill_node_xyz(phiNode, linked_file.rotation.x, linked_file.rotation.y, linked_file.rotation.z)
+
+            # Always include scale in the link information because this cannot be animated.
+            skNode = self.create_element("sk")
+            verknuepfteNode.appendChild(skNode)
+            if any([abs(linked_file.scale[i] - 1.0) > 0.00001 for i in range(0, 3)]):
+                fill_node_xyz(skNode, linked_file.scale.y, linked_file.scale.x, linked_file.scale.z)
 
         # Get path names
         filepath = os.path.join(

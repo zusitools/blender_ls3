@@ -831,10 +831,10 @@ class TestLs3Export(unittest.TestCase):
     self.open("animation_child_with_constraint")
     basename, ext, files = self.export_and_parse_multiple(["RadRotation"])
 
-    # Although the position of linked file #1 is not animated, it is included
-    # in the animation because the rotation is animated.
+    # The position of linked file #1 is not animated, therefore it is included
+    # in the link and not in the animation.
     verknuepfte_node = files[""].find("./Landschaft/Verknuepfte")
-    self.assertEqual(0, len( verknuepfte_node.find("./p").attrib))
+    self.assertXYZ(verknuepfte_node.find("./p"), 0, 1, 0)
     self.assertEqual(0, len(verknuepfte_node.find('sk').attrib))
 
     # Check for <AniNrs> node in <Animation> node.
@@ -857,9 +857,9 @@ class TestLs3Export(unittest.TestCase):
     self.assertXYZW(q_nodes[4], 0, 0, 0, -1)
 
     p_nodes = verkn_animation_node.findall("./AniPunkt/p")
-    self.assertEqual(5, len(p_nodes))
+    self.assertEqual(0, len(p_nodes))
     for p_node in p_nodes:
-        self.assertXYZ(p_node, 0, 1, 0)
+        self.assertXYZ(p_node, 0, 0, 0)
 
     # Check linked file #1.
     # Check for correct <VerknAnimation> node.
@@ -1204,11 +1204,40 @@ class TestLs3Export(unittest.TestCase):
 
     mainfile = files[""]
     verknuepfte_node = mainfile.find("./Landschaft/Verknuepfte")
-    self.assertEqual("7", verknuepfte_node.attrib["BoundingR"])
+    self.assertEqual(7, int(verknuepfte_node.attrib["BoundingR"]))
 
     linkedfile = files["Empty"]
     verknuepfte_node = linkedfile.find("./Landschaft/Verknuepfte")
-    self.assertEqual("2", verknuepfte_node.attrib["BoundingR"])
+    p_node = verknuepfte_node.find("./p")
+    self.assertAlmostEqual(2.5, float(p_node.attrib["X"]))
+    self.assertAlmostEqual(2.5, float(p_node.attrib["Z"]))
+    # BoundingR: 1.41 for the mesh + 2.5 for the translation
+    self.assertEqual(4, int(verknuepfte_node.attrib["BoundingR"]))
+
+  def test_rotation_translation_animation(self):
+    self.open("rotation_translation_animation")
+    root = self.export_and_parse({"exportAnimations" : True})
+    verknuepfte_node = root.find("./Landschaft/Verknuepfte")
+    self.assertEqual(8, int(verknuepfte_node.attrib["BoundingR"]))
+    self.assertAlmostEqual(5, float(verknuepfte_node.find("./p").attrib["X"]))
+
+    ani_punkt_nodes = root.findall("./Landschaft/VerknAnimation/AniPunkt")
+    self.assertEqual(2, len(ani_punkt_nodes))
+    self.assertAlmostEqual(-5.0, float(ani_punkt_nodes[0].find("./p").attrib["X"]))
+    self.assertAlmostEqual(5.0, float(ani_punkt_nodes[1].find("./p").attrib["X"]))
+
+  def test_rotation_animation_translated(self):
+    self.open("rotation_animation_translated")
+    root = self.export_and_parse({"exportAnimations" : True})
+    verknuepfte_node = root.find("./Landschaft/Verknuepfte")
+
+    self.assertEqual(3, int(verknuepfte_node.attrib["BoundingR"]))
+    self.assertAlmostEqual(10.0, float(verknuepfte_node.find("./p").attrib["X"]))
+
+    ani_punkt_p_nodes = root.findall("./Landschaft/VerknAnimation/AniPunkt/p")
+    self.assertEqual(len(ani_punkt_p_nodes), 0)
+    for node in ani_punkt_p_nodes:
+      self.assertEqual(0, len(node.attrib))
 
   def test_animation_continuation(self):
     self.open("animation_continuation")
@@ -1383,7 +1412,7 @@ class TestLs3Export(unittest.TestCase):
 
     root = files[""]
     verknuepfte_node = root.find("./Landschaft/Verknuepfte")
-    self.assertEqual(16, int(verknuepfte_node.attrib["BoundingR"]))
+    self.assertEqual(26, int(verknuepfte_node.attrib["BoundingR"]))
 
   def test_linked_file_animation_parented(self):
     self.open("linked_file_animation_parented")
