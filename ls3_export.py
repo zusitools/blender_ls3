@@ -463,12 +463,6 @@ class Ls3Exporter:
             ob = ob.parent
         return None
 
-    def get_aninrs(self, animations, animated_linked_files, animated_subsets):
-        """Returns the animation numbers for a list of animations. The animation number corresponds to the
-        1-indexed number of the subset/linked file that has the animation."""
-        return [aninr for aninr, subset in animated_subsets if self.animations[subset.identifier.animated_obj] in animations] \
-            + [aninr for aninr, linked in animated_linked_files if self.animations[linked.root_obj] in animations] \
-
     def transformation_relative(self, ob, root, scale_root):
         """Returns a matrix that describes ob's transformation relative to 'scale_root', where location and rotation
         transformation are only included up to 'root', which must be a descendant of 'scale_root'.
