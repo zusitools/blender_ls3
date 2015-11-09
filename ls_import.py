@@ -19,11 +19,14 @@
 import os
 import bpy
 import bmesh
+import logging
 import struct
 import mathutils
 import xml.dom.minidom as dom
 from .zusicommon import zusicommon
 from math import pi, radians
+
+logger = logging.getLogger(__name__)
 
 IMPORT_LINKED_NO = "0"
 IMPORT_LINKED_AS_EMPTYS = "1"
@@ -115,7 +118,7 @@ class LsImporter:
 
                 face.material_index = self.get_material(diffuse_color, night_color)
             else:
-                print("Warning: Number of vertices is %d" % elementType)
+                logger.warning("Warning: Number of vertices is %d" % elementType)
                 skipLine(fp, 1 + 3 * numVertices + 7)
 
     def get_material(self, diffuse_color, night_color):
@@ -167,11 +170,9 @@ class LsImporter:
 
     def import_ls(self):
         (shortName, ext) = os.path.splitext(self.config.fileName)
-        print("Opening LS file " + self.config.filePath)
+        logger.info("Opening LS file {}".format(self.config.filePath))
 
         with open(self.config.filePath, "r") as fp:
-            print("File read successfully")
-
             # Skip header
             skipLine(fp)
             numElements = int(fp.readline())
@@ -215,7 +216,7 @@ class LsImporter:
                         importer = LsImporter(settings)
                         importer.import_ls()
                     else:
-                        print("Warning: Linked file %s not found" % path)
+                        logger.warning("Warning: Linked file {} not found".format(path))
                 elif self.config.loadLinkedMode == IMPORT_LINKED_AS_EMPTYS:
                     empty = bpy.data.objects.new("{}_{}".format(self.config.fileName, filename), None)
                     empty.location = loc
@@ -238,5 +239,3 @@ class LsImporter:
                 self.readElement(fp)
 
             self.currentbmesh.to_mesh(self.currentmesh)
-
-            print("Done")

@@ -21,6 +21,7 @@
 import array
 import os
 import bpy
+import logging
 import struct
 import mathutils
 import xml.dom.minidom as dom
@@ -29,6 +30,8 @@ from .zusicommon import zusicommon
 from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list
+
+logger = logging.getLogger(__name__)
 
 IMPORT_LINKED_NO = "0"
 IMPORT_LINKED_AS_EMPTYS = "1"
@@ -716,13 +719,11 @@ class Ls3Importer:
     def import_ls3(self):
         self.subsetno = 0
         (shortName, ext) = os.path.splitext(self.config.fileName)
-        print("Opening LS3 file " + self.config.filePath)
+        logger.info("Opening LS3 file {}".format(self.config.filePath))
 
         # Open the file as bytes, else a Unicode BOM at the beginning of the file could confuse the XML parser.
         with open(self.config.filePath, "rb") as fp:
             with dom.parse(fp) as xml:
-                print("File read successfully")
-
                 self.work_list = { 0: [xml.firstChild] }
                 while len(self.work_list.keys()):
                     least_key = min(self.work_list.keys())
@@ -730,6 +731,5 @@ class Ls3Importer:
                     for node in self.work_list[least_key]:
                         self.visitNode(node)
                     del self.work_list[least_key]
-                print("Done")
 
         return self.subsets[0] if len(self.subsets) else None

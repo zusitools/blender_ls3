@@ -50,6 +50,7 @@ if "bpy" in locals():
  
 import bpy
 import os
+import logging
 from bpy.props import *
 from . import zusiprops, zusicommon
 from .zusicommon import zusicommon
@@ -64,6 +65,17 @@ from math import pi
 import xml.etree.ElementTree as ET
 
 _ = i18n.language.gettext
+
+logLevel = logging.INFO
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logLevel)
+logger.propagate = False
+
+if not logger.hasHandlers():
+    ch = logging.StreamHandler()
+    ch.setLevel(logLevel)
+    logger.addHandler(ch)
 
 # A setting to define whether to export a given variant.
 class ZusiFileVariantExportSetting(bpy.types.PropertyGroup):
@@ -488,12 +500,12 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
             root = ET.parse(os.path.join(os.path.dirname(__file__), "batchexport_settings.xml"))
             for setting_node in root.findall("./setting"):
                 if "blendfile" not in setting_node.attrib:
-                    print('Warning: <setting> node without "blendfile" attribute')
+                    logger.warning('Warning: <setting> node without "blendfile" attribute')
                     continue
                 exports = []
                 for export_node in setting_node.findall("./export"):
                     if "ls3file" not in export_node.attrib:
-                        print('Warning: <export> node without "ls3file" attribute')
+                        logger.warning('Warning: <export> node without "ls3file" attribute')
                         continue
                     export_mode = "0"
                     if "exportmode" in export_node.attrib:
@@ -513,7 +525,7 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
                         export_mode))
                 batch_export_settings[setting_node.attrib["blendfile"]] = exports
         except IOError as e:
-            print('Error opening batchexport_settings.xml: {}'.format(e.message))
+            logger.error('Error opening batchexport_settings.xml: {}'.format(e.message))
             pass
 
         try:

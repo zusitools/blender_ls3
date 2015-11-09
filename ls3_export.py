@@ -32,16 +32,7 @@ from math import floor, ceil, sqrt, radians
 from mathutils import *
 from collections import defaultdict
 
-logLevel = logging.INFO
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logLevel)
-logger.propagate = False
-
-if not logger.hasHandlers():
-    ch = logging.StreamHandler()
-    ch.setLevel(logLevel)
-    logger.addHandler(ch)
 
 # Converts a color value (of type Color) and an alpha value (value in [0..1])
 # to a hex string "AARRGGBB"
