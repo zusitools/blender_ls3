@@ -236,7 +236,9 @@ class Ls3Importer:
 
         if diffuse_color != "":
             (mat.diffuse_color, mat.alpha) = hex_string_to_rgba(diffuse_color, diffuse_bgr)
-            mat.diffuse_intensity = 1
+        else:
+            (mat.diffuse_color, mat.alpha) = ((0, 0, 0), 1)
+        mat.diffuse_intensity = 1
 
         if ambient_color != "":
             mat.zusi_use_ambient = True

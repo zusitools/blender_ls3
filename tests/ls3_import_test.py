@@ -164,6 +164,25 @@ class TestLs3Import(unittest.TestCase):
     self.assertTrue(mat.zusi_allow_overexposure)
     self.assertColorEqual((1, 1, 1), mat.zusi_overexposure_addition)
 
+  def test_diffuse_color(self):
+    self.ls3_import("diffusecolor.ls3")
+    gray = (128.0/255, 128.0/255, 128.0/255)
+    black = (0.0, 0.0, 0.0)
+
+    mat = bpy.data.objects["diffusecolor.ls3.0"].data.materials[0]
+    self.assertFalse(mat.zusi_use_emit)
+    self.assertFalse(mat.zusi_use_ambient)
+    self.assertColorEqual(gray, mat.diffuse_color)
+    self.assertEqual(1.0, mat.diffuse_intensity)
+    self.assertFalse(mat.zusi_allow_overexposure)
+
+    mat = bpy.data.objects["diffusecolor.ls3.1"].data.materials[0]
+    self.assertFalse(mat.zusi_use_emit)
+    self.assertFalse(mat.zusi_use_ambient)
+    self.assertColorEqual(black, mat.diffuse_color)
+    self.assertEqual(1.0, mat.diffuse_intensity)
+    self.assertFalse(mat.zusi_allow_overexposure)
+
   def test_ambient_color(self):
     self.ls3_import("ambientcolor.ls3")
     gray = (128.0/255, 128.0/255, 128.0/255)
