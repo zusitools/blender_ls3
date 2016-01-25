@@ -127,6 +127,18 @@ td, th { border: 1px solid gray; padding: 0.2em; }
 
 <p>Dazu muss in der Datei <code>batchexport_settings.xml</code> ein Eintrag für die Blender-Datei angelegt werden. Das Dateiformat ist in der Datei selbst beschrieben.</p>
 
+<h2>Tipps und Tricks</h2>
+
+<h3>Material "Unsichtbar"</h3>
+
+Ein Material mit Namen "Unsichtbar" wird beim Export ignoriert. Man kann ein solches Material einer Fläche zuweisen, die nur dazu dient, die Normalen einer anderen Fläche zu beeinflussen, etwa beim Einsatz von Smooth Shading.
+
+<h3>Material-Texturen vs. Face-Texturen</h3>
+
+In Blender können sowohl einem Material Texturen zugeordnet werden (im Reiter Textures im Properties-Panel) als auch einzelnen Faces (durch Auswahl eines Bildes im UV/Image Editor, während die Faces markiert sind &ndash; erst dadurch wird die Textur auch im Blender-3D-Fenster angezeigt). Der LS3-Exporter ignoriert die zweite Einstellung und beachtet nur die im Material definierten Texturen. Das kann man nutzen, um für das Texturieren eine hochauflösende und verlustfrei komprimierte PNG-Variante der Textur zu nutzen, während in den Materialeinstellungen (und damit im exportierten Modell) eine niedriger aufgelöste DDS-Variante der Textur angegeben wird.
+
+<p></p>
+
 <h1>LS-/LS3-Import</h1>
 
 <p>Der LS3-Import kann unter „File → Import → Zusi-Landschaft (.ls3)“ oder unter „<em>Leertaste</em> → LS3 importieren“ aufgerufen werden. Ebenso kann man unter „File → Import → Zusi-2-Landschaft (.ls)“ oder unter „<em>Leertaste</em> → LS importieren“ Zusi-2-Landschaftsdateien importieren</p>
