@@ -1256,6 +1256,7 @@ class Ls3Exporter:
         # Write XML document to file
         info('Exporting LS3 file {}', filepath)
         with open(filepath, 'wb') as fp:
+            fp.write(b"\xef\xbb\xbf")
             fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep))
 
         info("Bounding radius: {} m", int(ceil(ls3file.boundingr)))

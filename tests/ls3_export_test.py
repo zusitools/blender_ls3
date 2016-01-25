@@ -230,10 +230,12 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual({}, root[1].attrib)
     self.assertEqual(0, len(root[1]))
 
-  def test_xml_declaration(self):
+  def test_xml_declaration_and_bom(self):
     mainfile_name = self.export()
+    utf8bom = b'\xef\xbb\xbf'
+    self.assertEqual(utf8bom, open(mainfile_name, 'rb').read()[:len(utf8bom)])
     xmldecl = b'<?xml version="1.0" encoding="UTF-8"?>'
-    self.assertEqual(xmldecl, open(mainfile_name, 'rb').read()[:len(xmldecl)])
+    self.assertEqual(xmldecl, open(mainfile_name, 'rb').read()[len(utf8bom):len(utf8bom)+len(xmldecl)])
 
   def test_line_endings(self):
     self.clear_scene()
