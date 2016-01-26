@@ -23,6 +23,7 @@ bl_info = {
     'location': 'File > Import -> Zusi Scenery (.ls3) / File -> Export > Zusi Scenery (.ls3)',
     'description': 'Import and export files from/to the Zusi Scenery format (.ls3)',
     'category': 'Import-Export',
+    'wiki_url': 'http://zusitools.github.io/blender_ls3/',
 }
  
 # To support reload properly, try to access a package var, 
