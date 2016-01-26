@@ -13,12 +13,30 @@ td, th { border: 1px solid gray; padding: 0.2em; }
   </head>
   <body>
 
-<h1>Installation</h1>
-<p>siehe Readme unter <a href="https://github.com/zusitools/blender_ls3">https://github.com/zusitools/blender_ls3</a></p>
+<h1>Inhalt</h1>
 
-<p>Es wird Blender Version 2.66 oder höher vorausgesetzt.</p>
+<ul>
+    <li><a href="#installation">Installation</a></li>
+    <li><a href="#ls3export">LS3-Export</a></li>
+    <li><a href="#import">LS-/LS3-Import</a></li>
+</ul>
 
-<h1>LS3-Export</h1>
+<h1><a name="installation">Installation</a></h1>
+
+<p>Es wird Blender Version 2.66 oder höher vorausgesetzt. Zur Installation lädt man von der <a href="https://github.com/zusitools/blender_ls3/releases">Release-Seite</a> die Datei <em>blender_ls3.zip</em> des neuesten Releases herunter. In Blender führt man dann einmalig die folgenden Schritte durch:</p>
+
+<ol>
+    <li>File &rarr; User Preferences öffnen<br/><img src="readme_userprefs.png"/></li>
+    <li>Tab <em>Add-on</em> auswählen<br/><img src="readme_userprefs_addons.png"/></li>
+    <li>Auf <em>Install from file</em> klicken<br/><img src="readme_userprefs_installfromfile.png"/></li>
+    <li>Die heruntergeladene ZIP-Datei per Doppelklick auswählen<br/><img src="readme_userprefs_installfromfile2.png"/></li>
+    <li>Das Kästchen neben <em>Import-Export: Zusi Scenery Format (.ls3)</em> ankreuzen<br/><img src="readme_userprefs_installfromfile3.png"/></li>
+    <li>Auf <em>Save User Settings</em> klicken<br/><img src="readme_userprefs_installfromfile4.png"/></li>
+</ol>
+
+<p class="klein"><strong>Hinweis:</strong> Diese Variante funktioniert nicht, wenn man den aktuellen Repository-Stand per <em>Download ZIP</em> auf Github herunterlädt. Grund dafür ist, dass in dieser Zip-Datei der oberste Verzeichnisname <em>blender_ls3-master</em> einen Bindestrich enthält, womit Python nicht zurechtkommt. In diesem Fall, und wenn man den aktuellen Stand per Git herunterlädt, muss man selbst einen passenden Ordner <em>io_scene_ls3</em> im Blender-Add-on-Verzeichnis anlegen.</p>
+
+<h1><a name="ls3export">LS3-Export</a></h1>
 
 <p>Der LS3-Export kann unter „File → Export → Zusi-Landschaft (.ls3)“ oder unter „<em>Leertaste</em> → LS3 exportieren“ aufgerufen werden.</p>
 
@@ -139,7 +157,7 @@ In Blender können sowohl einem Material Texturen zugeordnet werden (im Reiter T
 
 <p></p>
 
-<h1>LS-/LS3-Import</h1>
+<h1><a name="import">LS-/LS3-Import</a></h1>
 
 <p>Der LS3-Import kann unter „File → Import → Zusi-Landschaft (.ls3)“ oder unter „<em>Leertaste</em> → LS3 importieren“ aufgerufen werden. Ebenso kann man unter „File → Import → Zusi-2-Landschaft (.ls)“ oder unter „<em>Leertaste</em> → LS importieren“ Zusi-2-Landschaftsdateien importieren</p>
 
