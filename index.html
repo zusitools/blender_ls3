@@ -127,17 +127,19 @@ td, th { border: 1px solid gray; padding: 0.2em; }
 
 <h2>Scharfe Kanten</h2>
 
-<p>Es besteht die Möglichkeit, Kanten explizit als scharf zu markieren. Dann werden die Vertices, aus denen diese Kanten bestehen, von der Mesh-Optimierung unabhängig vom Winkel zwischen den Normalen niemals zusammengefasst.</p>
+<p><strong>Hinweis:</strong> Dieser Abschnitt betrifft nur diejenigen, die Normalen von der Mesh-Optimierung berechnen lassen. Dies wird nicht empfohlen, stattdessen verwendet man die Blender-Funktionen <em>Shade Smooth</em> und <em>Shade Flat</em>.</p>
 
-<p>In Blender kann eine Kante unter „Mesh → Edges → Mark sharp“ als scharf markiert werden. (Wenn man im „Tool Shelf“-Bereich auf der linken Seite des 3D-Fensters (Taste T) einen Haken vor „Clear“ setzt, wird die Markierung wieder gelöscht). Scharfe Kanten werden im Editmode blau dargestellt:</p>
+<p class="klein">Es besteht die Möglichkeit, Kanten explizit als scharf zu markieren. Dann werden die Vertices, aus denen diese Kanten bestehen, von der Mesh-Optimierung unabhängig vom Winkel zwischen den Normalen niemals zusammengefasst.</p>
+
+<p class="klein">In Blender kann eine Kante unter „Mesh → Edges → Mark sharp“ als scharf markiert werden. (Wenn man im „Tool Shelf“-Bereich auf der linken Seite des 3D-Fensters (Taste T) einen Haken vor „Clear“ setzt, wird die Markierung wieder gelöscht). Scharfe Kanten werden im Editmode blau dargestellt:</p>
 
 <img src="sharpedges.png" />
 
-<p>Ein Beispiel soll den Unterschied verdeutlichen. Die Kanten des rechten Zylinders sind alle als scharf markiert, die des linken Zylinders nicht.</p>
+<p class="klein">Ein Beispiel soll den Unterschied verdeutlichen. Die Kanten des rechten Zylinders sind alle als scharf markiert, die des linken Zylinders nicht.</p>
 
 <img src="sharpedges2.png" />
 
-<p>Diese Objekte werden beide mit aktivierter Mesh-Optimierung exportiert, und zwar so, dass der Normalen-Grenzwinkel größer ist als der Winkel zwischen den Seitenflächen der Zylinder. Der linke Zylinder wirkt daher im Modellbetrachter glatt und rund, beim rechten wurden die Vertices nicht zusammengeführt und man kann man die einzelnen Flächen erkennen:</p>
+<p class="klein">Diese Objekte werden beide mit aktivierter Mesh-Optimierung exportiert, und zwar so, dass der Normalen-Grenzwinkel größer ist als der Winkel zwischen den Seitenflächen der Zylinder. Der linke Zylinder wirkt daher im Modellbetrachter glatt und rund, beim rechten wurden die Vertices nicht zusammengeführt und man kann man die einzelnen Flächen erkennen:</p>
 
 <img src="sharpedges3.png" />
 
