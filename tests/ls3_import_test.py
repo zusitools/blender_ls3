@@ -402,6 +402,9 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual(Vector((0, 0, 0)), child_ls.location)
     self.assertVectorEqual(Vector((0, 0, radians(-90))), child_ls.rotation_euler)
 
+    # Make sure author information is not imported
+    self.assertEqual(0, len(bpy.data.scenes[0].zusi_authors))
+
   # ---
   # LS import tests
   # ---
