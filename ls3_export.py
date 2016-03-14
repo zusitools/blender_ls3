@@ -983,7 +983,15 @@ class Ls3Exporter:
                 linked_file.is_billboard = ob.zusi_link_is_billboard
                 linked_file.is_readonly = ob.zusi_link_is_readonly
                 linked_file.must_export = False
-                result[self.get_file_root(ob)].linked_files.append(linked_file)
+
+                parent = result[self.get_file_root(ob)]
+                parent.linked_files.append(linked_file)
+                for animation in ob.zusi_link_animations:
+                    parent.animation_keys.add((
+                        int(animation.animation_type),
+                        animation.description if len(animation.description) > 0 \
+                                else get_ani_description(animation.animation_type),
+                        False))
 
         for root_obj, ls3file in result.items():
             ls3file.subsets = sorted(set([s for ob in ls3file.objects for s in self.exported_subsets[ob].values()]),

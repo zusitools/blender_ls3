@@ -1330,7 +1330,7 @@ class TestLs3Export(unittest.TestCase):
       self.assertEqual(set(expected), anchor_points)
 
   # ---
-  # Linked files tests
+  # Tests for Emptys exported as linked files
   # ---
 
   def test_linked_file_export(self):
@@ -1463,6 +1463,16 @@ class TestLs3Export(unittest.TestCase):
 
     root = self.export_and_parse({"exportSelected" : "1", "selected_objects": ["Empty"]})
     self.assertEqual(1, len(root.findall("./Landschaft/Verknuepfte")))
+
+  def test_linked_file_link_animations(self):
+    self.open("linked_file_link_animations")
+    root = self.export_and_parse({"exportAnimations" : True})
+
+    animationen = set((int(n.attrib.get("AniID", 0)), n.attrib.get("AniBeschreibung", ""))
+            for n in root.findall("./Landschaft/Animation"))
+    self.assertEqual(
+        set([(0, "Test 1"), (0, "Test 2"), (0, "Undefiniert/signalgesteuert"), (8, "Test 2"), (8, "Stromabnehmer 1"), (8, "Stromabnehmer A"), ]),
+        animationen)
 
   # ---
   # Batch export tests
