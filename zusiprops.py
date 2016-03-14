@@ -71,6 +71,44 @@ class ZusiFileVariant(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariant)
 
+animation_types = [
+    ("0", _("Undefined/signal controlled"), ""),
+    ("1", _("Continuous over time"), ""),
+    ("2", _("Speed (powered, braked)"), ""),
+    ("3", _("Speed (braked)"), ""),
+    ("4", _("Speed (powered)"), ""),
+    ("5", _("Speed"), ""),
+    ("6", _("Track curvature at front of vehicle"), ""),
+    ("7", _("Track curvature at rear of vehicle"), ""),
+    ("8", _("Pantograph A"), ""),
+    ("9", _("Pantograph B"), ""),
+    ("10", _("Pantograph C"), ""),
+    ("11", _("Pantograph D"), ""),
+    ("12", _("Doors left"), ""),
+    ("13", _("Doors right"), ""),
+    ("14", _("Tilt technology"), ""),
+]
+
+class ZusiLinkAnimation(bpy.types.PropertyGroup):
+    animation_type = bpy.props.EnumProperty(
+        name = _("Animation type"),
+        description = _("Defines how the animation is triggered in the simulator"),
+        items = animation_types,
+        default = "0"
+    )
+
+    description = bpy.props.StringProperty(
+        name = _("Name"),
+        description = _("Animation name; leave empty for default"),
+    )
+
+bpy.utils.register_class(ZusiLinkAnimation)
+
+class ZusiLinkAnimationList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.prop(item, "animation_type", text="", icon_value=icon)
+        layout.prop(item, "description", text="", icon_value=icon)
+
 class ZusiAnimationName(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(
         name = _("Name"),
@@ -541,24 +579,6 @@ variant_visibility_modes = [
     ("False", _("Visible in all but the selected variants"), ""),
 ]
 
-animation_types = [
-    ("0", _("Undefined/signal controlled"), ""),
-    ("1", _("Continuous over time"), ""),
-    ("2", _("Speed (powered, braked)"), ""),
-    ("3", _("Speed (braked)"), ""),
-    ("4", _("Speed (powered)"), ""),
-    ("5", _("Speed"), ""),
-    ("6", _("Track curvature at front of vehicle"), ""),
-    ("7", _("Track curvature at rear of vehicle"), ""),
-    ("8", _("Pantograph A"), ""),
-    ("9", _("Pantograph B"), ""),
-    ("10", _("Pantograph C"), ""),
-    ("11", _("Pantograph D"), ""),
-    ("12", _("Doors left"), ""),
-    ("13", _("Doors right"), ""),
-    ("14", _("Tilt technology"), ""),
-]
-
 anchor_point_categories = [
     ("0", _("General"), ""),
     ("1", _("Overhead line equipment"), ""),
@@ -893,7 +913,13 @@ bpy.types.Object.zusi_link_is_readonly = bpy.props.BoolProperty(
     default = True,
 )
 
+bpy.types.Object.zusi_link_animations = bpy.props.CollectionProperty(
+    name = _("Animations"),
+    description = _("Animations contained in the linked file"),
+    type = ZusiLinkAnimation,
+)
 
+bpy.types.Object.zusi_link_animations_index = bpy.props.IntProperty()
 
 #
 # Scene
@@ -1079,6 +1105,11 @@ class OBJECT_PT_data_linked_file(bpy.types.Panel):
         layout.prop(ob, "zusi_link_is_billboard")
         layout.prop(ob, "zusi_link_is_readonly")
 
+        layout.label(_("Animations contained in the linked file"))
+        template_list(layout.row(), "ZusiLinkAnimationList", "",
+                ob, "zusi_link_animations", ob, "zusi_link_animations_index",
+                "zusi_link_animations.add", "zusi_link_animations.remove", rows = 3)
+
 class OBJECT_PT_data_anchor_point(bpy.types.Panel):
     bl_label = _("Anchor point")
     bl_space_type = "PROPERTIES"
@@ -1139,6 +1170,38 @@ class ZUSI_ANCHOR_POINT_FILES_OT_del(bpy.types.Operator):
         if ob.zusi_anchor_point_files_index >= 0 and len(ob.zusi_anchor_point_files) > 0:
             ob.zusi_anchor_point_files.remove(ob.zusi_anchor_point_files_index)
             ob.zusi_anchor_point_files_index = max(ob.zusi_anchor_point_files_index - 1, 0)
+
+        return{'FINISHED'}
+
+class ZUSI_LINK_ANIMATIONS_OT_add(bpy.types.Operator):
+    bl_idname = 'zusi_link_animations.add'
+    bl_label = _("Add linked animation")
+    bl_description = _("Add info about an animation contained in the linked file")
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object is not None and context.object.type == 'EMPTY'
+
+    def invoke(self, context, event):
+        context.object.zusi_link_animations.add()
+        return{'FINISHED'}
+
+class ZUSI_LINK_ANIMATIONS_OT_del(bpy.types.Operator):
+    bl_idname = 'zusi_link_animations.remove'
+    bl_label = _("Remove linked animation")
+    bl_description = _("Remove the selected animation info from the list")
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object is not None and len(context.object.zusi_link_animations) > 0
+
+    def invoke(self, context, event):
+        ob = context.object
+        if ob.zusi_link_animations_index >= 0 and len(ob.zusi_link_animations) > 0:
+            ob.zusi_link_animations.remove(ob.zusi_link_animations_index)
+            ob.zusi_link_animations_index = max(ob.zusi_link_animations_index - 1, 0)
 
         return{'FINISHED'}
 
