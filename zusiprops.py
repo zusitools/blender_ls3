@@ -404,6 +404,7 @@ def on_zusi_texture_preset_update(self, context):
         return
 
     mat = context.object.data.materials[context.object.active_material_index]
+    mat.zusi_second_pass = False
     newpreset = mat.zusi_texture_preset
     
     if newpreset == 0:
@@ -757,6 +758,12 @@ bpy.types.Material.result_stage = bpy.props.PointerProperty(
     name = _("Result stage"),
     description = _("Settings for the result stage"),
     type = ZusiTexturePresetResultStageSettings,
+)
+
+bpy.types.Material.zusi_second_pass = bpy.props.BoolProperty(
+    name = _("Additional drawing pass without Z buffer"),
+    description = _("Additional drawing pass without Z buffer. Only available for 'One texture, semi-transparency' preset."),
+    default = False
 )
 
 #
@@ -1229,7 +1236,12 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             layout.prop(mat, "zusi_landscape_type")
             layout.prop(mat, "zusi_gf_type")
             layout.prop(mat, "zusi_texture_preset")
-            layout.operator("zusi_texture_preset.edit")
+
+            if mat.zusi_texture_preset == '0': # Custom
+                layout.operator("zusi_texture_preset.edit")
+            elif mat.zusi_texture_preset == '4': # One texture, semi-transparency
+                layout.prop(mat, "zusi_second_pass")
+
             layout.prop(mat, "zusi_force_brightness")
             layout.prop(mat, "zusi_signal_magnification")
             layout.prop(mat, "zusi_use_ambient", text = _("Ambient color:"))
