@@ -293,6 +293,8 @@ class Ls3Importer:
             mat.zusi_force_brightness = float(node.getAttribute("Zwangshelligkeit"))
         if node.getAttribute("zZoom") != "":
             mat.zusi_signal_magnification = float(node.getAttribute("zZoom"))
+        if node.getAttribute("DoppeltRendern") == "1":
+            mat.zusi_second_pass = True
         if node.getAttribute("zBias") != "":
             mat.offset_z = float(node.getAttribute("zBias"))
 
@@ -350,6 +352,7 @@ class Ls3Importer:
     def visitRenderFlagsNode(self, node):
         if node.getAttribute("TexVoreinstellung") != "":
             self.currentmesh.materials[0].zusi_texture_preset = node.getAttribute("TexVoreinstellung")
+            self.currentmesh.materials[0].zusi_second_pass &= self.currentmesh.materials[0].zusi_texture_preset == '4'
 
     # Visits an <Info> node
     def visitInfoNode(self, node):

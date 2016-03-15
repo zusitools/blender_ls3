@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+  <Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+  <Landschaft>
+    <SubSet Cd="FFA3A3A3" DoppeltRendern="1">
+      <RenderFlags TexVoreinstellung="4"/>
+    </SubSet>
+    <SubSet Cd="FFA3A3A3">
+      <RenderFlags TexVoreinstellung="4"/>
+    </SubSet>
+    <SubSet Cd="FFA3A3A3" DoppeltRendern="1">
+      <RenderFlags TexVoreinstellung="2"/>
+    </SubSet>
+  </Landschaft>
+</Zusi>

@@ -227,6 +227,12 @@ class TestLs3Import(unittest.TestCase):
     mat = bpy.data.objects["ls3typ.ls3.0"].data.materials[0]
     self.assertEqual('3', mat.zusi_landscape_type)
 
+  def test_second_pass(self):
+    self.ls3_import("second_drawing_pass.ls3")
+    self.assertTrue(bpy.data.objects["second_drawing_pass.ls3.0"].data.materials[0].zusi_second_pass)
+    self.assertFalse(bpy.data.objects["second_drawing_pass.ls3.1"].data.materials[0].zusi_second_pass)
+    self.assertFalse(bpy.data.objects["second_drawing_pass.ls3.2"].data.materials[0].zusi_second_pass)
+
   def test_import_multiple_files(self):
     bpy.ops.import_scene.ls3(bpy.context.copy(),
       files=[{"name":"nightcolor1.ls3"}, {"name":"zbias.ls3"}],
