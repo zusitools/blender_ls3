@@ -518,6 +518,14 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual('1', subsets[2].attrib["zBias"])
     self.assertEqual('1', subsets[3].attrib["zBias"])
 
+  def test_second_pass(self):
+    self.open("second_drawing_pass")
+    root = self.export_and_parse()
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(1, int(subsets[0].attrib.get("DoppeltRendern", 0)))
+    self.assertEqual(0, int(subsets[1].attrib.get("DoppeltRendern", 0)))
+    self.assertEqual(0, int(subsets[2].attrib.get("DoppeltRendern", 0)))
+
   @unittest.skipUnless(sys.platform.startswith("win"), "only makes sense on Windows")
   def test_path_relative_to_zusi_dir(self):
         # Test that a path outside the Zusi data dir (but on the same drive)

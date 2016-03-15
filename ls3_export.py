@@ -552,6 +552,8 @@ class Ls3Exporter:
                 subsetNode.setAttribute("zZoom", str(material.zusi_signal_magnification))
             if material.offset_z:
                 subsetNode.setAttribute("zBias", str(self.z_bias_map[material.offset_z]))
+            if material.zusi_second_pass and material.zusi_texture_preset == '4':
+                subsetNode.setAttribute("DoppeltRendern", "1")
 
         if not self.use_lsb:
             # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
