@@ -374,7 +374,7 @@ msgstr "Name"
 
 #: zusiprops.py:102
 msgid "Animation name; leave empty for default"
-msgstr ""
+msgstr "Animationsname, leer=Standardname"
 
 #: zusiprops.py:115
 msgid "Animation name"
@@ -937,13 +937,15 @@ msgstr "Einstellung für die Berechnung des Texturierungs-Ergebnisses"
 
 #: zusiprops.py:764
 msgid "Additional drawing pass without Z buffer"
-msgstr ""
+msgstr "Zusätzlicher Zeichenvorgang ohne Z-Buffer"
 
 #: zusiprops.py:765
 msgid ""
 "Additional drawing pass without Z buffer. Only available for 'One texture, "
 "semi-transparency' preset."
 msgstr ""
+"Zusätzlicher Zeichenvorgang ohne Z-Buffer. Nur verfügbar für die "
+"Voreinstellung 'Eine Textur, Halbtransparenz'."
 
 #: zusiprops.py:774
 msgid "Meters per texture"
@@ -1082,14 +1084,12 @@ msgid "Read only"
 msgstr "Schreibgeschützt"
 
 #: zusiprops.py:924
-#, fuzzy
 msgid "Animations"
-msgstr "Animations-Geschwindigkeit"
+msgstr "Animationen"
 
 #: zusiprops.py:925 zusiprops.py:1115
-#, fuzzy
 msgid "Animations contained in the linked file"
-msgstr "In dieser Datei enthaltene Varianten"
+msgstr "In der verknüpften Datei enthaltene Animationen"
 
 #: zusiprops.py:936 zusiprops.py:1033 zusiprops.py:1485
 msgid "Variants"
@@ -1139,8 +1139,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1003
 msgid "Animation duration"
@@ -1160,8 +1160,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1014
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
@@ -1208,23 +1208,22 @@ msgstr ""
 "Die ausgewählte Datei/den ausgewählten Ordner aus der Dateiliste löschen"
 
 #: zusiprops.py:1185
-#, fuzzy
 msgid "Add linked animation"
-msgstr "Animationsname hinzufügen"
+msgstr "Verknüpfte Animation hinzufügen"
 
 #: zusiprops.py:1186
 msgid "Add info about an animation contained in the linked file"
 msgstr ""
+"Information über eine in der verknüpften Datei enthaltene Animation "
+"hinzufügen"
 
 #: zusiprops.py:1199
-#, fuzzy
 msgid "Remove linked animation"
-msgstr "Animationsname löschen"
+msgstr "Verknüpfte Animation löschen"
 
 #: zusiprops.py:1200
-#, fuzzy
 msgid "Remove the selected animation info from the list"
-msgstr "Die ausgewählte Variante aus der Szene löschen"
+msgstr "Die ausgewählte Animationsinformation aus der Liste löschen"
 
 #: zusiprops.py:1247
 msgid "Ambient color:"
