@@ -64,6 +64,9 @@ def debug(msg, *args, **kwargs):
 def info(msg, *args, **kwargs):
     logger.info(msg.format(*args, **kwargs))
 
+def warn(msg, *args, **kwargs):
+    logger.warn(msg.format(*args, **kwargs))
+
 # Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py
 # or the default value specified above if an error occurs.
 def get_exporter_setting(key):
@@ -594,7 +597,7 @@ class Ls3Exporter:
                     mesh.calc_normals_split()
                 mesh.calc_tessface()
             else:
-                print("WARNING: Auto smooth setting will not be honored in Blender < 2.71")
+                warn("Auto smooth setting will not be honored in Blender < 2.71")
                 use_auto_smooth = False
 
         # If the object is mirrored/negatively scaled, the normals will come out the wrong way
@@ -610,7 +613,7 @@ class Ls3Exporter:
         no_merge_vertex_pairs = set([(e.vertices[0], e.vertices[1]) for e in mesh.edges if e.use_edge_sharp]).union(
             set([(e.vertices[1], e.vertices[0]) for e in mesh.edges if e.use_edge_sharp]))
 
-        # For each subset, and i in {0, 1}, get the UV layers from which the UV coordinates
+        # For each subset, and i in {0, 1}, get the UV layer from which the UV coordinates
         # for texture i in the subset shall be taken. Can be None.
         uvlayers = {}
         for material_index, subset in subsets.items():
@@ -627,10 +630,14 @@ class Ls3Exporter:
                 # Find UV layer with the same name as the UV map.
                 # Use active UV layer if the current UV map has no name (which is the default)
                 if active_uvmaps[texindex] != "":
+                    found = False
                     for uvlayer in mesh.tessface_uv_textures:
                         if uvlayer.name == active_uvmaps[texindex]:
                             uvlayers[material_index][texindex] = uvlayer
+                            found = True
                             break
+                    if not found:
+                        warn("UV layer {} of texture slot {} not found", active_uvmaps[texindex], active_texture_slots[texindex].name)
                 else:
                     uvlayers[material_index][texindex] = mesh.tessface_uv_textures.active
 
