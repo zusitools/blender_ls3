@@ -1034,7 +1034,7 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
 
         selected_variants = [vis.variant_id for vis in ob.zusi_variants_visibility]
         box = layout.box()
-        box.enabled = (ob.zusi_variants_visibility_mode != "None")
+        box.enabled = (ob.zusi_variants_visibility_mode != "None" and ob.library is None)
         for variant in context.scene.zusi_variants:
             row = box.row(align = False)
             row.alignment = "LEFT"
