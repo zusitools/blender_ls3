@@ -1027,7 +1027,7 @@ bpy.types.Action.zusi_animation_loop = bpy.props.BoolProperty(
 # Custom UI
 # ===
 
-# Draws a UI part to select the visibility of the object ob in file variants
+# Draws a UI part to select the visibility of the object or texture ob in file variants
 def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
     if len(context.scene.zusi_variants) > 0:
         layout.prop(ob, "zusi_variants_visibility_mode", text = _("Variants"))
