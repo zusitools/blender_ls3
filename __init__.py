@@ -262,6 +262,8 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
 
             importer = ls3_import.Ls3Importer(settings)
             importer.import_ls3()
+            if len(importer.warnings) > 0:
+                self.report({'WARNING'}, os.linesep.join(importer.warnings))
         return {'FINISHED'}
  
     def invoke(self, context, event):

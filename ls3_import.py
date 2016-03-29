@@ -25,11 +25,13 @@ import logging
 import struct
 import mathutils
 import xml.dom.minidom as dom
-from . import ls_import
+from . import ls_import, i18n
 from .zusicommon import zusicommon
 from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list
+
+_ = i18n.language.gettext
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +180,8 @@ class Ls3Importer:
             "MeshAnimation": 3,
             "VerknAnimation": 3,
         }
+
+        self.warnings = []
 
     def visitNode(self, node):
         name = "visit" + node.nodeName + "Node"
@@ -495,7 +499,9 @@ class Ls3Importer:
                         self.config.lod_bit,
                         empty,
                     )
-                    Ls3Importer(settings).import_ls3()
+                    ls3importer = Ls3Importer(settings)
+                    ls3importer.import_ls3()
+                    self.warnings.extend(ls3importer.warnings)
             else:
                 empty.zusi_is_linked_file = True
         except(IndexError):
@@ -650,6 +656,8 @@ class Ls3Importer:
             lsbname = zusicommon.resolve_file_path(node.getAttribute("Dateiname"),
                 self.config.fileDirectory, self.datapath)
             self.lsbreader.set_lsb_file(lsbname)
+        else:
+            self.warnings.append(_("File {} contains binary mesh data (LSB format), which will not be imported.").format(self.config.filePath))
 
     #
     # Visits a <Vertex> node.
