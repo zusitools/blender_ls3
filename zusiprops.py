@@ -119,7 +119,10 @@ bpy.utils.register_class(ZusiAnimationName)
 
 class ZusiFileVariantList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        layout.prop(item, "name", text="", emboss=False, icon_value=icon)
+        if bpy.app.version >= (2, 70, 0):
+            layout.prop(item, "name", text="", emboss=False, icon_value=icon)
+        else:
+            layout.label(item.name, icon_value=icon)
 
 # Defines a visibility of an object/material/texture/whatever in a certain variant
 class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
@@ -195,7 +198,10 @@ bpy.utils.register_class(ZusiAuthor)
 
 class ZusiAuthorList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        layout.prop(item, "name", text="", emboss=False, icon_value=icon)
+        if bpy.app.version >= (2, 70, 0):
+            layout.prop(item, "name", text="", emboss=False, icon_value=icon)
+        else:
+            layout.label(item.name, icon_value=icon)
 
 class ZusiAnchorPointFile(bpy.types.PropertyGroup):
     def set_name(self, value):
@@ -1495,6 +1501,11 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         template_list(layout.row(), "ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index",
                 "zusi_variants.add", "zusi_variants.remove", rows = 3)
 
+        # Show input field to change variant name (in Blender >= 2.70, this is instead done by double-clicking on the item)
+        if bpy.app.version < (2, 70, 0) and sce.zusi_variants:
+            entry = sce.zusi_variants[sce.zusi_variants_index]
+            layout.prop(entry, "name")
+
 # ---
 # Animation info UI
 # ---
@@ -1643,10 +1654,13 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
         template_list(layout.row(), "ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index",
                 "zusi_authors.add", "zusi_authors.remove", rows = 3)
 
-        # Show input field to change author name
+        # Show input fields to change author data
         if sce.zusi_authors:
             entry = sce.zusi_authors[sce.zusi_authors_index]
             row = layout.row()
+            # Show input field to change author name (in Blender >= 2.70, this is instead done by double-clicking on the item)
+            if bpy.app.version < (2, 70, 0):
+                row.prop(entry, "name")
             row.prop(entry, "id")
             layout.prop(entry, "email")
             layout.prop(entry, "effort")
