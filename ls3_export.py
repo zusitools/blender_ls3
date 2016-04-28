@@ -225,7 +225,10 @@ class Ls3Subset:
         self.identifier = identifier
         self.boundingr = 0
         self.vertexdata = []
-        self.facedata = array.array('H')
+        # The LSB format only allows for up to 65,536 vertices per mesh subset,
+        # however before mesh optimization this number may be larger,
+        # which is why using 'H' (unsigned short, min. 2 bytes) does not suffice.
+        self.facedata = array.array('L')
 
     def __str__(self):
         return str(self.identifier)
@@ -1260,9 +1263,17 @@ class Ls3Exporter:
         for index, subset in enumerate(ls3file.subsets):
             if self.config.optimizeMesh:
                 new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-                subset.facedata = array.array('H', [new_vidx[x] for x in subset.facedata])
                 num_deleted_vertices = sum(v is None for v in subset.vertexdata)
+                if len(subset.vertexdata) - num_deleted_vertices > 65536:
+                    raise OverflowError("Subset {} has {} vertices after optimization, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata) - num_deleted_vertices))
+                subset.facedata = array.array('H', [new_vidx[x] for x in subset.facedata])
                 info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
+            else:
+                if len(subset.vertexdata) > 65536:
+                    raise OverflowError("Subset {} has {} vertices, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata)))
+                if lsbwriter:
+                    # LSB writer needs its face data as unsigned short.
+                    subset.facedata = array.array('H', list(subset.facedata))
 
             if lsbwriter:
                 lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)

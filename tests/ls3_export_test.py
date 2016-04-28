@@ -322,6 +322,21 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
+  def test_too_many_vertices(self):
+    self.open("toomanyvertices")
+    with self.assertRaises(RuntimeError) as ctx:
+        self.export_and_parse()
+    self.assertTrue("OverflowError" in ctx.exception.args[0])
+
+    with self.assertRaises(RuntimeError) as ctx:
+        self.export_and_parse({
+          "optimizeMesh" : True,
+          "maxCoordDelta" : 0.1,
+          "maxUVDelta" : 1.0,
+          "maxNormalAngle" : 1,
+        })
+    self.assertTrue("OverflowError" in ctx.exception.args[0])
+
   def test_scaled_object(self):
     self.open("scale")
     root = self.export_and_parse()
