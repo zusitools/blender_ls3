@@ -47,7 +47,7 @@ default_export_settings = {
     "exportAnimations" : False,
     "optimizeMesh" : True,
     "maxCoordDelta" : 0.001,
-    "maxUVDelta" : 0.02,
+    "maxUVDelta" : 0.002,
     "maxNormalAngle" : radians(10),
 }
 
