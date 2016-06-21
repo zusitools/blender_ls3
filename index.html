@@ -48,13 +48,14 @@ td, th { border: 1px solid gray; padding: 0.2em; }
 
 <dl>
 	<dt>Varianten</dt><dd>Wird <a href="#varianten-export">weiter unten</a> erklärt</dd>
-	<dt>Export</dt><dd>Legt fest, welche Objekte exportiert werden sollen.
+        <dt>Export</dt><dd>Legt fest, welche Objekte exportiert werden sollen. Als Veranschaulichung dient die folgende Blender-Szene (gleiche Farben = gleiches Material, der linke Würfel ist ausgewählt). <br/> <img src="export_markiert_blender.png"/>
 		<dl>
-			<dt>Alle Objekte</dt><dd>Alle in der Szene befindlichen Objekte werden exportiert</dd>
-			<dt>Ausgewählte Objekte</dt><dd>Nur die in Blender ausgewählten Objekte werden exportiert.</dd>
-			<dt>Subsets der ausgewählten Objekte</dt><dd>Alle Subsets, die mindestens ein ausgewähltes Objekt enthalten, werden exportiert. Für den Export eines einzelnen Subsets genügt es also, ein Objekt aus diesem Subset auszuwählen und diesen Exportmodus einzustellen.</dd>
+			<dt>Alle Objekte</dt><dd>Alle in der Szene befindlichen Objekte werden exportiert. <br/> <img src="export_markiert_alleobjekte.png"/> </dd>
+			<dt>Ausgewählte Objekte</dt><dd>Nur die in Blender ausgewählten Objekte werden exportiert. <br/> <img src="export_markiert_ausgewaehlte.png"/> </dd>
+
+			<dt>Subsets der ausgewählten Objekte</dt><dd>Alle Subsets, die mindestens einem ausgewählten Objekt enthalten sind, werden exportiert. Für den Export eines einzelnen Subsets genügt es also, ein Objekt aus diesem Subset auszuwählen und diesen Exportmodus einzustellen. <br/> <img src="export_markiert_subsets_ausgewaehlter.png"/> </dd>
 		</dl>
-		Die Varianten-Sichtbarkeit hat Priorität, d.h. ein ausgewähltes Objekt, das in keiner der zu exportierenden Varianten sichtbar ist, wird auch in der Einstellung „Selected objects“ nicht exportiert.
+		Die Varianten-Sichtbarkeit hat Priorität, d.h. ein ausgewähltes Objekt, das in keiner der zu exportierenden Varianten sichtbar ist, wird auch in der Einstellung „Ausgewählte Objekte“ nicht exportiert.
 	</dd>
 	<dt>Mesh optimieren</dt><dd>Aktiviert eine Optimierung zur Reduzierung der Vertexzahl eines Subsets. Das Aktivieren dieser Option ist dringend zu empfehlen, da die exportierte Datei sonst unnötig viele Vertices enthält.
 </dl>
