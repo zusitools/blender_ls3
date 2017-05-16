@@ -848,6 +848,17 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotEqual("", animation_nodes[0].attrib["AniBeschreibung"])
     self.assertAniNrs(animation_nodes[0], [0])
 
+
+  def test_animation_index_linked_file(self):
+    self.open("animation_index_linked_file")
+    mainfile = self.export_and_parse({"exportAnimations" : True})
+    animation_nodes = mainfile.findall("./Landschaft/Animation")
+    dateinamen = [n.attrib["Dateiname"] for n in mainfile.findall("./Landschaft/Verknuepfte/Datei")]
+    self.assertIn("Empty1", dateinamen[0])
+    self.assertIn("test.ls3", dateinamen[1])
+    verkn_animation_node = mainfile.find("./Landschaft/VerknAnimation")
+    self.assertEqual(0, int(verkn_animation_node.attrib["AniIndex"]))
+
   # ---
   # Animation tests - Mesh and animation data
   # ---

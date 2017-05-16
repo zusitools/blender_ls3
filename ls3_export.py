@@ -1165,6 +1165,7 @@ class Ls3Exporter:
             else:
                 ls3file.boundingr = max(ls3file.boundingr, subset.boundingr)
 
+        ls3file.linked_files.sort(key = lambda lf: lf.root_obj.name)
         for idx, linked_file in enumerate(ls3file.linked_files):
             ls3file.animation_keys.update(linked_file.animation_keys)
 
@@ -1213,7 +1214,7 @@ class Ls3Exporter:
             landschaftNode.appendChild(node)
 
         # Write linked files (*after* writing the animations because that computes loc/rot/scale/boundingr_in_parent for each linked file).
-        for linked_file in sorted(ls3file.linked_files, key = lambda lf: lf.root_obj.name, reverse = True):
+        for linked_file in reversed(ls3file.linked_files):
             verknuepfteNode = self.create_element("Verknuepfte")
             boundingr = int(ceil(linked_file.boundingr_in_parent))
             if boundingr != 0:
