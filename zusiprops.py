@@ -1230,13 +1230,12 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        if context.object and context.object.type == 'MESH':
-            return len(context.object.data.materials)
+        return context.material is not None
 
     def draw(self, context):
         layout = self.layout
 
-        mat = context.object.data.materials[context.object.active_material_index]
+        mat = context.material
 
         if mat:
             layout.prop(mat, "zusi_landscape_type")
