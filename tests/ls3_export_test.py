@@ -457,6 +457,11 @@ class TestLs3Export(unittest.TestCase):
     renderflags = subset.find("./RenderFlags")
     self.assertEqual("1", renderflags.attrib["TexVoreinstellung"])
 
+  def test_material_linked_to_object(self):
+    self.open("material_linked_to_object")
+    root = self.export_and_parse()
+    self.assertEqual(2, len(root.findall("./Landschaft/SubSet")))
+
   def test_night_color(self):
     self.open("nightcolor")
     root = self.export_and_parse()

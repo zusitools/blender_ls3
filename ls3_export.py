@@ -107,9 +107,9 @@ def zusi_rotation_from_quaternion(quat, euler_compat=None):
 
 def get_used_materials_for_object(ob):
     """Returns a set of pairs (material index, material) for all materials used (i.e. assigned to any face) in the given object."""
-    if ob.data and (len(ob.data.materials) > 0):
+    if ob.data and (len(ob.material_slots) > 0):
         used_material_indices = set([poly.material_index for poly in ob.data.polygons])
-        return set([(i, ob.data.materials[i]) for i in used_material_indices if ob.data.materials[i] is not None and ob.data.materials[i].name != 'Unsichtbar'])
+        return set([(i, ob.material_slots[i].material) for i in used_material_indices if ob.material_slots[i].material is not None and ob.material_slots[i].name != 'Unsichtbar'])
     else:
         return set([(0, None)])
 
