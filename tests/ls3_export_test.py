@@ -322,6 +322,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
+  @unittest.skip("very slow")
   def test_too_many_vertices(self):
     self.open("toomanyvertices")
     with self.assertRaises(RuntimeError) as ctx:
