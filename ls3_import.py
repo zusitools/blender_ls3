@@ -84,6 +84,18 @@ def zusi_to_blender_euler(euler):
 def zusi_to_blender_scale(scale):
     return Vector((scale[1], scale[0], scale[2]))
 
+def lod_convert(lod):
+    result = 0
+    if (lod & 1) != 0:
+        result |= 8
+    if (lod & 2) != 0:
+        result |= 4
+    if (lod & 4) != 0:
+        result |= 2
+    if (lod & 8) != 0:
+        result |= 1
+    return result
+
 def get_float_attr(node, name):
     attr = node.getAttribute(name)
     return float(attr) if len(attr) else 0.0
@@ -461,7 +473,7 @@ class Ls3Importer:
             empty.zusi_link_preload_factor = get_float_attr(node, "Vorlade")
             empty.zusi_link_radius = get_int_attr(node, "BoundingR")
             empty.zusi_link_forced_brightness = get_float_attr(node, "Helligkeit")
-            empty.zusi_link_lod = get_int_attr(node, "LODbit")
+            empty.zusi_link_lod = lod_convert(get_int_attr(node, "LODbit"))
 
             flags = get_int_attr(node, "Flags")
             empty.zusi_link_is_tile = flags & 4 != 0

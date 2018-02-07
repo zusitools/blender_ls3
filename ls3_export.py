@@ -96,6 +96,18 @@ def normalize_color(color):
         min(1.0, max(0.0, color.b))
     ))
 
+def lod_convert(lod):
+    result = 0
+    if (lod & 1) != 0:
+        result |= 8
+    if (lod & 2) != 0:
+        result |= 4
+    if (lod & 4) != 0:
+        result |= 2
+    if (lod & 8) != 0:
+        result |= 1
+    return result
+
 def zusi_rotation_from_quaternion(quat, euler_compat=None):
     # Blender uses extrinsic Euler rotation (the order can be specified).
     # Zusi uses intrinsic ZYX Euler rotation, which corresponds to extrinsic XYZ Euler rotation,
@@ -989,7 +1001,7 @@ class Ls3Exporter:
                 linked_file.preload_factor = ob.zusi_link_preload_factor
                 linked_file.boundingr = ob.zusi_link_radius
                 linked_file.forced_brightness = ob.zusi_link_forced_brightness
-                linked_file.lod = ob.zusi_link_lod
+                linked_file.lod = lod_convert(ob.zusi_link_lod)
                 linked_file.is_tile = ob.zusi_link_is_tile
                 linked_file.is_detail_tile = ob.zusi_link_is_detail_tile
                 linked_file.is_billboard = ob.zusi_link_is_billboard

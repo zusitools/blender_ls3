@@ -902,6 +902,13 @@ bpy.types.Object.zusi_link_forced_brightness = bpy.props.FloatProperty(
     name = _("Forced brightness [0..1]"),
 )
 
+# Due to an implementation error in older versions of blender_ls3,
+# this does not correspond to the LOD value used by Zusi.
+# Instead, the flags are:
+#  LOD0 - 1   [should be: 8]
+#  LOD1 - 2   [4]
+#  LOD2 - 4   [2]
+#  LOD3 - 8   [1]
 bpy.types.Object.zusi_link_lod = bpy.props.IntProperty(
     name = _("Level of detail"),
 )

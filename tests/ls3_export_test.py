@@ -1403,7 +1403,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(13.5, float(v4.attrib["Vorlade"]))
     self.assertEqual(15, int(v4.attrib["BoundingR"]))
     self.assertEqual(0.5, float(v4.attrib["Helligkeit"]))
-    self.assertEqual(5, int(v4.attrib["LODbit"]))
+    self.assertEqual(10, int(v4.attrib["LODbit"]))
     self.assertEqual(4 + 8, int(v4.attrib["Flags"])) # Tile + Billboard
 
     v5 = verknuepfte_nodes[4]
@@ -1422,7 +1422,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotIn("Vorlade", v5.attrib)
     self.assertNotIn("BoundingR", v5.attrib)
     self.assertNotIn("Helligkeit", v5.attrib)
-    self.assertEqual(10, int(v5.attrib["LODbit"]))
+    self.assertEqual(5, int(v5.attrib["LODbit"]))
     self.assertEqual(32 + 16, int(v5.attrib["Flags"])) # Detail tile + read only
 
   def test_linked_file_parented(self):
@@ -1503,6 +1503,19 @@ class TestLs3Export(unittest.TestCase):
 
     root = self.export_and_parse({"exportSelected" : "1", "selected_objects": ["Empty"]})
     self.assertEqual(1, len(root.findall("./Landschaft/Verknuepfte")))
+
+  def test_linked_file_lod(self):
+    self.open("linked_file_lod")
+    root = self.export_and_parse()
+
+    verknuepfte_nodes = root.findall("./Landschaft/Verknuepfte")
+    self.assertEqual(5, len(verknuepfte_nodes))
+
+    self.assertEqual(8, int(verknuepfte_nodes[0].attrib["LODbit"]))
+    self.assertEqual(4, int(verknuepfte_nodes[1].attrib["LODbit"]))
+    self.assertEqual(2, int(verknuepfte_nodes[2].attrib["LODbit"]))
+    self.assertEqual(1, int(verknuepfte_nodes[3].attrib["LODbit"]))
+    self.assertEqual(11, int(verknuepfte_nodes[4].attrib["LODbit"]))
 
   def test_linked_file_link_animations(self):
     self.open("linked_file_link_animations")
