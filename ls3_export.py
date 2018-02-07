@@ -120,8 +120,12 @@ def zusi_rotation_from_quaternion(quat, euler_compat=None):
 def get_used_materials_for_object(ob):
     """Returns a set of pairs (material index, material) for all materials used (i.e. assigned to any face) in the given object."""
     if ob.data and (len(ob.material_slots) > 0):
-        used_material_indices = set([poly.material_index for poly in ob.data.polygons])
-        return set([(i, ob.material_slots[i].material) for i in used_material_indices if ob.material_slots[i].material is not None and ob.material_slots[i].name != 'Unsichtbar'])
+        if ob.type == 'MESH':
+            elements = ob.data.polygons
+        elif ob.type == 'CURVE':
+            elements = ob.data.splines
+        used_material_indices = set(elem.material_index for elem in elements)
+        return set((i, ob.material_slots[i].material) for i in used_material_indices if ob.material_slots[i].material is not None and ob.material_slots[i].name != 'Unsichtbar')
     else:
         return set([(0, None)])
 
@@ -596,7 +600,7 @@ class Ls3Exporter:
         vgroup_yz = -1 if "Normal constraint YZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint YZ"].index
         vgroup_xz = -1 if "Normal constraint XZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XZ"].index
 
-        use_rail_normals = ob.data and ob.data.zusi_is_rail
+        use_rail_normals = ob.type == 'MESH' and ob.data and ob.data.zusi_is_rail
 
         # Apply modifiers and transform the mesh so that the vertex coordinates
         # are global coordinates. Also recalculate the vertex normals.
@@ -1052,7 +1056,7 @@ class Ls3Exporter:
             result[ob] = {}
             # If export setting is "export only selected objects", filter out unselected objects
             # from the beginning. Also, non-mesh objects are not exported.
-            if (ob.type != 'MESH' or
+            if ((ob.type != 'MESH' and ob.type != 'CURVE') or
                     (self.config.exportSelected == EXPORT_SELECTED_OBJECTS and
                             ob.name not in self.config.selectedObjects)):
                 continue
