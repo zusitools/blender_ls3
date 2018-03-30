@@ -443,6 +443,25 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
+  def test_multitexturing_same_texture(self):
+    """Tests that UV coordinates are exported correctly when the same texture is used multiple times with different UV maps"""
+    self.open("multitexturing_sametexture")
+    root = self.export_and_parse()
+
+    vertex_nodes = root.findall("./Landschaft/SubSet/Vertex")
+    self.assertEqual(24, len(vertex_nodes))
+
+    for vertex_node in vertex_nodes:
+      u1 = float(vertex_node.attrib["U"])
+      u2 = float(vertex_node.attrib["U2"])
+      v1 = float(vertex_node.attrib["V"])
+      v2 = float(vertex_node.attrib["V2"])
+
+      self.assertIn(round(u1, 1), [0, 1])
+      self.assertIn(round(v1, 1), [0, 1])
+      self.assertIn(round(u2, 2), [.25, .75])
+      self.assertIn(round(v2, 2), [.25, .75])
+
   def test_meters_per_texture(self):
     self.open("meters_per_texture")
     root = self.export_and_parse()

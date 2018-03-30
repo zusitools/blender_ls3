@@ -510,23 +510,21 @@ class Ls3Exporter:
             ob = ob.parent
         return result
 
-    # Returns a list of the active texture slots of the given material.
+    # Returns a list of the active usable texture slots of the given material.
     def get_active_texture_slots(self, material):
-        if material:
-            # If no variants are defined, the visibility of the texture slot is taken into account.
-            variants_defined = len(self.config.context.scene.zusi_variants) > 0
+        if not material:
+            return []
 
-            # Create a list of image textures
-            image_texture_slots = [material.texture_slots[texture_slot]
-                for texture_slot in material.texture_slots.keys()
-                if material.texture_slots[texture_slot].texture
-                    and material.texture_slots[texture_slot].texture.type == "IMAGE"
-                    and (variants_defined or material.texture_slots[texture_slot].use)]
-
-            # Refine the list, including only textures that have a file source and are active in the given variant
-            return [texture_slot for texture_slot in image_texture_slots
-                    if getattr(texture_slot.texture.image, "source", "") == "FILE" and zusicommon.is_object_visible(texture_slot.texture, self.config.variantIDs)]
-        return []
+        # Create a list of active image texture slots.
+        # The use flag (checkbox) of the texture slot is only taken into account if no variants are defined.
+        variants_defined = len(self.config.context.scene.zusi_variants) > 0
+        return [texture_slot for texture_slot in material.texture_slots
+            if texture_slot
+                and texture_slot.texture
+                and texture_slot.texture.type == "IMAGE"
+                and (variants_defined or texture_slot.use)
+                and getattr(texture_slot.texture.image, "source", "") == "FILE"
+                and zusicommon.is_object_visible(texture_slot.texture, self.config.variantIDs)]
 
     # Writes all objects that have the "Is anchor point" property set to true.
     def write_anchor_points(self, landschaftNode):
