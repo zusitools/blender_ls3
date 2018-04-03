@@ -426,21 +426,25 @@ class Ls3Exporter:
 
     # Convert a Blender path to a path where Zusi can find the specified file.
     # Returns
-    #  - only the file name: if the file resides in the same directory as the .ls3 file
+    #  - only the file name: if the file resides in the same directory as the .ls3 file (this can be turned off by setting force_relative_to_root=True)
     #  - a path relative to the Zusi data directory: if the file resides on the same drive as the Zusi data directory,
     #  - the path, otherwise.
     # The path separator will always be a backslash, regardless of the operating system
-    def relpath(self, path):
+    def relpath(self, path, force_relative_to_root=False):
         path = os.path.realpath(bpy.path.abspath(path))
         (dirname, filename) = os.path.split(path)
 
-        if os.path.normpath(dirname) == os.path.normpath(self.config.fileDirectory):
+        if os.path.normpath(dirname) == os.path.normpath(self.config.fileDirectory) and not force_relative_to_root:
             return filename
         else:
             datadir = os.path.realpath(zusicommon.get_zusi_data_path())
 
             try:
-                return os.path.relpath(path, datadir).replace(os.sep, "\\")
+                result = os.path.relpath(path, datadir)
+                if os.sep not in result:
+                    return '\\' + result
+                else:
+                    return result.replace(os.sep, "\\")
             except ValueError:
                 # path and datadir are not on the same drive
                 return path.replace(os.sep, "\\")
@@ -549,7 +553,7 @@ class Ls3Exporter:
                 fill_node_xyz(self.create_child_element(ankerpunktNode, "phi"), rotation.x, rotation.y, rotation.z)
 
                 for entry in ob.zusi_anchor_point_files:
-                    self.create_child_element(ankerpunktNode, "Datei").setAttribute("Dateiname", self.relpath(entry.name_realpath))
+                    self.create_child_element(ankerpunktNode, "Datei").setAttribute("Dateiname", self.relpath(entry.name_realpath, force_relative_to_root=True))
 
         for name in sorted(anchor_points.keys()):
             landschaftNode.appendChild(anchor_points[name])

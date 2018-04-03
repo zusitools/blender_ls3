@@ -1355,6 +1355,11 @@ class TestLs3Export(unittest.TestCase):
 
   def test_anchor_point_export(self):
     self.open("anchor_points")
+    assert(ZUSI3_EXPORTPATH != ZUSI3_DATAPATH);
+    bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[0].name = os.path.join(ZUSI3_EXPORTPATH, "file.ls3")
+    bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[1].name = os.path.join(ZUSI3_EXPORTPATH, "folder")
+    bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[2].name = os.path.join(ZUSI3_DATAPATH, "file.ls3")
+    bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[3].name = os.path.join(ZUSI3_DATAPATH, "folder")
     root = self.export_and_parse()
 
     anchor_point_nodes = root.findall("./Landschaft/Ankerpunkt")
@@ -1366,9 +1371,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("Anchor point 1 description", a1.attrib["Beschreibung"])
 
     a1files = a1.findall("./Datei")
-    self.assertEqual(2, len(a1files))
-    self.assertEqual("file.ls3", a1files[0].attrib["Dateiname"])
-    self.assertEqual("folder", a1files[1].attrib["Dateiname"])
+    self.assertEqual(4, len(a1files))
+
+    # Paths must be relative to the data directory to work in Zusi 3D Editor
+    self.assertEqual("ExportTest\\file.ls3", a1files[0].attrib["Dateiname"])
+    self.assertEqual("ExportTest\\folder", a1files[1].attrib["Dateiname"])
+    self.assertEqual("\\file.ls3", a1files[2].attrib["Dateiname"])
+    self.assertEqual("\\folder", a1files[3].attrib["Dateiname"])
 
     a2 = anchor_point_nodes[1]
     self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
