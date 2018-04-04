@@ -452,7 +452,7 @@ def on_zusi_texture_preset_update(self, context):
     # Result stage
     mat.result_stage.D3DRS_SRCBLEND = "5" # D3DBLEND_SRCALPHA
     mat.result_stage.D3DRS_DESTBLEND = "6" # D3DBLEND_INVSRCALPHA
-    mat.result_stage.D3DRS_ALPHABLENDENABLE = newpreset in [4, 6, 7, 8, 9]
+    mat.result_stage.D3DRS_ALPHABLENDENABLE = newpreset in [4, 6, 7, 8, 9, 12]
     mat.result_stage.D3DRS_ALPHATESTENABLE = newpreset not in [1, 3]
     mat.result_stage.alpha_ref = 1
     mat.result_stage.D3DRS_SHADEMODE = "2" # D3DSHADE_GOURAUD
@@ -476,9 +476,13 @@ def on_zusi_texture_preset_update(self, context):
         mat.result_stage.D3DRS_SRCBLEND = "6" # D3DBLEND_INVSRCALPHA
         mat.result_stage.D3DRS_DESTBLEND = "3" # D3DBLEND_SRCCOLOR
     
-    if newpreset == 8:
+    if newpreset in [8, 12]:
         mat.texture_stage_1.D3DTSS_ALPHAOP = "4" # D3DTOP_MODULATE
+
+    if newpreset == 8:
         mat.result_stage.alpha_ref = 100
+    elif newpreset == 12:
+        mat.result_stage.alpha_ref = 150
     
     if newpreset in [3, 5]:
         mat.texture_stage_2.D3DTSS_COLORARG1 = "2" # D3DTA_TEXTURE
@@ -574,10 +578,11 @@ texture_presets = [
     ("5", _("Tex. 1 default, tex. 2 transp./illuminated"), ""),
     ("6", _("Signal lens (shine-through)"), ""),
     ("7", _("Dimmable signal lamp (with semi-transparency)"), ""),
-    ("8", _("Semi-transparency for leaf-like structures"), ""),
+    ("8", _("Semi-transparency for leaf-like structures, Alpha reference value 100"), ""),
     ("9", _("Overlaying window, dimming off at day"), ""),
     ("10", _("Overlaying window, switched off at day"), ""),
     ("11", _("Wall of fog"), ""),
+    ("12", _("Semi-transparency for leaf-like structures, Alpha reference value 150"), ""),
 ]
 
 variant_visibility_modes = [
