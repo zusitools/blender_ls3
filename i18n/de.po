@@ -675,9 +675,8 @@ msgid "Dimmable signal lamp (with semi-transparency)"
 msgstr "Signallampe dimmbar (mit Halbtransparenz)"
 
 #: zusiprops.py:581
-#, fuzzy
 msgid "Semi-transparency for leaf-like structures, Alpha reference value 100"
-msgstr "Halbtransparenz für Laub-ähnliche Strukturen"
+msgstr "Halbtransparenz für laubähnliche Strukturen, Alpharef 100"
 
 #: zusiprops.py:582
 msgid "Overlaying window, dimming off at day"
@@ -692,9 +691,8 @@ msgid "Wall of fog"
 msgstr "Nebelwand"
 
 #: zusiprops.py:585
-#, fuzzy
 msgid "Semi-transparency for leaf-like structures, Alpha reference value 150"
-msgstr "Halbtransparenz für Laub-ähnliche Strukturen"
+msgstr "Halbtransparenz für laubähnliche Strukturen, Alpharef 150"
 
 #: zusiprops.py:589
 msgid "Visible in all variants"
