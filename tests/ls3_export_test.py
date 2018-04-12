@@ -309,6 +309,7 @@ class TestLs3Export(unittest.TestCase):
   # ---
 
   def test_export_simple_cube(self):
+    self.open("simple_cube")
     root = self.export_and_parse()
 
     # <Landschaft> node contains one subset
@@ -321,6 +322,19 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertEqual(24, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
+
+  def test_export_edit_mode(self):
+    self.open("edit_mode")
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.transform.translate(value=(1, 0, 0))
+    root = self.export_and_parse()
+
+    p_nodes = root.findall("./Landschaft/SubSet/Vertex/p")
+    self.assertEqual(24, len(p_nodes))
+    for v in p_nodes:
+        self.assertAlmostEqual(1, abs(float(v.attrib["X"])), places=5)
+        self.assertAlmostEqual(1, abs(float(v.attrib["Y"])), places=5)
+        self.assertAlmostEqual(1, abs(float(v.attrib["Z"])), places=5)
 
   @unittest.skip("very slow")
   def test_too_many_vertices(self):

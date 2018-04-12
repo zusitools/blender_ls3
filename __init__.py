@@ -468,7 +468,12 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         return ls3_export.Ls3Exporter(settings)
 
     def execute(self, context):
+        is_editmode = (context.mode == 'EDIT_MESH')
+        if is_editmode:
+            bpy.ops.object.editmode_toggle()
         self.get_exporter(context).export_ls3()
+        if is_editmode:
+            bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
  
     def invoke(self, context, event):
@@ -545,6 +550,10 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
             return {'CANCELLED'}
 
         def runbatch():
+            is_editmode = (context.mode == 'EDIT_MESH')
+            if is_editmode:
+                bpy.ops.object.editmode_toggle()
+
             for setting in batch_export_settings[bpy.data.filepath]:
                 (directory, filename) = os.path.split(setting[2])
         
@@ -565,6 +574,9 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
 
                 exporter = ls3_export.Ls3Exporter(settings)
                 exporter.export_ls3()
+
+            if is_editmode:
+                bpy.ops.object.editmode_toggle()
 
         if True:
             runbatch()
