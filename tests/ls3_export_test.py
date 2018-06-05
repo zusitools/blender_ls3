@@ -1393,6 +1393,9 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("\\file.ls3", a1files[2].attrib["Dateiname"])
     self.assertEqual("\\folder", a1files[3].attrib["Dateiname"])
 
+    for i in range(0, 4):
+        self.assertEqual("1", a1files[1].attrib["NurInfo"])
+
     a2 = anchor_point_nodes[1]
     self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
     self.assertXYZ(a2.find("./p"), -2, 1, 3)

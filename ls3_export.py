@@ -553,7 +553,9 @@ class Ls3Exporter:
                 fill_node_xyz(self.create_child_element(ankerpunktNode, "phi"), rotation.x, rotation.y, rotation.z)
 
                 for entry in ob.zusi_anchor_point_files:
-                    self.create_child_element(ankerpunktNode, "Datei").setAttribute("Dateiname", self.relpath(entry.name_realpath, force_relative_to_root=True))
+                    dateiNode = self.create_child_element(ankerpunktNode, "Datei")
+                    dateiNode.setAttribute("Dateiname", self.relpath(entry.name_realpath, force_relative_to_root=True))
+                    dateiNode.setAttribute("NurInfo", "1")
 
         for name in sorted(anchor_points.keys()):
             landschaftNode.appendChild(anchor_points[name])
