@@ -198,10 +198,6 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
             importer.import_ls()
         return {'FINISHED'}
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
 class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     bl_idname = "import_scene.ls3"
     bl_description = _('Import from Zusi Scenery file format (.ls3)')
@@ -272,9 +268,8 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
                 setting = self.properties.lod_import_setting.add()
                 setting.name = _("LOD %d") % i
                 setting.lod_bit = 2**(3 - i)
-    
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+
+        return super().invoke(context, event)
 
 class OBJECT_OT_embed_linked(bpy.types.Operator):
     bl_idname = "zusi_linked_file.embed"
@@ -490,8 +485,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             setting.variant_id = variant.id
             setting.export = setting.variant_id in old_selected
 
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+        return super().invoke(context, event)
 
 class EXPORT_OT_ls3_batch(bpy.types.Operator):
     bl_idname = "export_scene.ls3_batch"
