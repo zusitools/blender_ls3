@@ -304,6 +304,16 @@ class TestLs3Export(unittest.TestCase):
     self.assertFalse(os.path.exists(os.path.join(ZUSI3_EXPORTPATH, "export.lsb")))
     self.assertEqual([], root.findall("./Landschaft/lsb"))
 
+  def test_export_visible_layers(self):
+    self.open("export_visible_layers")
+    self.assertEqual([True, False, True] + [False] * 17, list(bpy.context.scene.layers))
+
+    root = self.export_and_parse({"exportSelected" : "0"})  # Export all objects
+    self.assertEqual(3, len(root.findall("./Landschaft/SubSet")))
+
+    root = self.export_and_parse({"exportSelected" : "4"})  # Export only visible layers
+    self.assertEqual(2, len(root.findall("./Landschaft/SubSet")))
+
   # ---
   # Mesh and texture export tests
   # ---

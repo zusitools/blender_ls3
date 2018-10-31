@@ -346,7 +346,8 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         items = [
             ("0", _("All objects"), ""),
             ("1", _("Selected objects"), ""),
-            ("2", _("Subsets containing selected objects"), "")
+            ("2", _("Subsets containing selected objects"), ""),
+            ("4", _("Objects on visible layers"), ""),
         ],
         default = ls3_export.get_exporter_setting("exportSelected"),
     )
@@ -445,6 +446,13 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         col.prop(self, "maxNormalAngle")
 
     def get_exporter(self, context):
+        if self.properties.exportSelected == '4':  # Visible layers
+            is_on_visible_layer = lambda ob: any((a and b) for a, b in zip(ob.layers, context.scene.layers))
+            selectedObjects = [ob.name for ob in context.scene.objects if is_on_visible_layer(ob)]
+            self.properties.exportSelected = '1'  # Selected objects
+        else:
+            selectedObjects = [ob.name for ob in context.selected_objects]
+
         settings = ls3_export.Ls3ExporterSettings(
             context,
             self.properties.filepath,
@@ -457,7 +465,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             self.properties.maxCoordDelta,
             (self.properties.maxNormalAngle / 360) * 2 * pi,
             [setting.variant_id for setting in self.properties.variant_export_setting if setting.export == True],
-            [ob.name for ob in context.selected_objects],
+            selectedObjects,
         )
         
         return ls3_export.Ls3Exporter(settings)
