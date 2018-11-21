@@ -86,8 +86,8 @@ class TestLs3Import(unittest.TestCase):
   # ---
 
   def test_import_author_info(self):
-    self.ls3_import("author_info_1.ls3", {"loadAuthorInformation": True})
-    self.ls3_import("author_info_2.ls3", {"loadAuthorInformation": True})
+    self.ls3_import("author_info_1.ls3", {"importFileMetadata": True})
+    self.ls3_import("author_info_2.ls3", {"importFileMetadata": True})
 
     expected = set([
         # name, id, aufwand, lizenz, email, beschreibung
@@ -379,10 +379,14 @@ class TestLs3Import(unittest.TestCase):
       with open(os.path.join("ls", "cube.ls"), 'r') as f2:
         f.write(f2.read())
     with open(os.path.join(ZUSI3_DATAPATH, "RollingStock", "Deutschland", "Epoche5", "Elektroloks", "101", "3D-Daten", "101_vr.lod.ls3"), 'w') as f:
-      with open(os.path.join("ls3s", "cube.ls3"), 'r') as f2:
+      with open(os.path.join("ls3s", "cube_with_id_and_description.ls3"), 'r') as f2:
         f.write(f2.read())
 
     self.ls3_import("linked_file_embed_ls3.ls3")
+    self.assertEqual(0, len(bpy.data.scenes[0].zusi_authors))
+    self.assertEqual(0, bpy.data.scenes[0].zusi_object_id)
+    self.assertEqual("", bpy.data.scenes[0].zusi_description)
+
     parent_ls3 = bpy.data.objects["linked_file_embed_ls3.ls3_101_vr.lod.ls3.001"]
     parent_ls = bpy.data.objects["linked_file_embed_ls3.ls3_AVG_803_Front.ls.002"]
 
@@ -414,8 +418,10 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual(Vector((0, 0, 0)), child_ls.location)
     self.assertVectorEqual(Vector((0, 0, radians(-90))), child_ls.rotation_euler)
 
-    # Make sure author information is not imported
+    # Make sure author and file information is not imported
     self.assertEqual(0, len(bpy.data.scenes[0].zusi_authors))
+    self.assertEqual(0, bpy.data.scenes[0].zusi_object_id)
+    self.assertEqual("", bpy.data.scenes[0].zusi_description)
 
   # ---
   # LS import tests

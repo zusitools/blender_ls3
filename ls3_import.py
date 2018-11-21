@@ -110,7 +110,7 @@ class Ls3ImporterSettings:
                 filePath,
                 fileName,
                 fileDirectory,
-                loadAuthorInformation = True,
+                importFileMetadata = True,
                 loadLinkedMode = IMPORT_LINKED_AS_EMPTYS,
                 location = [0.0, 0.0, 0.0], # in Blender coords
                 rotation = [0.0, 0.0, 0.0], # in Blender coords
@@ -122,7 +122,7 @@ class Ls3ImporterSettings:
         self.filePath = filePath
         self.fileName = fileName
         self.fileDirectory = fileDirectory
-        self.loadAuthorInformation = loadAuthorInformation
+        self.importFileMetadata = importFileMetadata
         self.loadLinkedMode = loadLinkedMode
         self.location = location
         self.rotation = rotation
@@ -373,11 +373,12 @@ class Ls3Importer:
 
     # Visits an <Info> node
     def visitInfoNode(self, node):
-        if node.getAttribute("ObjektID") != "":
-            bpy.context.scene.zusi_object_id = int(node.getAttribute("ObjektID"))
-        if node.getAttribute("Lizenz") != "":
-            bpy.context.scene.zusi_license = node.getAttribute("Lizenz")
-        bpy.context.scene.zusi_description = node.getAttribute("Beschreibung")
+        if self.config.importFileMetadata:
+            if node.getAttribute("ObjektID") != "":
+                bpy.context.scene.zusi_object_id = int(node.getAttribute("ObjektID"))
+            if node.getAttribute("Lizenz") != "":
+                bpy.context.scene.zusi_license = node.getAttribute("Lizenz")
+            bpy.context.scene.zusi_description = node.getAttribute("Beschreibung")
 
         for child in node.childNodes:
             self.visitNode(child)
@@ -386,7 +387,7 @@ class Ls3Importer:
     # Visits an <AutorEintrag> node
     #
     def visitAutorEintragNode(self, node):
-        if self.config.loadAuthorInformation:
+        if self.config.importFileMetadata:
             author = None
             for a in bpy.context.scene.zusi_authors:
                 if a.id != 0 and node.getAttribute("AutorID") != "" and int(node.getAttribute("AutorID")) != a.id:
@@ -504,7 +505,7 @@ class Ls3Importer:
                         dateiname,
                         filename,
                         directory,
-                        self.config.loadAuthorInformation,
+                        self.config.importFileMetadata,
                         self.config.loadLinkedMode,
                         [loc[x] + self.config.location[x] for x in [0,1,2]],
                         [rot[x] + self.config.rotation[x] for x in [0,1,2]],

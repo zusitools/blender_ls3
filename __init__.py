@@ -212,7 +212,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     files = bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
     directory = bpy.props.StringProperty()
 
-    loadAuthorInformation = bpy.props.BoolProperty(
+    importFileMetadata = bpy.props.BoolProperty(
         name = _("Load author information"),
         description = _("Insert author information from the imported file into the .blend file"),
         default = False
@@ -235,7 +235,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     def draw(self, context):
         layout = self.layout
 
-        layout.prop(self, "loadAuthorInformation")
+        layout.prop(self, "importFileMetadata")
         layout.prop(self, "loadLinkedMode")
 
         layout.label(_("Import LODs (only embedded linked files)"))
@@ -251,7 +251,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
                 os.path.join(self.properties.directory, f.name),
                 f.name,
                 self.properties.directory,
-                self.properties.loadAuthorInformation,
+                self.properties.importFileMetadata,
                 self.properties.loadLinkedMode,
                 lod_bit = sum([s.lod_bit for s in self.properties.lod_import_setting if s.imp])
             )
