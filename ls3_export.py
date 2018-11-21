@@ -805,6 +805,8 @@ class Ls3Exporter:
         if material.zusi_use_emit:
             # Emit alpha is ignored in Zusi.
             subsetNode.setAttribute("Ce", rgba_to_rgb_hex_string(emit_color, 0))
+        if material.zusi_texture_preset in ['5', '10'] and material.zusi_night_switch_threshold != 0.0:
+            subsetNode.setAttribute("Nachtumschaltung", str(material.zusi_night_switch_threshold))
 
         renderFlagsNode.setAttribute("TexVoreinstellung", material.zusi_texture_preset)
         if material.zusi_texture_preset == "0":

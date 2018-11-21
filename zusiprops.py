@@ -777,6 +777,14 @@ bpy.types.Material.zusi_second_pass = bpy.props.BoolProperty(
     default = False
 )
 
+bpy.types.Material.zusi_night_switch_threshold = bpy.props.FloatProperty(
+    name = _("Night switch threshold"),
+    description = _("Environment brightness below which the night texture is displayed"),
+    min = 0.0,
+    max = 1.0,
+    default = 0.0,
+)
+
 #
 # Texture
 #
@@ -1258,6 +1266,8 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                 layout.operator("zusi_texture_preset.edit")
             elif mat.zusi_texture_preset == '4': # One texture, semi-transparency
                 layout.prop(mat, "zusi_second_pass")
+            elif mat.zusi_texture_preset in ['5', '10']:
+                layout.prop(mat, "zusi_night_switch_threshold")
 
             layout.prop(mat, "zusi_force_brightness")
             layout.prop(mat, "zusi_signal_magnification")

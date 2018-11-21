@@ -533,6 +533,17 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("FFFFFFFF", subsets[3].attrib["Cd"])
     self.assertEqual("00FFFFFF", subsets[3].attrib["Ce"])
 
+  def test_night_switch_threshold(self):
+    self.open("night_switch_threshold")
+    root = self.export_and_parse()
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(3, len(subsets))
+
+    self.assertAlmostEqual(0.3, float(subsets[0].attrib["Nachtumschaltung"]), places = 5)
+    self.assertNotIn("Nachtumschaltung", subsets[1].attrib)
+    self.assertAlmostEqual(0.8, float(subsets[2].attrib["Nachtumschaltung"]), places = 5)
+
   def test_color_order(self):
     self.open("color_order")
     root = self.export_and_parse()

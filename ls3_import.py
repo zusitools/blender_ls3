@@ -249,6 +249,7 @@ class Ls3Importer:
         (ambient_bgr, ambient_color) = (True, node.getAttribute("CA")) if node.hasAttribute("CA") else (False, node.getAttribute("Ca"))
         (diffuse_bgr, diffuse_color) = (True, node.getAttribute("C")) if node.hasAttribute("C") else (False, node.getAttribute("Cd"))
         (night_bgr, night_color) = (True, node.getAttribute("E")) if node.hasAttribute("E") else (False, node.getAttribute("Ce"))
+        mat.zusi_night_switch_threshold = float(node.getAttribute("Nachtumschaltung")) if len(node.getAttribute("Nachtumschaltung")) else 0
 
         if diffuse_color != "":
             (mat.diffuse_color, mat.alpha) = hex_string_to_rgba(diffuse_color, diffuse_bgr)
