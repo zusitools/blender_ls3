@@ -1324,7 +1324,7 @@ class Ls3Exporter:
 
         while len(work_list):
             cur_file = work_list.pop()
-            for ob in cur_file.objects:
+            for ob in sorted(cur_file.objects, key=lambda ob: ob.name):
                 self.write_object_data(ob, cur_file)
 
             write_list.insert(0, cur_file)
