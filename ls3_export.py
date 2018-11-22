@@ -292,7 +292,9 @@ class SubsetIdentifier:
 class OrderedAttrElement(dom.Element):
     """An XML element that writes its attributes in a defined order per tag name"""
 
-    # This is the order in which Zusi writes the file. This is to minimize diffs when editing a file with Zusi afterwards.
+    # This is the order in which Zusi writes node attributes. This is to minimize diffs when editing a file with Zusi afterwards.
+    # Only specify orders for elements where the order differs from the alphabetical order.
+    # In the latter case we can just sort the attributes by keys.
     orders = {
         "Info": ["DateiTyp", "Version", "MinVersion", "ObjektID", "Beschreibung", "EinsatzAb", "EinsatzBis", "DateiKategorie"],
         "SubSet": ["Cd", "Ca", "Ce", "TypLs3", "TypGF", "GruppenName", "BeleuchtungTyp", "Zwangshelligkeit", "Blink", "MeterProTex", "MeterProTex2", "zBias", "zZoom", "DoppeltRendern", "Nachtumschaltung", "NachtEinstellung", "MeshV", "MeshI"],
