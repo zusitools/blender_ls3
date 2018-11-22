@@ -716,6 +716,13 @@ bpy.types.Material.zusi_texture_preset = bpy.props.EnumProperty(
     update = on_zusi_texture_preset_update,
 )
 
+bpy.types.Material.zusi_day_mode_preset = bpy.props.EnumProperty(
+    name = _("Day mode preset"),
+    description = _("The texture preset to use when the environment brightness is greater than \"Night switch threshold\""),
+    items = [(t if t[0] != "0" else (t[0], "-", t[2])) for t in texture_presets],
+    default = "1",
+)
+
 # This cannot be renamed to zusi_scenery_type because of existing files.
 bpy.types.Material.zusi_landscape_type = bpy.props.EnumProperty(
     name = _("Scenery type"),
@@ -1268,6 +1275,9 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                 layout.prop(mat, "zusi_second_pass")
             elif mat.zusi_texture_preset in ['5', '10']:
                 layout.prop(mat, "zusi_night_switch_threshold")
+
+            if mat.zusi_texture_preset == '5':
+                layout.prop(mat, "zusi_day_mode_preset")
 
             layout.prop(mat, "zusi_force_brightness")
             layout.prop(mat, "zusi_signal_magnification")

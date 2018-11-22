@@ -807,6 +807,8 @@ class Ls3Exporter:
             subsetNode.setAttribute("Ce", rgba_to_rgb_hex_string(emit_color, 0))
         if material.zusi_texture_preset in ['5', '10'] and material.zusi_night_switch_threshold != 0.0:
             subsetNode.setAttribute("Nachtumschaltung", str(material.zusi_night_switch_threshold))
+        if material.zusi_texture_preset == '5' and material.zusi_day_mode_preset != '0':
+            subsetNode.setAttribute("NachtEinstellung", material.zusi_day_mode_preset)
 
         renderFlagsNode.setAttribute("TexVoreinstellung", material.zusi_texture_preset)
         if material.zusi_texture_preset == "0":

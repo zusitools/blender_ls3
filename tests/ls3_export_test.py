@@ -544,6 +544,17 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotIn("Nachtumschaltung", subsets[1].attrib)
     self.assertAlmostEqual(0.8, float(subsets[2].attrib["Nachtumschaltung"]), places = 5)
 
+  def test_day_mode_preset(self):
+    self.open("day_mode_preset")
+    root = self.export_and_parse()
+
+    subsets = root.findall("./Landschaft/SubSet")
+    self.assertEqual(3, len(subsets))
+
+    self.assertEqual("7", subsets[0].attrib["NachtEinstellung"])
+    self.assertNotIn("NachtEinstellung", subsets[1].attrib)
+    self.assertNotIn("NachtEinstellung", subsets[2].attrib)
+
   def test_color_order(self):
     self.open("color_order")
     root = self.export_and_parse()

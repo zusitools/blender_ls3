@@ -158,6 +158,12 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(0.5, bpy.data.objects["night_switch_threshold.ls3.1"].data.materials[0].zusi_night_switch_threshold)
     self.assertAlmostEqual(0.8, bpy.data.objects["night_switch_threshold.ls3.2"].data.materials[0].zusi_night_switch_threshold)
 
+  def test_day_mode_preset(self):
+    self.ls3_import("day_mode_preset.ls3")
+    self.assertEqual("7", bpy.data.objects["day_mode_preset.ls3.0"].data.materials[0].zusi_day_mode_preset)
+    self.assertEqual("0", bpy.data.objects["day_mode_preset.ls3.1"].data.materials[0].zusi_day_mode_preset)
+    self.assertEqual("4", bpy.data.objects["day_mode_preset.ls3.2"].data.materials[0].zusi_day_mode_preset)
+
   def test_overexposure(self):
     self.ls3_import("overexposure.ls3")
 
