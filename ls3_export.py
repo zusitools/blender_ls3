@@ -430,16 +430,6 @@ class Ls3Exporter:
         # The XML document node
         self.xmldoc = None
 
-        # Initialize map of Blender Z bias values (float) to integer values
-        # e.g. if values (-0.1, -0.05, 0, 0.1) appear in the scene, they will be
-        # mapped to (-2, -1, 0, 1).
-        zbiases_pos = sorted(set([mat.offset_z for mat in bpy.data.materials if mat.offset_z > 0]))
-        zbiases_neg = sorted(set([mat.offset_z for mat in bpy.data.materials if mat.offset_z < 0]), reverse = True)
-
-        self.z_bias_map = { 0.0 : 0 }
-        self.z_bias_map.update(dict((value, idx + 1) for idx, value in enumerate(zbiases_pos)))
-        self.z_bias_map.update(dict((value, -(idx + 1)) for idx, value in enumerate(zbiases_neg)))
-
         # Build file structure
         self.get_animations()
         self.exported_subsets = self.get_exported_subsets()
@@ -549,9 +539,9 @@ class Ls3Exporter:
                 scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
                 scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
                 scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
-                result = scale1 * scale2 * scale3 * result
+                result = scale1 @ scale2 @ scale3 @ result
             else:
-                result = ob.matrix_local * result
+                result = ob.matrix_local @ result
             ob = ob.parent
         return result
 
@@ -563,6 +553,7 @@ class Ls3Exporter:
         # Create a list of active image texture slots.
         # The use flag (checkbox) of the texture slot is only taken into account if no variants are defined.
         variants_defined = len(self.config.context.scene.zusi_variants) > 0
+        return [] # XXX
         return [texture_slot for texture_slot in material.texture_slots
             if texture_slot
                 and texture_slot.texture
@@ -617,8 +608,6 @@ class Ls3Exporter:
                 subsetNode.setAttribute("Zwangshelligkeit", str(material.zusi_force_brightness))
             if material.zusi_signal_magnification:
                 subsetNode.setAttribute("zZoom", str(material.zusi_signal_magnification))
-            if material.offset_z:
-                subsetNode.setAttribute("zBias", str(self.z_bias_map[material.offset_z]))
             if material.zusi_second_pass and material.zusi_texture_preset == '4':
                 subsetNode.setAttribute("DoppeltRendern", "1")
 
@@ -649,20 +638,14 @@ class Ls3Exporter:
 
         # Apply modifiers and transform the mesh so that the vertex coordinates
         # are global coordinates. Also recalculate the vertex normals.
-        mesh = ob.to_mesh(self.config.context.scene, True, "PREVIEW")
+        depsgraph = self.config.context.evaluated_depsgraph_get()
+        mesh = ob.evaluated_get(depsgraph).to_mesh() # , settings="PREVIEW")
         mesh.transform(self.transformation_relative(ob, self.get_animated_ob(ob), ls3file.root_obj))
         mesh.calc_normals()
         use_auto_smooth = mesh.use_auto_smooth
         if mesh.use_auto_smooth:
-            if bpy.app.version >= (2, 71, 0): # MeshTessFace.split_normals available in >= 2.71
-                if bpy.app.version <= (2, 73, 0):
-                    mesh.calc_normals_split(mesh.auto_smooth_angle)
-                else:
-                    mesh.calc_normals_split()
-                mesh.calc_tessface()
-            else:
-                warn("Auto smooth setting will not be honored in Blender < 2.71")
-                use_auto_smooth = False
+            mesh.calc_normals_split()
+        mesh.calc_loop_triangles()
 
         # If the object is mirrored/negatively scaled, the normals will come out the wrong way
         # when applying the transformation. Workaround from:
@@ -695,7 +678,7 @@ class Ls3Exporter:
                 # Use active UV layer if the current UV map has no name (which is the default)
                 if active_uvmaps[texindex] != "":
                     found = False
-                    for uvlayer in mesh.tessface_uv_textures:
+                    for uvlayer in mesh.uv_layers:
                         if uvlayer.name == active_uvmaps[texindex]:
                             uvlayers[material_index][texindex] = uvlayer
                             found = True
@@ -703,15 +686,15 @@ class Ls3Exporter:
                     if not found:
                         warn("UV layer {} of texture slot {} not found", active_uvmaps[texindex], active_texture_slots[texindex].name)
                 else:
-                    uvlayers[material_index][texindex] = mesh.tessface_uv_textures.active
+                    uvlayers[material_index][texindex] = mesh.uv_layers.active
 
         # Write vertices, faces and UV coordinates.
-        # Access faces via the tessfaces API which provides only triangles and quads.
+        # Access faces via the loop_triangles API which automatically triangulates the mesh.
         # A vertex that appears in two faces with different normals or different UV coordinates will
         # have to be exported as two Zusi vertices. Therefore, all vertices are exported once per face,
         # and mesh optimization will later re-merge vertices that have the same location, normal, and
         # UV coordinates.
-        for face_index, face in enumerate(mesh.tessfaces):
+        for face_index, face in enumerate(mesh.loop_triangles):
             if face.material_index not in subsets:
                 continue
             subset = subsets[face.material_index]
@@ -798,8 +781,8 @@ class Ls3Exporter:
                     vertex_index in face_no_merge_vertices
                 ))
 
-        # Remove the generated preview mesh
-        bpy.data.meshes.remove(mesh)
+        # Remove the generated preview mesh -- seems not necessary any more ("is outside of main library and cannot be removed from it")
+        # bpy.data.meshes.remove(mesh)
 
         for matidx, boundingr_squared in max_v_len_squared.items():
             subset = subsets[matidx]
@@ -818,7 +801,7 @@ class Ls3Exporter:
         # By day the diffuse and ambient color are added to the night color.
         # It follows from this that an object can only get darker at night, not lighter.
 
-        diffuse_color = material.diffuse_color * material.diffuse_intensity
+        diffuse_color = Color(material.diffuse_color[0:3])
         ambient_color = material.zusi_ambient_color if material.zusi_use_ambient else Color((1, 1, 1))
 
         # Adjust emit color to be always darker than the diffuse and ambient color.
@@ -839,7 +822,7 @@ class Ls3Exporter:
             diffuse_color = clamp_color(diffuse_color + material.zusi_overexposure_addition)
             ambient_color = clamp_color(ambient_color + material.zusi_overexposure_addition_ambient)
 
-        subsetNode.setAttribute("Cd", rgba_to_rgb_hex_string(diffuse_color, material.alpha))
+        subsetNode.setAttribute("Cd", rgba_to_rgb_hex_string(diffuse_color, 1)) #material.alpha)) # XXX
         if material.zusi_use_ambient:
             subsetNode.setAttribute("Ca", rgba_to_rgb_hex_string(ambient_color,
                 material.zusi_ambient_alpha))
@@ -1164,15 +1147,15 @@ class Ls3Exporter:
 
                 if author.id != 0:
                     autorEintragNode.setAttribute("AutorID", str(author.id))
-                if author.name != zusiprops.ZusiAuthor.name[1]["default"]:
+                if author.name != zusiprops.ZusiAuthor.__annotations__['name'][1]["default"]:
                     autorEintragNode.setAttribute("AutorName", author.name)
-                if author.email != zusiprops.ZusiAuthor.email[1]["default"]:
+                if author.email != zusiprops.ZusiAuthor.__annotations__['email'][1]["default"]:
                     autorEintragNode.setAttribute("AutorEmail", author.email)
-                if write_effort and author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
+                if write_effort and author.effort != zusiprops.ZusiAuthor.__annotations__['effort'][1]["default"]:
                     autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
-                if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
+                if author.remarks != zusiprops.ZusiAuthor.__annotations__['remarks'][1]["default"]:
                     autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
-                if author.license != zusiprops.ZusiAuthor.license[1]["default"]:
+                if author.license != zusiprops.ZusiAuthor.__annotations__['license'][1]["default"]:
                     autorEintragNode.setAttribute("AutorLizenz", author.license)
 
         sce = self.config.context.scene

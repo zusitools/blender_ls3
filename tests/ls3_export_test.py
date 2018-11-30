@@ -71,6 +71,7 @@ class TestLs3Export(unittest.TestCase):
       self._openkey_patch.start()
       self._enumvalue_patch.start()
 
+    # TODO This requires that you have a zusiconfig.py file set up
     sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].datapath_official = ZUSI3_DATAPATH_OFFICIAL
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
@@ -98,10 +99,10 @@ class TestLs3Export(unittest.TestCase):
         raise e
 
   def clear_scene(self):
-    for ob in bpy.context.scene.objects:
-      bpy.context.scene.objects.unlink(ob)
+    for ob in bpy.context.scene.collection.objects:
+      bpy.context.scene.collection.objects.unlink(ob)
       bpy.data.objects.remove(ob)
-    bpy.context.scene.update()
+    # bpy.context.scene.update()
 
   def export(self, exportargs={}, noclose=False):
     context = bpy.context.copy()
@@ -408,7 +409,6 @@ class TestLs3Export(unittest.TestCase):
     for v in vertex_pos_nodes:
         self.assertAlmostEqual(6, abs(float(v.attrib["X"])) + abs(float(v.attrib["Y"])) + abs(float(v.attrib["Z"])), places = 5)
 
-  @unittest.skipUnless(bpy.app.version >= (2, 71, 0), "MeshTessFace.split_normals available in Blender >= 2.71")
   def test_split_normals(self):
     self.open("split_normals")
     root = self.export_and_parse()
@@ -423,7 +423,6 @@ class TestLs3Export(unittest.TestCase):
         else:
             self.assertXYZ(n, 1, 0, 0)
 
-  @unittest.skipUnless(bpy.app.version >= (2, 74, 0), "Custom split normals available in Blender >= 2.74")
   def test_custom_split_normals(self):
     self.open("custom_split_normals")
     root = self.export_and_parse()

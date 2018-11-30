@@ -18,8 +18,8 @@
 bl_info = {
     'name': 'Zusi Scenery Format (.ls3)',
     'author': 'Johannes',
-    'version': (1, 0, 11),
-    'blender': (2, 66, 0),
+    'version': (2, 0, 11),
+    'blender': (2, 80, 0),
     'location': 'File > Import -> Zusi Scenery (.ls3) / File -> Export > Zusi Scenery (.ls3)',
     'description': 'Import and export files from/to the Zusi Scenery format (.ls3)',
     'category': 'Import-Export',
@@ -80,22 +80,22 @@ if not logger.hasHandlers():
 
 # A setting to define whether to export a given variant.
 class ZusiFileVariantExportSetting(bpy.types.PropertyGroup):
-    variant_id = bpy.props.IntProperty(
+    variant_id: bpy.props.IntProperty(
         name = _("Variant ID"),
         description = _("ID of the variant")
     )
-    export = bpy.props.BoolProperty(
+    export: bpy.props.BoolProperty(
         name = "", # for display in template_list
         description = _("Export this variant")
     )
-    template_list_controls = StringProperty(
+    template_list_controls: bpy.props.StringProperty(
         default="export",
         options={"HIDDEN"}
     )
 
 bpy.utils.register_class(ZusiFileVariantExportSetting)
 
-class ZusiFileVariantExportSettingList(zusiprops.CheckBoxList, bpy.types.UIList):
+class ZUSI_UL_ZusiFileVariantExportSettingList(zusiprops.CheckBoxList, bpy.types.UIList):
     def get_property_name(self):
         return "export"
     
@@ -107,15 +107,15 @@ class ZusiFileVariantExportSettingList(zusiprops.CheckBoxList, bpy.types.UIList)
 
 # A setting to define whether to show a given variant.
 class ZusiFileVariantVisibilitySetting(bpy.types.PropertyGroup):
-    variant_id = bpy.props.IntProperty(
+    variant_id: bpy.props.IntProperty(
         name = _("Variant ID"),
         description = _("ID of the variant")
     )
-    visible = bpy.props.BoolProperty(
+    visible: bpy.props.BoolProperty(
         name = "", # for display in template_list
         description = _("Show this variant")
     )
-    template_list_controls = StringProperty(
+    template_list_controls: bpy.props.StringProperty(
         default="visible",
         options={"HIDDEN"}
     )
@@ -124,15 +124,15 @@ bpy.utils.register_class(ZusiFileVariantVisibilitySetting)
 
 # A setting to define whether to import a given LOD
 class ZusiLodImportSetting(bpy.types.PropertyGroup):
-    lod_bit = bpy.props.IntProperty(
+    lod_bit: bpy.props.IntProperty(
         name = _("LOD bit")
     )
-    imp = bpy.props.BoolProperty(
+    imp: bpy.props.BoolProperty(
         name = "", # for display in template_list
         description = _("Import this LOD"),
         default = True
     )
-    template_list_controls = StringProperty(
+    template_list_controls: bpy.props.StringProperty(
         default="imp",
         options={"HIDDEN"}
     )
@@ -167,13 +167,13 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
     bl_region_type = "WINDOW"
 
     filename_ext = ".ls"
-    filter_glob = StringProperty(default="*.ls", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.ls", options={'HIDDEN'})
 
     # These properties have to be all lowercase and are assigned by the file selector
-    files = bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
-    directory = bpy.props.StringProperty()
+    files: bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
+    directory: bpy.props.StringProperty()
 
-    loadLinkedMode = bpy.props.EnumProperty(
+    loadLinkedMode: bpy.props.EnumProperty(
         name = _("Load linked files"),
         description = _("Import files that are linked in the LS file"),
         items = load_linked_modes,
@@ -206,31 +206,31 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     bl_region_type = "WINDOW"
  
     filename_ext = ".ls3"
-    filter_glob = StringProperty(default="*.ls3", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.ls3", options={'HIDDEN'})
  
     # These properties have to be all lowercase and are assigned by the file selector
-    files = bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
-    directory = bpy.props.StringProperty()
+    files: bpy.props.CollectionProperty(type = bpy.types.OperatorFileListElement, options = {'HIDDEN'})
+    directory: bpy.props.StringProperty()
 
-    importFileMetadata = bpy.props.BoolProperty(
+    importFileMetadata: bpy.props.BoolProperty(
         name = _("Load author information"),
         description = _("Insert author information from the imported file into the .blend file"),
         default = False
     )
 
-    loadLinkedMode = bpy.props.EnumProperty(
+    loadLinkedMode: bpy.props.EnumProperty(
         name = _("Load linked files"),
         description = _("Import files that are linked in the LS3 file"),
         items = load_linked_modes,
         default = "1"
     )
 
-    lod_import_setting = bpy.props.CollectionProperty(
+    lod_import_setting: bpy.props.CollectionProperty(
         name = _("LODs to import"),
         type = ZusiLodImportSetting
     )
 
-    lod_import_setting_index = bpy.props.IntProperty()
+    lod_import_setting_index: bpy.props.IntProperty()
 
     def draw(self, context):
         layout = self.layout
@@ -238,7 +238,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         layout.prop(self, "importFileMetadata")
         layout.prop(self, "loadLinkedMode")
 
-        layout.label(_("Import LODs (only embedded linked files)"))
+        layout.label(text=_("Import LODs (only embedded linked files)"))
         row = layout.row()
         row.enabled = self.properties.loadLinkedMode == "2"
         row.template_list("ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
@@ -277,7 +277,7 @@ class OBJECT_OT_embed_linked(bpy.types.Operator):
     bl_description = _('Load the contents of the linked file specified at this object and insert them as children of this object')
     bl_options = {'UNDO', 'INTERNAL'}
 
-    ob = bpy.props.StringProperty(options={'HIDDEN'})
+    ob: bpy.props.StringProperty(options={'HIDDEN'})
 
     def execute(self, context):
         ob = bpy.data.objects[self.ob]
@@ -332,16 +332,16 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
  
     # From ExportHelper. Filter filenames.
     filename_ext = ".ls3"
-    filter_glob = StringProperty(default="*.ls3", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.ls3", options={'HIDDEN'})
 
     had_no_author_info = BoolProperty(default=False, options={'HIDDEN'})
 
     # These properties have to be all lowercase and are assigned by the file selector
-    filepath = bpy.props.StringProperty()
-    filename = bpy.props.StringProperty()
-    directory = bpy.props.StringProperty()
+    filepath: bpy.props.StringProperty()
+    filename: bpy.props.StringProperty()
+    directory: bpy.props.StringProperty()
 
-    exportSelected = bpy.props.EnumProperty(
+    exportSelected: bpy.props.EnumProperty(
         name = _("Export mode"),
         description = _("Choose which objects to export"),
         items = [
@@ -353,26 +353,26 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         default = ls3_export.get_exporter_setting("exportSelected"),
     )
 
-    exportAnimations = bpy.props.BoolProperty(
+    exportAnimations: bpy.props.BoolProperty(
         name = _("Export animations"),
         description = _("Export animations from keyframes (this might create/overwrite additional files)"),
         default = ls3_export.get_exporter_setting("exportAnimations")
     )
 
-    optimizeMesh = bpy.props.BoolProperty(
+    optimizeMesh: bpy.props.BoolProperty(
         name = _("Optimize mesh"),
         description = _("Optimize meshes in the exported file (this will not modify any meshes in the Blender file)"),
         default = ls3_export.get_exporter_setting("optimizeMesh"),
     )
 
-    maxCoordDelta = bpy.props.FloatProperty(
+    maxCoordDelta: bpy.props.FloatProperty(
         name = _("Max. distance"),
         description = _("Maximum distance between two vertices to be merged"),
         default = ls3_export.get_exporter_setting("maxCoordDelta"),
         min = 0.0
     )
 
-    maxUVDelta = bpy.props.FloatProperty(
+    maxUVDelta: bpy.props.FloatProperty(
         name = _("Max. UV distance"),
         description = _("Maximum UV coordinate distance between two vertices to be merged"),
         default = ls3_export.get_exporter_setting("maxUVDelta"),
@@ -380,7 +380,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         max = 1.0
     )
 
-    maxNormalAngle = bpy.props.FloatProperty(
+    maxNormalAngle: bpy.props.FloatProperty(
         name = _("Max. normal angle"),
         subtype = 'ANGLE',
         description = _("Maximum angle between the normal vectors of two vertices to be merged"),
@@ -389,19 +389,19 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         max = 360.0
     )
 
-    writeLsb = bpy.props.BoolProperty(
+    writeLsb: bpy.props.BoolProperty(
         name = _("Write mesh data to LSB file"),
         description = _("Write vertex and face data to a separate file for better loading performance in Zusi"),
         default = ls3_export.get_exporter_setting("writeLsb"),
     )
 
-    variant_export_setting = bpy.props.CollectionProperty(
+    variant_export_setting: bpy.props.CollectionProperty(
         name = _("Variants to export"),
         description = _("Choose which variants to export"),
         type = ZusiFileVariantExportSetting
     )
 
-    variant_export_setting_index = bpy.props.IntProperty()
+    variant_export_setting_index: bpy.props.IntProperty()
 
     def draw(self, context):
         layout = self.layout
@@ -409,30 +409,22 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
         if not context.scene.zusi_authors or len(context.scene.zusi_authors) == 0:
             self.had_no_author_info = True
-            layout.label(_("No author information entered"), icon='ERROR')
+            layout.label(text=_("No author information entered"), icon='ERROR')
             layout.operator("zusi_authors.add_default")
         elif self.had_no_author_info:
-            layout.label(_("Author information added"), icon='INFO')
+            layout.label(text=_("Author information added"), icon='INFO')
             box = layout.box()
-            box.label(_("Name: %s" % context.scene.zusi_authors[0].name))
-            box.label(_("E-mail: %s" % context.scene.zusi_authors[0].email))
+            box.label(text=_("Name: %s" % context.scene.zusi_authors[0].name))
+            box.label(text=_("E-mail: %s" % context.scene.zusi_authors[0].email))
 
-        materials_with_intensity_less_1 = [s.identifier.material for f in files for s in f.subsets
-            if s.identifier.material is not None and s.identifier.material.diffuse_intensity < 1.]
-        if len(materials_with_intensity_less_1):
-            layout.label(_("Materials with diffuse intensity < 1"), icon='ERROR')
-            box = layout.box()
-            for m in materials_with_intensity_less_1:
-                box.label(text = m.name)
-
-        layout.label(_("Variants (leave empty to export all)"))
+        layout.label(text=_("Variants (leave empty to export all)"))
 
         if len(context.scene.zusi_variants) > 0:
             num_rows = min(5, len(self.properties.variant_export_setting))
-            layout.template_list("ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
+            layout.template_list("ZUSI_UL_ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
         else:
             box = layout.box()
-            box.label(_("Variants can be defined in the Scene settings."))
+            box.label(text=_("Variants can be defined in the Scene settings."))
 
         layout.prop(self, "exportSelected", text = "Export")
         layout.prop(self, "exportAnimations")
@@ -627,24 +619,24 @@ class VIEW_OT_show_variants(bpy.types.Operator):
     bl_label = _("Show Variants")
     bl_options = {'REGISTER', 'UNDO'}
 
-    variant_visibility_setting = bpy.props.CollectionProperty(
+    variant_visibility_setting: bpy.props.CollectionProperty(
         name = _("Variants to show"),
         description = _("Choose which variants to show"),
         type = ZusiFileVariantVisibilitySetting
     )
 
-    variant_visibility_setting_index = bpy.props.IntProperty()
+    variant_visibility_setting_index: bpy.props.IntProperty()
 
     def draw(self, context):
         layout = self.layout
 
-        layout.label(_("Variants (leave empty to show all)"))
+        layout.label(text=_("Variants (leave empty to show all)"))
 
         if len(context.scene.zusi_variants) > 0:
-            layout.template_list("ZusiFileVariantVisibilityList", "", self, "variant_visibility_setting", self, "variant_visibility_setting_index")
+            layout.template_list("ZUSI_UL_ZusiFileVariantVisibilityList", "", self, "variant_visibility_setting", self, "variant_visibility_setting_index")
         else:
             box = layout.box()
-            box.label(_("Variants can be defined in the Scene settings."))
+            box.label(text=_("Variants can be defined in the Scene settings."))
 
     def execute(self, context):
         variantIDs = [setting.variant_id for setting in self.properties.variant_visibility_setting if setting.visible == True]
@@ -685,20 +677,38 @@ def menu_func_export(self, context):
 
 def menu_func_show_variants(self, context):
     self.layout.operator(VIEW_OT_show_variants.bl_idname, text=_("Show variants ..."))
+
+classes = {
+#    ZusiFileVariantExportSetting,
+#    ZusiFileVariantExportSettingList,
+#    ZusiFileVariantVisibilitySetting,
+#    ZusiLodImportSetting,
+#    ZusiLodImportSettingList,
+    IMPORT_OT_ls,
+    IMPORT_OT_ls3,
+#    OBJECT_OT_embed_linked,
+    EXPORT_OT_ls3,
+    EXPORT_OT_ls3_batch,
+    VIEW_OT_show_variants,
+}
+
+generated_register, generated_unregister = bpy.utils.register_classes_factory(classes)
  
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.INFO_MT_file_import.append(menu_func_import_ls)
-    bpy.types.INFO_MT_file_import.append(menu_func_import)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
+    zusiprops.register()
+    generated_register()
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import_ls)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     bpy.types.VIEW3D_MT_view.append(menu_func_show_variants)
  
 def unregister():
-    bpy.utils.unregister_module(__name__)
-    bpy.types.INFO_MT_file_import.remove(menu_func_import_ls)
-    bpy.types.INFO_MT_file_import.remove(menu_func_import)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import_ls)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     bpy.types.VIEW3D_MT_view.remove(menu_func_show_variants)
+    generated_unregister()
+    zusiprops.unregister()
  
 if __name__ == "__main__":
     register()

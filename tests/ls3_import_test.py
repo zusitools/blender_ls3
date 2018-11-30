@@ -38,10 +38,10 @@ class TestLs3Import(unittest.TestCase):
 
     # Clear scene.
     bpy.ops.wm.read_homefile()
-    for ob in bpy.context.scene.objects:
-      bpy.context.scene.objects.unlink(ob)
+    for ob in bpy.context.scene.collection.objects:
+      bpy.context.scene.collection.objects.unlink(ob)
       bpy.data.objects.remove(ob)
-    bpy.context.scene.update()
+    # bpy.context.scene.update()
 
   def tearDown(self):
     self._mock_fs.stop()
@@ -59,9 +59,9 @@ class TestLs3Import(unittest.TestCase):
       **importargs)
 
   def assertColorEqual(self, expected, actual):
-    self.assertAlmostEqual(expected[0], actual.r)
-    self.assertAlmostEqual(expected[1], actual.g)
-    self.assertAlmostEqual(expected[2], actual.b)
+    self.assertAlmostEqual(expected[0], actual[0])
+    self.assertAlmostEqual(expected[1], actual[1])
+    self.assertAlmostEqual(expected[2], actual[2])
 
   def assertVectorEqual(self, expected, actual, places = 5):
     expected = Vector(expected)
@@ -132,7 +132,6 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("cube_trailing_semicolon.ls3")
     self.assertEqual(12, len(bpy.data.objects["cube_trailing_semicolon.ls3.0"].data.polygons))
 
-  @unittest.skipUnless(bpy.app.version >= (2, 74, 0), "Normal import available in Blender >= 2.74")
   def test_import_normals(self):
     self.ls3_import("custom_normals.ls3")
     ob = bpy.data.objects["custom_normals.ls3.0"]
@@ -207,14 +206,12 @@ class TestLs3Import(unittest.TestCase):
     self.assertFalse(mat.zusi_use_emit)
     self.assertFalse(mat.zusi_use_ambient)
     self.assertColorEqual(gray, mat.diffuse_color)
-    self.assertEqual(1.0, mat.diffuse_intensity)
     self.assertFalse(mat.zusi_allow_overexposure)
 
     mat = bpy.data.objects["diffusecolor.ls3.1"].data.materials[0]
     self.assertFalse(mat.zusi_use_emit)
     self.assertFalse(mat.zusi_use_ambient)
     self.assertColorEqual(black, mat.diffuse_color)
-    self.assertEqual(1.0, mat.diffuse_intensity)
     self.assertFalse(mat.zusi_allow_overexposure)
 
   def test_ambient_color(self):
@@ -254,7 +251,6 @@ class TestLs3Import(unittest.TestCase):
   def test_zbias(self):
     self.ls3_import("zbias.ls3")
     mat = bpy.data.objects["zbias.ls3.0"].data.materials[0]
-    self.assertEqual(-1, mat.offset_z)
 
   def test_ls3typ(self):
     self.ls3_import("ls3typ.ls3")
@@ -280,7 +276,7 @@ class TestLs3Import(unittest.TestCase):
     a2 = bpy.data.objects["anchor_points.ls3_AnchorPoint.002"]
 
     self.assertEqual('EMPTY', a1.type)
-    self.assertEqual('ARROWS', a1.empty_draw_type)
+    self.assertEqual('ARROWS', a1.empty_display_type)
     self.assertTrue(a1.zusi_is_anchor_point)
     self.assertEqual("1", a1.zusi_anchor_point_category)
     self.assertEqual("2", a1.zusi_anchor_point_type)
@@ -293,7 +289,7 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(r"zusi3:Loks\Elektroloks", a1.zusi_anchor_point_files[1].name)
 
     self.assertEqual('EMPTY', a2.type)
-    self.assertEqual('ARROWS', a2.empty_draw_type)
+    self.assertEqual('ARROWS', a2.empty_display_type)
     self.assertTrue(a2.zusi_is_anchor_point)
     self.assertEqual("0", a2.zusi_anchor_point_category)
     self.assertEqual("0", a2.zusi_anchor_point_type)

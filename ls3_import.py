@@ -222,7 +222,7 @@ class Ls3Importer:
         #self.currentobject.rotation_euler = self.config.rotation
         #self.currentobject.scale = self.config.scale
         self.currentobject.parent = self.config.parent
-        bpy.context.scene.objects.link(self.currentobject)
+        bpy.context.scene.collection.objects.link(self.currentobject)
 
         self.subsets.append(self.currentobject)
 
@@ -241,10 +241,10 @@ class Ls3Importer:
         mat.zusi_day_mode_preset = node.getAttribute("NachtEinstellung") if node.hasAttribute("NachtEinstellung") else "0"
 
         if diffuse_color != "":
-            (mat.diffuse_color, mat.alpha) = hex_string_to_rgba(diffuse_color, diffuse_bgr)
+            tmp = hex_string_to_rgba(diffuse_color, diffuse_bgr) # XXX mat.alpha
+            mat.diffuse_color = (*tmp[0], tmp[1])
         else:
-            (mat.diffuse_color, mat.alpha) = ((0, 0, 0), 1)
-        mat.diffuse_intensity = 1
+            mat.diffuse_color = (0, 0, 0, 1) # XXX mat.alpha
 
         if ambient_color != "":
             mat.zusi_use_ambient = True
@@ -255,20 +255,20 @@ class Ls3Importer:
         if night_color != "":
             mat.zusi_use_emit = True
             (mat.zusi_emit_color, ignored) = hex_string_to_rgba(night_color, night_bgr)
-            mat.diffuse_color += mat.zusi_emit_color
+            mat.diffuse_color[0] += mat.zusi_emit_color.r
+            mat.diffuse_color[1] += mat.zusi_emit_color.g
+            mat.diffuse_color[2] += mat.zusi_emit_color.b
 
-            if mat.diffuse_color.r > 1.0 or mat.diffuse_color.g > 1.0 or mat.diffuse_color.b > 1.0:
+            if mat.diffuse_color[0] > 1.0 or mat.diffuse_color[1] > 1.0 or mat.diffuse_color[2] > 1.0:
                 mat.zusi_allow_overexposure = True
                 mat.zusi_overexposure_addition = mathutils.Color((
-                    max(0.0, mat.diffuse_color.r - 1),
-                    max(0.0, mat.diffuse_color.g - 1),
-                    max(0.0, mat.diffuse_color.b - 1)
+                    max(0.0, mat.diffuse_color[0] - 1),
+                    max(0.0, mat.diffuse_color[1] - 1),
+                    max(0.0, mat.diffuse_color[2] - 1)
                 ))
-                mat.diffuse_color = mathutils.Color((
-                    min(mat.diffuse_color.r, 1.0),
-                    min(mat.diffuse_color.g, 1.0),
-                    min(mat.diffuse_color.b, 1.0)
-                ))
+                mat.diffuse_color[0] = min(mat.diffuse_color[0], 1.0)
+                mat.diffuse_color[1] = min(mat.diffuse_color[1], 1.0)
+                mat.diffuse_color[2] = min(mat.diffuse_color[2], 1.0)
 
             if mat.zusi_use_ambient:
                 ambient_color = mat.zusi_ambient_color + mat.zusi_emit_color
@@ -301,8 +301,6 @@ class Ls3Importer:
             mat.zusi_signal_magnification = float(node.getAttribute("zZoom"))
         if node.getAttribute("DoppeltRendern") == "1":
             mat.zusi_second_pass = True
-        if node.getAttribute("zBias") != "":
-            mat.offset_z = float(node.getAttribute("zBias"))
 
         # Visit child nodes (such as texture and vertices/faces)
         for child in node.childNodes:
@@ -333,24 +331,22 @@ class Ls3Importer:
         self.currentmesh.polygons.foreach_set("loop_start", range(0, 3 * len(self.currentfaces), 3))
         self.currentmesh.polygons.foreach_set("loop_total", [3] * len(self.currentfaces))
 
-        if bpy.app.version >= (2, 74, 0):
-            self.currentmesh.create_normals_split()
-            normals = []
-            for f in self.currentfaces:
-                for i in range(0, 3):
-                    v = self.currentvertices[f[i]]
-                    normals += [v[4], -v[3], v[5]]
-            self.currentmesh.loops.foreach_set("normal", normals)
+        self.currentmesh.create_normals_split()
+        normals = []
+        for f in self.currentfaces:
+            for i in range(0, 3):
+                v = self.currentvertices[f[i]]
+                normals += [v[4], -v[3], v[5]]
+        self.currentmesh.loops.foreach_set("normal", normals)
 
         # Set custom normals
-        if bpy.app.version >= (2, 74, 0):
-            self.currentmesh.validate(clean_customdata = False) # False in order to preserve normals stored in loops
-            self.currentmesh.update(calc_edges = False)
+        self.currentmesh.validate(clean_customdata = False) # False in order to preserve normals stored in loops
+        self.currentmesh.update(calc_edges = False)
 
-            custom_normals = array.array('f', [0.0] * (len(self.currentmesh.loops) * 3))
-            self.currentmesh.loops.foreach_get("normal", custom_normals)
-            self.currentmesh.normals_split_custom_set(tuple(zip(*(iter(custom_normals),) * 3)))
-            self.currentmesh.use_auto_smooth = True
+        custom_normals = array.array('f', [0.0] * (len(self.currentmesh.loops) * 3))
+        self.currentmesh.loops.foreach_get("normal", custom_normals)
+        self.currentmesh.normals_split_custom_set(tuple(zip(*(iter(custom_normals),) * 3)))
+        self.currentmesh.use_auto_smooth = True
 
         self.currentmesh.update(calc_edges = True)
 
@@ -482,7 +478,7 @@ class Ls3Importer:
             empty.zusi_link_is_billboard = flags & 8 != 0
             empty.zusi_link_is_readonly = flags & 16 != 0
 
-            self.config.context.scene.objects.link(empty)
+            self.config.context.scene.collection.objects.link(empty)
             self.linked_files.append(empty)
 
             if self.config.loadLinkedMode == IMPORT_LINKED_EMBED:
@@ -526,7 +522,7 @@ class Ls3Importer:
     def visitAnkerpunktNode(self, node):
         self.anchor_point_no += 1
         empty = bpy.data.objects.new("%s_AnchorPoint.%03d" % (self.config.fileName, self.anchor_point_no), None)
-        empty.empty_draw_type = 'ARROWS'
+        empty.empty_display_type = 'ARROWS'
         empty.zusi_is_anchor_point = True
 
         if node.getAttribute("AnkerKat"):
@@ -557,7 +553,7 @@ class Ls3Importer:
         empty.rotation_euler = rot
         empty.rotation_mode = rot.order
         empty.parent = self.config.parent
-        bpy.context.scene.objects.link(empty)
+        bpy.context.scene.collection.objects.link(empty)
 
     #
     # Visits a <MeshAnimation> node.
@@ -620,7 +616,7 @@ class Ls3Importer:
             for idx in range(0, 3):
                 if (datapath, idx) not in fcurves_by_datapath:
                     fcurves_by_datapath[(datapath, idx)] = \
-                        ob.animation_data.action.fcurves.new(datapath, idx)
+                        ob.animation_data.action.fcurves.new(datapath, index=idx)
 
         # Get X coordinate of control point.
         ani_zeit = node.getAttribute("AniZeit")
@@ -703,7 +699,7 @@ class Ls3Importer:
 
             # Add texture to current object
             mat = self.currentmesh.materials[0]
-            slotidx = sum(s is not None for s in mat.texture_slots)
+            # XXX slotidx = sum(s is not None for s in mat.texture_slots)
 
             imgpath = zusicommon.resolve_file_path(dateinode.getAttribute("Dateiname"),
                     self.config.fileDirectory, self.datapath, self.datapath_official) # may raise RuntimeError
@@ -712,13 +708,13 @@ class Ls3Importer:
             tex = bpy.data.textures.new(self.config.fileName + "." + str(self.subsetno),  type='IMAGE')
             tex.image = img
 
-            texslot = mat.texture_slots.create(slotidx)
-            texslot.texture = tex
-            texslot.texture_coords = 'UV'
-            texslot.blend_type = 'COLOR'
+            # XXX texslot = mat.texture_slots.create(slotidx)
+            # XXX texslot.texture = tex
+            # XXX texslot.texture_coords = 'UV'
+            # XXX texslot.blend_type = 'COLOR'
 
-            if slotidx < 2:
-                tex.zusi_meters_per_texture = self.current_meters_per_tex[slotidx]
+            # XXX if slotidx < 2:
+            # XXX     tex.zusi_meters_per_texture = self.current_meters_per_tex[slotidx]
 
         except(IndexError,  RuntimeError):
             pass

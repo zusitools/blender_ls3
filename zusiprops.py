@@ -71,12 +71,12 @@ class CheckBoxList():
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         icon = "CHECKBOX_HLT" if self.get_property_value(item) else "CHECKBOX_DEHLT"
         layout.prop(item, self.get_property_name(), text = "", icon = icon, toggle = True, icon_only = True, emboss = False)
-        layout.label(self.get_item_text(item))
+        layout.label(text=self.get_item_text(item))
 
 # Defines a variant in a scene with an ID (which should not be changed) and a variant name
 # (Name is defined in PropertyGroup)
 class ZusiFileVariant(bpy.types.PropertyGroup):
-    id = bpy.props.IntProperty(
+    id: bpy.props.IntProperty(
         name = _("ID"),
         description = _("Unique ID of this variant"),
     )
@@ -102,50 +102,47 @@ animation_types = [
 ]
 
 class ZusiLinkAnimation(bpy.types.PropertyGroup):
-    animation_type = bpy.props.EnumProperty(
+    animation_type: bpy.props.EnumProperty(
         name = _("Animation type"),
         description = _("Defines how the animation is triggered in the simulator"),
         items = animation_types,
         default = "0"
     )
 
-    description = bpy.props.StringProperty(
+    description: bpy.props.StringProperty(
         name = _("Name"),
         description = _("Animation name; leave empty for default"),
     )
 
 bpy.utils.register_class(ZusiLinkAnimation)
 
-class ZusiLinkAnimationList(bpy.types.UIList):
+class ZUSI_UL_ZusiLinkAnimationList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         layout.prop(item, "animation_type", text="", icon_value=icon)
         layout.prop(item, "description", text="", icon_value=icon)
 
 class ZusiAnimationName(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name: bpy.props.StringProperty(
         name = _("Name"),
         description = _("Animation name")
     )
 
 bpy.utils.register_class(ZusiAnimationName)
 
-class ZusiFileVariantList(bpy.types.UIList):
+class ZUSI_UL_ZusiFileVariantList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        if bpy.app.version >= (2, 70, 0):
-            layout.prop(item, "name", text="", emboss=False, icon_value=icon)
-        else:
-            layout.label(item.name, icon_value=icon)
+        layout.prop(item, "name", text="", emboss=False, icon_value=icon)
 
 # Defines a visibility of an object/material/texture/whatever in a certain variant
 class ZusiFileVariantVisibility(bpy.types.PropertyGroup):
-    variant_id = bpy.props.IntProperty(
+    variant_id: bpy.props.IntProperty(
         name = _("Variant ID"),
         description = _("ID of the variant this object is visible in")
     )
 
 bpy.utils.register_class(ZusiFileVariantVisibility)
 
-class ZusiFileVariantVisibilityList(CheckBoxList, bpy.types.UIList):
+class ZUSI_UL_ZusiFileVariantVisibilityList(CheckBoxList, bpy.types.UIList):
 
     def get_property_name(self):
         return "visible"
@@ -167,38 +164,38 @@ licenses = [
 
 # Contains information about a file's author
 class ZusiAuthor(bpy.types.PropertyGroup):
-    id = bpy.props.IntProperty(
+    id: bpy.props.IntProperty(
         name = _("ID"),
         description = _("The ID of the author"),
         min = 0
     )
 
-    name = bpy.props.StringProperty(
+    name: bpy.props.StringProperty(
         name = _("Name"),
         description = _("The name of the author"),
         default = ""
     )
 
-    email = bpy.props.StringProperty(
+    email: bpy.props.StringProperty(
         name = _("E-mail"),
         description = _("The e-mail address of the author"),
         default = ""
     )
 
-    effort = bpy.props.FloatProperty(
+    effort: bpy.props.FloatProperty(
         name = _("Effort"),
         description = _("The effort of the author (unit: one house)"),
         min = 0,
         default = 0.0
     )
 
-    remarks = bpy.props.StringProperty(
+    remarks: bpy.props.StringProperty(
         name = _("Remarks"),
         description = _("Remarks about the author"),
         default = ""
     )
 
-    license = bpy.props.EnumProperty(
+    license: bpy.props.EnumProperty(
         name = _("License"),
         description = _("The license under which the author has published this object"),
         items = licenses,
@@ -208,18 +205,15 @@ class ZusiAuthor(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAuthor)
 
-class ZusiAuthorList(bpy.types.UIList):
+class ZUSI_UL_ZusiAuthorList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        if bpy.app.version >= (2, 70, 0):
-            layout.prop(item, "name", text="", emboss=False, icon_value=icon)
-        else:
-            layout.label(item.name, icon_value=icon)
+        layout.prop(item, "name", text="", emboss=False, icon_value=icon)
 
 class ZusiAnchorPointFile(bpy.types.PropertyGroup):
     def set_name(self, value):
         self.name = blender_path_to_zusi_file_path(value)
 
-    name_realpath = bpy.props.StringProperty(
+    name_realpath: bpy.props.StringProperty(
         name = _("File or folder name"),
         subtype = "FILE_PATH",
         get = lambda self: zusi_file_path_to_blender_path(self.name),
@@ -228,12 +222,12 @@ class ZusiAnchorPointFile(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiAnchorPointFile)
 
-class ZusiAnchorPointFileList(bpy.types.UIList):
+class ZUSI_UL_ZusiAnchorPointFileList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         if os.path.exists(item.name_realpath):
-            layout.label(zusi_file_path_to_display_path(item.name), icon = 'FILE_FOLDER' if os.path.isdir(item.name_realpath) else 'FILE')
+            layout.label(text=zusi_file_path_to_display_path(item.name), icon = 'FILE_FOLDER' if os.path.isdir(item.name_realpath) else 'FILE')
         else:
-            layout.label(item.name_realpath, icon = 'ERROR')
+            layout.label(text=item.name_realpath, icon = 'ERROR')
 
 # Custom texture preset properties
 
@@ -311,67 +305,67 @@ d3d_shademodes = [
 
 # Settings for one texture stage in a custom texture preset
 class ZusiTexturePresetTextureStageSettings(bpy.types.PropertyGroup):
-    D3DSAMP_MINFILTER = bpy.props.EnumProperty(
+    D3DSAMP_MINFILTER: bpy.props.EnumProperty(
         name = "D3DSAMP_MINFILTER",
         description = _("Value for D3DSAMP_MINFILTER"),
         items = d3d_texture_filters,
     )
     
-    D3DSAMP_MAGFILTER = bpy.props.EnumProperty(
+    D3DSAMP_MAGFILTER: bpy.props.EnumProperty(
         name = "D3DSAMP_MAGFILTER",
         description = _("Value for D3DSAMP_MAGFILTER"),
         items = d3d_texture_filters,
     )
     
-    D3DTSS_COLOROP = bpy.props.EnumProperty(
+    D3DTSS_COLOROP: bpy.props.EnumProperty(
         name = "D3DTSS_COLOROP",
         description = _("Value for D3DTSS_COLOROP"),
         items = d3d_texture_ops,
     )
     
-    D3DTSS_COLORARG1 = bpy.props.EnumProperty(
+    D3DTSS_COLORARG1: bpy.props.EnumProperty(
         name = "D3DTSS_COLORARG1",
         description = _("Value for D3DTSS_COLORARG1"),
         items = d3d_texture_args,
     )
     
-    D3DTSS_COLORARG2 = bpy.props.EnumProperty(
+    D3DTSS_COLORARG2: bpy.props.EnumProperty(
         name = "D3DTSS_COLORARG2",
         description = _("Value for D3DTSS_COLORARG2"),
         items = d3d_texture_args,
     )
     
-    D3DTSS_COLORARG0 = bpy.props.EnumProperty(
+    D3DTSS_COLORARG0: bpy.props.EnumProperty(
         name = "D3DTSS_COLORARG2",
         description = _("Value for D3DTSS_COLORARG0"),
         items = d3d_texture_args,
     )
     
-    D3DSAMP_ALPHAOP = bpy.props.EnumProperty(
+    D3DSAMP_ALPHAOP: bpy.props.EnumProperty(
         name = "D3DSAMP_ALPHAOP",
         description = _("Value for D3DSAMP_ALPHAOP"),
         items = d3d_texture_ops,
     )
     
-    D3DTSS_ALPHAARG1 = bpy.props.EnumProperty(
+    D3DTSS_ALPHAARG1: bpy.props.EnumProperty(
         name = "D3DTSS_ALPHAARG1",
         description = _("Value for D3DTSS_ALPHAARG1"),
         items = d3d_texture_args,
     )
     
-    D3DTSS_ALPHAARG2 = bpy.props.EnumProperty(
+    D3DTSS_ALPHAARG2: bpy.props.EnumProperty(
         name = "D3DTSS_ALPHAARG2",
         description = _("Value for D3DTSS_ALPHAARG2"),
         items = d3d_texture_args,
     )
     
-    D3DTSS_ALPHAARG0 = bpy.props.EnumProperty(
+    D3DTSS_ALPHAARG0: bpy.props.EnumProperty(
         name = "D3DTSS_ALPHAARG0",
         description = _("Value for D3DTSS_ALPHAARG0"),
         items = d3d_texture_args,
     )
     
-    D3DTSS_RESULTARG = bpy.props.EnumProperty(
+    D3DTSS_RESULTARG: bpy.props.EnumProperty(
         name = "D3DTSS_RESULTARG",
         description = _("Value for D3DTSS_RESULTARG"),
         items = d3d_texture_args,
@@ -380,35 +374,35 @@ class ZusiTexturePresetTextureStageSettings(bpy.types.PropertyGroup):
 bpy.utils.register_class(ZusiTexturePresetTextureStageSettings)
 
 class ZusiTexturePresetResultStageSettings(bpy.types.PropertyGroup):
-    D3DRS_DESTBLEND = bpy.props.EnumProperty(
+    D3DRS_DESTBLEND: bpy.props.EnumProperty(
         name = "D3DRS_DESTBLEND",
         description = _("Value for D3DRS_DESTBLEND"),
         items = d3d_blend_params,
     )
 
-    D3DRS_SRCBLEND = bpy.props.EnumProperty(
+    D3DRS_SRCBLEND: bpy.props.EnumProperty(
         name = "D3DRS_SRCBLEND",
         description = _("Value for D3DRS_SRCBLEND"),
         items = d3d_blend_params,
     )
     
-    D3DRS_ALPHABLENDENABLE = bpy.props.BoolProperty(
+    D3DRS_ALPHABLENDENABLE: bpy.props.BoolProperty(
         name = "D3DRS_ALPHABLENDENABLE",
         description = _("Value for D3DRS_ALPHABLENDENABLE"),
     )
     
-    D3DRS_ALPHATESTENABLE = bpy.props.BoolProperty(
+    D3DRS_ALPHATESTENABLE: bpy.props.BoolProperty(
         name = "D3DRS_ALPHATESTENABLE",
         description = _("Value for D3DRS_ALPHATESTENABLE"),
     )
     
-    alpha_ref = bpy.props.IntProperty(
+    alpha_ref: bpy.props.IntProperty(
         name = _("Alpha REF value"),
         min = 0,
         max = 255,
     )
     
-    D3DRS_SHADEMODE = bpy.props.EnumProperty(
+    D3DRS_SHADEMODE: bpy.props.EnumProperty(
         name = "D3DRS_SHADEMODE",
         description = "D3DRS_SHADEMODE",
         items = d3d_shademodes,
@@ -536,9 +530,9 @@ def template_list(layout, listtype_name, list_id, dataptr, propname, active_data
     if len(add_operator_name) or len(remove_operator_name):
         col = layout.column(align = True)
         if len(add_operator_name):
-            col.operator(add_operator_name, icon = "ZOOMIN", text = "")
+            col.operator(add_operator_name, icon = "ADD", text = "")
         if len(remove_operator_name):
-            col.operator(remove_operator_name, icon = "ZOOMOUT", text = "")
+            col.operator(remove_operator_name, icon = "REMOVE", text = "")
 
 # ---
 # Custom properties
@@ -1092,9 +1086,9 @@ def draw_variants_visibility_box(context, layout, ob, object_type = "Object"):
             op.variant_id = variant.id
             op.object_type = object_type
     else:
-        layout.label(_("Variants:"))
+        layout.label(text=_("Variants:"))
         box = layout.box()
-        box.label(_("Variants can be defined in the Scene settings."))
+        box.label(text=_("Variants can be defined in the Scene settings."))
 
 # ---
 # Data panel (Mesh, link, and anchor point properties)
@@ -1157,8 +1151,8 @@ class OBJECT_PT_data_linked_file(bpy.types.Panel):
         layout.prop(ob, "zusi_link_is_billboard")
         layout.prop(ob, "zusi_link_is_readonly")
 
-        layout.label(_("Animations contained in the linked file"))
-        template_list(layout.row(), "ZusiLinkAnimationList", "",
+        layout.label(text=_("Animations contained in the linked file"))
+        template_list(layout.row(), "ZUSI_UL_ZusiLinkAnimationList", "",
                 ob, "zusi_link_animations", ob, "zusi_link_animations_index",
                 "zusi_link_animations.add", "zusi_link_animations.remove", rows = 3)
 
@@ -1185,8 +1179,8 @@ class OBJECT_PT_data_anchor_point(bpy.types.Panel):
         layout.prop(ob, "zusi_anchor_point_type")
         layout.prop(ob, "zusi_anchor_point_description")
 
-        layout.label(_("Suggested files/folders to be attached here:"))
-        template_list(layout.row(), "ZusiAnchorPointFileList", "",
+        layout.label(text=_("Suggested files/folders to be attached here:"))
+        template_list(layout.row(), "ZUSI_UL_ZusiAnchorPointFileList", "",
                 ob, "zusi_anchor_point_files", ob, "zusi_anchor_point_files_index",
                 "zusi_anchor_point_files.add", "zusi_anchor_point_files.remove", rows = 3)
 
@@ -1306,7 +1300,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             row.prop(mat, "zusi_emit_color", text="")
 
             # Warn the user when night color is not exportable.
-            diffuse_color = mat.diffuse_color * mat.diffuse_intensity
+            diffuse_color = mat.diffuse_color
             if mat.zusi_use_emit:
                 emit_color = mat.zusi_emit_color
                 ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else mathutils.Color((1, 1, 1))
@@ -1366,7 +1360,7 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
                     (mat.texture_stage_1, _("First texture stage")),
                     (mat.texture_stage_2, _("Second texture stage"))]:
                 col = layout.column()
-                col.label(description)
+                col.label(text=description)
                 col.prop(texstage, "D3DSAMP_MINFILTER")
                 col.prop(texstage, "D3DSAMP_MAGFILTER")
                 col.prop(texstage, "D3DTSS_COLOROP")
@@ -1380,12 +1374,12 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
                 col.prop(texstage, "D3DTSS_RESULTARG")
             
             col = layout.column()
-            col.label(_("Third texture stage"))
+            col.label(text=_("Third texture stage"))
             col.prop(mat.texture_stage_3, "D3DTSS_COLOROP")
             col.prop(mat.texture_stage_3, "D3DTSS_COLORARG1")
             col.prop(mat.texture_stage_3, "D3DTSS_COLORARG2")
             
-            col.label(_("Result stage"))
+            col.label(text=_("Result stage"))
             col.prop(mat.result_stage, "D3DRS_DESTBLEND")
             col.prop(mat.result_stage, "D3DRS_SRCBLEND")
             col.prop(mat.result_stage, "D3DRS_ALPHABLENDENABLE")
@@ -1403,7 +1397,7 @@ class OBJECT_OT_zusi_toggle_link_lod(bpy.types.Operator):
     bl_label = _("Toggle linked file LOD")
     bl_options = {'INTERNAL'}
 
-    lodbit = bpy.props.IntProperty()
+    lodbit: bpy.props.IntProperty()
 
     def execute(self, context):
         ob = context.object
@@ -1419,8 +1413,8 @@ class OBJECT_OT_zusi_toggle_variant_visibility(bpy.types.Operator):
     bl_label = _("Toggle visibility")
     bl_options = {'INTERNAL'}
 
-    variant_id = bpy.props.IntProperty()
-    object_type = bpy.props.EnumProperty(
+    variant_id: bpy.props.IntProperty()
+    object_type: bpy.props.EnumProperty(
         items = [("Object", "", ""), ("Texture", "", "")]
     )
 
@@ -1541,13 +1535,8 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         sce = context.scene
 
         # Show list of variants with add/remove button
-        template_list(layout.row(), "ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index",
+        template_list(layout.row(), "ZUSI_UL_ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index",
                 "zusi_variants.add", "zusi_variants.remove", rows = 3)
-
-        # Show input field to change variant name (in Blender >= 2.70, this is instead done by double-clicking on the item)
-        if bpy.app.version < (2, 70, 0) and sce.zusi_variants:
-            entry = sce.zusi_variants[sce.zusi_variants_index]
-            layout.prop(entry, "name")
 
 # ---
 # Animation info UI
@@ -1588,7 +1577,7 @@ class ACTION_OT_set_interpolation_linear(bpy.types.Operator):
     bl_description = _("Set the interpolation mode of all animation curves of this action to 'Linear'")
     bl_options = {'INTERNAL', 'UNDO'}
 
-    action_name = bpy.props.StringProperty(options = {'HIDDEN'})
+    action_name: bpy.props.StringProperty(options = {'HIDDEN'})
 
     def execute(self, context):
         for fcurve in bpy.data.actions[self.action_name].fcurves:
@@ -1694,18 +1683,51 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
         layout.operator("zusi_authors.add_default")
 
         # Show list of authors with add/remove buttons.
-        template_list(layout.row(), "ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index",
+        template_list(layout.row(), "ZUSI_UL_ZusiAuthorList", "", sce, "zusi_authors", sce, "zusi_authors_index",
                 "zusi_authors.add", "zusi_authors.remove", rows = 3)
 
         # Show input fields to change author data
         if sce.zusi_authors:
             entry = sce.zusi_authors[sce.zusi_authors_index]
             row = layout.row()
-            # Show input field to change author name (in Blender >= 2.70, this is instead done by double-clicking on the item)
-            if bpy.app.version < (2, 70, 0):
-                row.prop(entry, "name")
             row.prop(entry, "id")
             layout.prop(entry, "email")
             layout.prop(entry, "effort")
             layout.prop(entry, "license")
             layout.prop(entry, "remarks")
+
+classes = {
+    ZUSI_UL_ZusiLinkAnimationList,
+    ZUSI_UL_ZusiFileVariantList,
+    ZUSI_UL_ZusiFileVariantVisibilityList,
+    ZUSI_UL_ZusiAuthorList,
+    ZUSI_UL_ZusiAnchorPointFileList,
+
+    OBJECT_PT_data_zusi_properties,
+    OBJECT_PT_data_linked_file,
+    OBJECT_PT_data_anchor_point,
+    ZUSI_ANCHOR_POINT_FILES_OT_add,
+    ZUSI_ANCHOR_POINT_FILES_OT_del,
+    ZUSI_LINK_ANIMATIONS_OT_add,
+    ZUSI_LINK_ANIMATIONS_OT_del,
+    OBJECT_PT_material_zusi_properties,
+    OBJECT_PT_material_edit_custom_texture_preset,
+    OBJECT_OT_zusi_toggle_link_lod,
+    OBJECT_OT_zusi_toggle_variant_visibility,
+    OBJECT_PT_subset_zusi_properties,
+    TEXTURE_PT_zusi_properties,
+    SCENE_PT_zusi_properties,
+    ZUSI_VARIANTS_OT_add,
+    ZUSI_VARIANTS_OT_del,
+    SCENE_PT_zusi_variants,
+    ACTION_OT_add_zusi_animation_name,
+    ACTION_OT_del_zusi_animation_name,
+    ACTION_OT_set_interpolation_linear,
+    SCENE_PT_zusi_animations,
+    ZUSI_AUTHORS_OT_add,
+    ZUSI_AUTHORS_OT_del,
+    ZUSI_AUTHORS_OT_add_default,
+    SCENE_PT_zusi_authors,
+}
+
+register, unregister = bpy.utils.register_classes_factory(classes)

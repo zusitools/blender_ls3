@@ -140,26 +140,25 @@ class LsImporter:
         matindex = bpy.data.materials.find(matname)
         if matindex == -1:
             mat = bpy.data.materials.new(matname)
-            mat.diffuse_color = diffuse_color
-            mat.diffuse_intensity = 1
+            mat.diffuse_color = (diffuse_color.r, diffuse_color.g, diffuse_color.b, 1)
 
             if night_color_int != (0, 0, 0):
                 mat.zusi_use_emit = True
                 mat.zusi_emit_color = night_color
-                mat.diffuse_color += mat.zusi_emit_color
+                mat.diffuse_color[0] += mat.zusi_emit_color.r
+                mat.diffuse_color[1] += mat.zusi_emit_color.g
+                mat.diffuse_color[2] += mat.zusi_emit_color.b
 
-                if mat.diffuse_color.r > 1.0 or mat.diffuse_color.g > 1.0 or mat.diffuse_color.b > 1.0:
+                if mat.diffuse_color[0] > 1.0 or mat.diffuse_color[1] > 1.0 or mat.diffuse_color[2] > 1.0:
                     mat.zusi_allow_overexposure = True
                     mat.zusi_overexposure_addition = mathutils.Color((
-                        max(0.0, mat.diffuse_color.r - 1),
-                        max(0.0, mat.diffuse_color.g - 1),
-                        max(0.0, mat.diffuse_color.b - 1)
+                        max(0.0, mat.diffuse_color[0] - 1),
+                        max(0.0, mat.diffuse_color[1] - 1),
+                        max(0.0, mat.diffuse_color[2] - 1)
                     ))
-                    mat.diffuse_color = mathutils.Color((
-                        min(mat.diffuse_color.r, 1.0),
-                        min(mat.diffuse_color.g, 1.0),
-                        min(mat.diffuse_color.b, 1.0)
-                    ))
+                    mat.diffuse_color[0] = min(mat.diffuse_color[0], 1.0)
+                    mat.diffuse_color[1] = min(mat.diffuse_color[1], 1.0)
+                    mat.diffuse_color[2] = min(mat.diffuse_color[2], 1.0)
 
         matindex = self.currentmesh.materials.find(matname)
         if matindex == -1:
@@ -188,7 +187,7 @@ class LsImporter:
             if self.config.parent_is_ls3:
                 # Coordinate system conversion
                 self.currentobject.rotation_euler.z -= radians(90)
-            bpy.context.scene.objects.link(self.currentobject)
+            bpy.context.scene.collection.objects.link(self.currentobject)
 
             # Linked files
             line = fp.readline()
@@ -228,7 +227,7 @@ class LsImporter:
                     empty.zusi_is_linked_file = True
                     empty.zusi_link_file_name_realpath = path
 
-                    self.config.context.scene.objects.link(empty)
+                    self.config.context.scene.collection.objects.link(empty)
 
                 line = fp.readline()
 
