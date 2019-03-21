@@ -253,10 +253,10 @@ msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
 #: __init__.py:603
 #, python-format
-msgid "Successfully exported %d file"
-msgid_plural "Successfully exported %d files"
-msgstr[0] "%d Datei erfolgreich exportiert"
-msgstr[1] "%d Dateien erfolgreich exportiert"
+msgid "Exported %d file"
+msgid_plural "Exported %d files"
+msgstr[0] "%d Datei exportiert"
+msgstr[1] "%d Dateien exportiert"
 
 #: __init__.py:612
 msgid "Show only objects that are visible in a given set of variants"
