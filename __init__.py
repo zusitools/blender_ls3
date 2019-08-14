@@ -284,7 +284,8 @@ class OBJECT_OT_embed_linked(bpy.types.Operator):
         path = bpy.path.abspath(ob.zusi_link_file_name_realpath)
 
         if not os.path.exists(path):
-            return {'ERROR'}
+            self.report({'ERROR'}, _("File %s not found") % path)
+            return {'CANCELLED'}
 
         (directory, filename) = os.path.split(path)
         if filename.lower().endswith(".ls"):
