@@ -1435,7 +1435,7 @@ class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return context.object is not None and (context.object.type == 'MESH' or context.object.type == 'EMPTY')
+        return context.object is not None and (context.object.type == 'MESH' or context.object.type == 'EMPTY' or context.object.type == 'CURVE')
 
     def draw(self, context):
         if context.object.type == 'MESH':
