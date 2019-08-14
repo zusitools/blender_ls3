@@ -990,7 +990,7 @@ class Ls3Exporter:
                     work_list.append(root_obj)
                 if root_obj not in result:
                     new_file = Ls3File()
-                    new_file.filename = basename + "_" + root_obj.name + ext
+                    new_file.filename = basename + "_" + root_obj.name.replace(" ", "_") + ext
                     new_file.root_obj = root_obj
                     result[root_obj] = new_file
 

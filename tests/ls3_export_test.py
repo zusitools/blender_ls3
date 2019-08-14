@@ -1295,6 +1295,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("Everything", author[0].attrib["AutorBeschreibung"])
     self.assertNotIn("AutorAufwand", author[0].attrib)
 
+  def test_animation_spaces_in_object_name(self):
+    self.open("animation_spaces_in_object_name")
+    try:
+      files = self.export_and_parse_multiple(["Parent_with_spaces"])
+    except FileNotFoundError as e:
+      self.fail(str(e))
+
   def test_boundingr(self):
     self.open("boundingr")
     basename, ext, files = self.export_and_parse_multiple(["Planet", "Mond"])
