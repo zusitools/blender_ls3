@@ -88,8 +88,8 @@ def fill_node_wxyz(node, w, x, y, z, default = 0):
     if abs(w - default) > EPSILON:
         node.setAttribute("W", str(w))
 
-def normalize_color(color):
-    """Returns a normalized version (RGB components between 0.0 and 1.0) of a color."""
+def clamp_color(color):
+    """Returns a clamped version (RGB components between 0.0 and 1.0) of a color."""
     return Color((
         min(1.0, max(0.0, color.r)),
         min(1.0, max(0.0, color.g)),
@@ -797,8 +797,8 @@ class Ls3Exporter:
 
         # Add overexposure to the diffuse color.
         if material.zusi_allow_overexposure:
-            diffuse_color = normalize_color(diffuse_color + material.zusi_overexposure_addition)
-            ambient_color = normalize_color(ambient_color + material.zusi_overexposure_addition_ambient)
+            diffuse_color = clamp_color(diffuse_color + material.zusi_overexposure_addition)
+            ambient_color = clamp_color(ambient_color + material.zusi_overexposure_addition_ambient)
 
         subsetNode.setAttribute("Cd", rgba_to_rgb_hex_string(diffuse_color, material.alpha))
         if material.zusi_use_ambient:
