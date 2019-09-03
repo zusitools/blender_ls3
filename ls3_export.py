@@ -398,7 +398,7 @@ class Ls3Exporter:
         self.xmldoc = None
 
         try:
-            self.use_lsb = zusiconfig.use_lsb
+            self.use_lsb = zusiconfig.use_lsb and not os.getenv('NO_LSB')
         except:
             self.use_lsb = False
 

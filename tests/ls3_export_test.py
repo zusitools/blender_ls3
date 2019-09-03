@@ -283,7 +283,7 @@ class TestLs3Export(unittest.TestCase):
         for a in root.findall("./Info/AutorEintrag")])
     self.assertEqual(set([("Author 1", "0"), ("Author 2", "5")]), licenses)
 
-  @unittest.skipUnless(os.path.exists(os.path.join("..", "lsb.py")), "LSB support disabled")
+  @unittest.skipUnless(os.getenv("NO_LSB") is None and os.path.exists(os.path.join("..", "lsb.py")), "LSB support disabled")
   def test_lsb_node_pos(self):
     sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
     root = self.export_and_parse()
@@ -295,7 +295,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(landschaft_node.getchildren().index(subset_node) - 1,
         landschaft_node.getchildren().index(lsb_node))
 
-  @unittest.skipUnless(os.path.exists(os.path.join("..", "lsb.py")), "LSB support disabled")
+  @unittest.skipUnless(os.getenv("NO_LSB") is None and os.path.exists(os.path.join("..", "lsb.py")), "LSB support disabled")
   def test_no_lsb_on_empty(self):
     sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
     self.clear_scene()
