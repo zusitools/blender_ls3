@@ -178,6 +178,7 @@ class Ls3Importer:
 
         # Path to Zusi data dir
         self.datapath = zusicommon.get_zusi_data_path()
+        self.datapath_official = zusicommon.get_zusi_data_path_official()
 
         # Some nodes have to be visited in a certain order. Nodes with a level specified here
         # are visited only after all other nodes with lower or unspecified levels have been visited.
@@ -439,7 +440,7 @@ class Ls3Importer:
         try:
             dateinode = [x for x in node.childNodes if x.nodeName == "Datei"][0] #may raise IndexError
             dateiname = zusicommon.resolve_file_path(dateinode.getAttribute("Dateiname"),
-                self.config.fileDirectory, self.datapath)
+                self.config.fileDirectory, self.datapath, self.datapath_official)
             loc = [0.0] * 3
             rot = [0.0] * 3
             scale = [1.0] * 3
@@ -546,7 +547,7 @@ class Ls3Importer:
                 if n.getAttribute("Dateiname"):
                     entry = empty.zusi_anchor_point_files.add()
                     entry.name_realpath = zusicommon.resolve_file_path(n.getAttribute("Dateiname"),
-                        self.config.fileDirectory, self.datapath)
+                        self.config.fileDirectory, self.datapath, self.datapath_official)
             elif n.nodeName == "p":
                 fill_xyz_vector(n, loc)
             elif n.nodeName == "phi":
@@ -669,7 +670,7 @@ class Ls3Importer:
     def visitlsbNode(self, node):
         if self.lsbreader is not None:
             lsbname = zusicommon.resolve_file_path(node.getAttribute("Dateiname"),
-                self.config.fileDirectory, self.datapath)
+                self.config.fileDirectory, self.datapath, self.datapath_official)
             self.lsbreader.set_lsb_file(lsbname)
         else:
             self.warnings.append(_("File {} contains binary mesh data (LSB format), which will not be imported.").format(self.config.filePath))
@@ -719,7 +720,7 @@ class Ls3Importer:
             slotidx = sum(s is not None for s in mat.texture_slots)
 
             imgpath = zusicommon.resolve_file_path(dateinode.getAttribute("Dateiname"),
-                    self.config.fileDirectory, self.datapath) # may raise RuntimeError
+                    self.config.fileDirectory, self.datapath, self.datapath_official) # may raise RuntimeError
             existing_images = [i for i in bpy.data.images if bpy.path.abspath(i.filepath) == bpy.path.abspath(imgpath)]
             img = existing_images[0] if len(existing_images) else bpy.data.images.load(imgpath)
             tex = bpy.data.textures.new(self.config.fileName + "." + str(self.subsetno),  type='IMAGE')

@@ -35,8 +35,13 @@ def zusi_file_path_to_blender_path(zusi_path):
         return os.path.normpath(os.path.join(zusicommon.get_zusi2_data_path(),
             zusi_path[len("zusi2:"):].replace('\\', os.path.sep)))
     elif zusi_path.startswith("zusi3:"):
-        return os.path.normpath(os.path.join(zusicommon.get_zusi_data_path(),
+        result = os.path.normpath(os.path.join(zusicommon.get_zusi_data_path(),
             zusi_path[len("zusi3:"):].replace('\\', os.path.sep)))
+        if os.path.exists(result):
+            return result
+        else:
+            return os.path.normpath(os.path.join(zusicommon.get_zusi_data_path_official(),
+                zusi_path[len("zusi3:"):].replace('\\', os.path.sep)))
     return zusi_path
 
 def zusi_file_path_to_display_path(zusi_path):
@@ -51,6 +56,8 @@ def blender_path_to_zusi_file_path(blender_path):
     (dirname, filename) = os.path.split(path)
     if bpy.path.is_subdir(dirname, zusicommon.get_zusi_data_path()):
         return "zusi3:" + os.path.relpath(path, zusicommon.get_zusi_data_path()).replace(os.path.sep, '\\')
+    if bpy.path.is_subdir(dirname, zusicommon.get_zusi_data_path_official()):
+        return "zusi3:" + os.path.relpath(path, zusicommon.get_zusi_data_path_official()).replace(os.path.sep, '\\')
     if bpy.path.is_subdir(dirname, zusicommon.get_zusi2_data_path()):
         return "zusi2:" + os.path.relpath(path, zusicommon.get_zusi2_data_path()).replace(os.path.sep, '\\')
     return blender_path

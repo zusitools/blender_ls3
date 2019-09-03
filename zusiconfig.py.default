@@ -15,11 +15,17 @@ default_export_settings = {
 #
 #	datapath = "/mnt/zusi/Daten/"
 #
+# Note the trailing slash, which is required.
+#
 # Then rename this file to zusiconfig.py
 
 datapath = ""
 
-# In the same way, you can set the Zusi 2 data directory here.
+# In the same way, you can set the official data directory here ...
+
+datapath_official = ""
+
+# ... and the Zusi 2 data directory here.
 
 z2datapath = ""
 

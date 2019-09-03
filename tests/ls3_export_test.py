@@ -16,6 +16,7 @@ sys.path.append(os.getcwd())
 from mocks import MockFS
 
 ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/zusi3/daten"
+ZUSI3_DATAPATH_OFFICIAL = r"Z:\Zusi3\DatenOffiziell" if sys.platform.startswith("win") else "/mnt/Zusi3/DatenOffiziell"
 ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/zusi2/daten"
 ZUSI3_EXPORTPATH = r"Z:\Zusi3\Daten\ExportTest" if sys.platform.startswith("win") else "/mnt/zusi3/daten/ExportTest"
 NON_ZUSI_PATH = r"Z:\NichtZusi" if sys.platform.startswith("win") else "/mnt/nichtzusi"
@@ -71,6 +72,7 @@ class TestLs3Export(unittest.TestCase):
       self._enumvalue_patch.start()
 
     sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
+    sys.modules["io_scene_ls3.zusiconfig"].datapath_official = ZUSI3_DATAPATH_OFFICIAL
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
     sys.modules["io_scene_ls3.zusiconfig"].default_export_settings = {
@@ -632,7 +634,7 @@ class TestLs3Export(unittest.TestCase):
 
         self.assertEqual(r"zusi3:Routes\Deutschland\32U_0004_0057\000442_005692_Freienohl\Freienohl_1985.ls3",
             files[1].name)
-        self.assertEqual(os.path.join(ZUSI3_DATAPATH, "Routes", "Deutschland", "32U_0004_0057", "000442_005692_Freienohl", "Freienohl_1985.ls3"),
+        self.assertEqual(os.path.join(ZUSI3_DATAPATH_OFFICIAL, "Routes", "Deutschland", "32U_0004_0057", "000442_005692_Freienohl", "Freienohl_1985.ls3"),
             files[1].name_realpath)
 
         self.assertEqual("/tmp/foo.bar", files[2].name)
@@ -645,22 +647,27 @@ class TestLs3Export(unittest.TestCase):
         files[1].name_realpath = os.path.join(ZUSI3_DATAPATH, "Loks", "Elektroloks", "101", "101.fzg")
         self.assertEqual(r"zusi3:Loks\Elektroloks\101\101.fzg", files[1].name)
 
-        files[2].name_realpath = os.path.join(NON_ZUSI_PATH, "KeineDaten", "Irgendwas.fzg")
-        self.assertEqual(files[2].name_realpath, files[2].name)
+        files[2].name_realpath = os.path.join(ZUSI3_DATAPATH_OFFICIAL, "Loks", "Elektroloks", "102", "102.fzg")
+        self.assertEqual(r"zusi3:Loks\Elektroloks\102\102.fzg", files[2].name)
+
+        files[3].name_realpath = os.path.join(NON_ZUSI_PATH, "KeineDaten", "Irgendwas.fzg")
+        self.assertEqual(files[3].name_realpath, files[3].name)
 
         # Export
         mainfile = self.export_and_parse()
         datei_nodes = mainfile.findall('./Landschaft/Ankerpunkt/Datei')
-        self.assertEqual(3, len(datei_nodes))
+        self.assertEqual(4, len(datei_nodes))
 
         if sys.platform.startswith("win"):
           self.assertEqual(r"..\..\Zusi2\Daten\Loks\Elektroloks\101\101.fzg", datei_nodes[0].attrib["Dateiname"])
           self.assertEqual(r"Loks\Elektroloks\101\101.fzg", datei_nodes[1].attrib["Dateiname"])
-          self.assertEqual(r"..\..\NichtZusi\KeineDaten\Irgendwas.fzg", datei_nodes[2].attrib["Dateiname"])
+          self.assertEqual(r"Loks\Elektroloks\102\102.fzg", datei_nodes[2].attrib["Dateiname"])
+          self.assertEqual(r"..\..\NichtZusi\KeineDaten\Irgendwas.fzg", datei_nodes[3].attrib["Dateiname"])
         else:
           self.assertEqual(r"..\..\zusi2\daten\Loks\Elektroloks\101\101.fzg", datei_nodes[0].attrib["Dateiname"])
           self.assertEqual(r"Loks\Elektroloks\101\101.fzg", datei_nodes[1].attrib["Dateiname"])
-          self.assertEqual(r"..\..\nichtzusi\KeineDaten\Irgendwas.fzg", datei_nodes[2].attrib["Dateiname"])
+          self.assertEqual(r"Loks\Elektroloks\102\102.fzg", datei_nodes[2].attrib["Dateiname"])
+          self.assertEqual(r"..\..\nichtzusi\KeineDaten\Irgendwas.fzg", datei_nodes[3].attrib["Dateiname"])
 
   # ---
   # Variants tests

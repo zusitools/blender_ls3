@@ -430,26 +430,32 @@ class Ls3Exporter:
     # Returns
     #  - only the file name: if the file resides in the same directory as the .ls3 file (this can be turned off by setting force_relative_to_root=True)
     #  - a path relative to the Zusi data directory: if the file resides on the same drive as the Zusi data directory,
+    #    (this is checked for both user and official data directory)
     #  - the path, otherwise.
-    # The path separator will always be a backslash, regardless of the operating system
+    # The path separator will always be a backslash, regardless of the operating system.
     def relpath(self, path, force_relative_to_root=False):
         path = os.path.realpath(bpy.path.abspath(path))
         (dirname, filename) = os.path.split(path)
 
-        if os.path.normpath(dirname) == os.path.normpath(self.config.fileDirectory) and not force_relative_to_root:
+        if not force_relative_to_root and os.path.normpath(dirname) == os.path.normpath(self.config.fileDirectory):
             return filename
+
+        datadir_official = os.path.realpath(zusicommon.get_zusi_data_path_official())
+        if bpy.path.is_subdir(dirname, datadir_official):
+            result = os.path.relpath(path, datadir_official)
         else:
             datadir = os.path.realpath(zusicommon.get_zusi_data_path())
-
             try:
                 result = os.path.relpath(path, datadir)
-                if os.sep not in result:
-                    return '\\' + result
-                else:
-                    return result.replace(os.sep, "\\")
             except ValueError:
                 # path and datadir are not on the same drive
-                return path.replace(os.sep, "\\")
+                try:
+                    result = os.path.relpath(path, datadir_official)
+                except ValueError:
+                    # path and datadir_official are not on the same drive either
+                    return path.replace(os.sep, "\\")
+
+        return result.replace(os.sep, "\\") if os.sep in result else '\\' + result
 
     def get_file_root(self, ob):
         """Returns the object that has to be the root of the LS3 file in which 'ob' is placed

@@ -12,6 +12,7 @@ sys.path.append(os.getcwd())
 from mocks import MockFS
 
 ZUSI3_DATAPATH = r"Z:\Zusi3\Daten" if sys.platform.startswith("win") else "/mnt/Zusi3/Daten"
+ZUSI3_DATAPATH_OFFICIAL = r"Z:\Zusi3\DatenOffiziell" if sys.platform.startswith("win") else "/mnt/Zusi3/DatenOffiziell"
 ZUSI2_DATAPATH = r"Z:\Zusi2\Daten" if sys.platform.startswith("win") else "/mnt/Zusi2/Daten"
 NON_ZUSI_PATH = r"Z:\NichtZusi" if sys.platform.startswith("win") else "/mnt/nichtzusi"
 
@@ -29,6 +30,7 @@ class TestLs3Import(unittest.TestCase):
 
   def setUp(self):
     sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
+    sys.modules["io_scene_ls3.zusiconfig"].datapath_official = ZUSI3_DATAPATH_OFFICIAL
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
 
