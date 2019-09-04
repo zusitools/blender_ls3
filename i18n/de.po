@@ -113,7 +113,7 @@ msgstr ""
 #: __init__.py:287
 #, python-format
 msgid "File %s not found"
-msgstr ""
+msgstr "Datei %s nicht gefunden"
 
 #: __init__.py:328
 msgid "Export to Zusi Scenery file format (.ls3)"
@@ -145,7 +145,7 @@ msgstr "Subsets der ausgewählten Objekte"
 
 #: __init__.py:351
 msgid "Objects on visible layers"
-msgstr ""
+msgstr "Objekte auf sichtbaren Ebenen"
 
 #: __init__.py:357
 msgid "Export animations"
@@ -891,13 +891,15 @@ msgstr "Die Texturvoreinstellung für dieses Material"
 
 #: zusiprops.py:727
 msgid "Day mode preset"
-msgstr ""
+msgstr "Tag-Voreinstellung"
 
 #: zusiprops.py:728
 msgid ""
 "The texture preset to use when the environment brightness is greater than "
 "\"Night switch threshold\""
 msgstr ""
+"Die Voreinstellung, die genutzt werden soll, wenn die Umgebung heller ist "
+"als der Nachtumschaltungs-Schwellwert "
 
 #: zusiprops.py:735
 msgid "Scenery type"
@@ -978,11 +980,11 @@ msgstr ""
 
 #: zusiprops.py:795
 msgid "Night switch threshold"
-msgstr ""
+msgstr "Nachtumschaltungs-Schwellwert"
 
 #: zusiprops.py:796
 msgid "Environment brightness below which the night texture is displayed"
-msgstr ""
+msgstr "Umgebungshelligkeit, unterhalb der die Nachttextur dargestellt wird"
 
 #: zusiprops.py:807
 msgid "Meters per texture"
@@ -1176,8 +1178,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1043
 msgid "Animation duration"
@@ -1197,8 +1199,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1054
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
