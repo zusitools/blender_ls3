@@ -441,6 +441,11 @@ class Ls3Exporter:
             return filename
 
         datadir_official = os.path.realpath(zusicommon.get_zusi_data_path_official())
+        # KNOWN ISSUE: https://developer.blender.org/T44137
+        # In Blender <= 2.73, bpy.path.is_subdir will wrongly return True for some paths, e.g.
+        # bpy.path.is_subdir("/mnt/Zusi3/DatenOffiziell/Loks/Elektroloks", "/mnt/Zusi3/Daten/") == True
+        # Just ignore the issue and hope people will either use the latest version of Blender
+        # or have their paths configured differently.
         if bpy.path.is_subdir(dirname, datadir_official):
             result = os.path.relpath(path, datadir_official)
         else:

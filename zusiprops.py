@@ -54,6 +54,11 @@ def zusi_file_path_to_display_path(zusi_path):
 def blender_path_to_zusi_file_path(blender_path):
     path = os.path.realpath(bpy.path.abspath(blender_path))
     (dirname, filename) = os.path.split(path)
+    # KNOWN ISSUE: https://developer.blender.org/T44137
+    # In Blender <= 2.73, bpy.path.is_subdir will wrongly return True for some paths, e.g.
+    # bpy.path.is_subdir("/mnt/Zusi3/DatenOffiziell/Loks/Elektroloks", "/mnt/Zusi3/Daten/") == True
+    # Just ignore the issue and hope people will either use the latest version of Blender
+    # or have their paths configured differently.
     if bpy.path.is_subdir(dirname, zusicommon.get_zusi_data_path()):
         return "zusi3:" + os.path.relpath(path, zusicommon.get_zusi_data_path()).replace(os.path.sep, '\\')
     if bpy.path.is_subdir(dirname, zusicommon.get_zusi_data_path_official()):
