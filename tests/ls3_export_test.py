@@ -1666,5 +1666,9 @@ class TestLs3Export(unittest.TestCase):
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
-  unittest.TextTestRunner(verbosity=2).run(suite)
+  try:
+    if not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful():
+      raise Exception('Tests failed')
+  except Exception:
+    sys.exit(1)
   bpy.ops.wm.quit_blender()
