@@ -25,7 +25,7 @@ import logging
 import struct
 import mathutils
 import xml.dom.minidom as dom
-from . import ls_import, i18n
+from . import ls_import, i18n, lsb
 from .zusicommon import zusicommon
 from math import pi
 from mathutils import *
@@ -134,8 +134,7 @@ class Ls3Importer:
     def __init__(self, config):
         self.config = config
 
-        from . import lsb
-        self.lsbreader = lsb.LsbReader()
+        self.lsb_reader = None  # created on demand
 
         # Imported subsets (= Blender objects) indexed by their subset number.
         # Imported linked files (= Blender objects) indexed by the order they occur in the LS3 file.
@@ -174,14 +173,12 @@ class Ls3Importer:
         # are visited only after all other nodes with lower or unspecified levels have been visited.
         self.work_list_level = 0
         self.work_list_levels = {
-            "lsb": 0,
+            "SubSet": 0,
 
-            "SubSet": 1,
+            "Verknuepfte": 1,
 
-            "Verknuepfte": 2,
-
-            "MeshAnimation": 3,
-            "VerknAnimation": 3,
+            "MeshAnimation": 2,
+            "VerknAnimation": 2,
         }
 
         self.warnings = []
@@ -311,9 +308,19 @@ class Ls3Importer:
         for child in node.childNodes:
             self.visitNode(child)
 
-        # Read LSB file
-        if self.lsbreader.lsbfile is not None:
-            (self.currentvertices, self.currentfaces) = self.lsbreader.read_subset_data(node)
+        # Read LSB file. This is not the filename given in the <lsb> node,
+        # which serves as information only.
+        if node.hasAttribute("MeshI") or node.hasAttribute("MeshV"):
+            if self.lsb_reader is None:
+                self.lsb_reader = lsb.LsbReader()
+                lsbname = os.path.splitext(self.config.filePath)[0] + ".lsb"
+                try:
+                    self.lsb_reader.set_lsb_file(lsbname)
+                except FileNotFoundError:
+                    logger.error("Failed to open LSB file {}".format(lsbname))
+                    self.lsb_reader.lsbfile = None
+            if self.lsb_reader.lsbfile is not None:
+                (self.currentvertices, self.currentfaces) = self.lsb_reader.read_subset_data(node)
 
         # Fill the mesh with verts, edges, faces
         self.currentmesh.vertices.add(len(self.currentvertices))
@@ -655,14 +662,6 @@ class Ls3Importer:
         fcurves_by_datapath[("rotation_euler", 2)].keyframe_points.insert(controlpoint_x, rot_euler.z + ob.rotation_euler[2]).interpolation = "LINEAR"
 
     #
-    # Visits a <lsb> node.
-    #
-    def visitlsbNode(self, node):
-        lsbname = zusicommon.resolve_file_path(node.getAttribute("Dateiname"),
-            self.config.fileDirectory, self.datapath, self.datapath_official)
-        self.lsbreader.set_lsb_file(lsbname)
-
-    #
     # Visits a <Vertex> node.
     #
     def visitVertexNode(self, node):
@@ -736,6 +735,7 @@ class Ls3Importer:
         self.subsetno = 0
         (shortName, ext) = os.path.splitext(self.config.fileName)
         logger.info("Opening LS3 file {}".format(self.config.filePath))
+        self.lsb_reader = None
 
         # Open the file as bytes, else a Unicode BOM at the beginning of the file could confuse the XML parser.
         with open(self.config.filePath, "rb") as fp:
