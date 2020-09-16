@@ -33,9 +33,12 @@ read version_name
 echo -n "Description (in German?): "
 read descr
 
-curl -u "zusitools" https://api.github.com/repos/zusitools/blender_ls3/releases -d "{\"tag_name\":\"$tag_name\",\"name\":\"$version_name\",\"body\":\"$descr\"}"
+echo -n "GitHub personal access token: "
+read token
+
+curl -H "Authorization: token $token" https://api.github.com/repos/zusitools/blender_ls3/releases -d "{\"tag_name\":\"$tag_name\",\"name\":\"$version_name\",\"body\":\"$descr\"}"
 
 echo -n "Release ID: "
 read release_id
 
-curl -H "Content-Type:application/octet-stream" -u "zusitools" "https://uploads.github.com/repos/zusitools/blender_ls3/releases/$release_id/assets?name=blender_ls3.zip" --data-binary @release/blender_ls3.zip
+curl -H "Content-Type:application/octet-stream" -H "Authorization: token $token" "https://uploads.github.com/repos/zusitools/blender_ls3/releases/$release_id/assets?name=blender_ls3.zip" --data-binary @release/blender_ls3.zip
