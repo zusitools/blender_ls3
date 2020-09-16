@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+  <Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+  <Landschaft>
+    <lsb Dateiname="lsb.lsb"/>
+    <SubSet Cd="FFA3A3A3" MeshV="24" MeshI="36">
+      <RenderFlags TexVoreinstellung="1"/>
+    </SubSet>
+  </Landschaft>
+</Zusi>

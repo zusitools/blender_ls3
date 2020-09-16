@@ -134,18 +134,8 @@ class Ls3Importer:
     def __init__(self, config):
         self.config = config
 
-        # LSB reader
-        try:
-            from . import zusiconfig
-            use_lsb = zusiconfig.use_lsb
-        except:
-            use_lsb = False
-        
-        if use_lsb:
-            from . import lsb
-            self.lsbreader = lsb.LsbReader()
-        else:
-            self.lsbreader = None
+        from . import lsb
+        self.lsbreader = lsb.LsbReader()
 
         # Imported subsets (= Blender objects) indexed by their subset number.
         # Imported linked files (= Blender objects) indexed by the order they occur in the LS3 file.
@@ -322,7 +312,7 @@ class Ls3Importer:
             self.visitNode(child)
 
         # Read LSB file
-        if self.lsbreader is not None and self.lsbreader.lsbfile is not None:
+        if self.lsbreader.lsbfile is not None:
             (self.currentvertices, self.currentfaces) = self.lsbreader.read_subset_data(node)
 
         # Fill the mesh with verts, edges, faces
@@ -668,12 +658,9 @@ class Ls3Importer:
     # Visits a <lsb> node.
     #
     def visitlsbNode(self, node):
-        if self.lsbreader is not None:
-            lsbname = zusicommon.resolve_file_path(node.getAttribute("Dateiname"),
-                self.config.fileDirectory, self.datapath, self.datapath_official)
-            self.lsbreader.set_lsb_file(lsbname)
-        else:
-            self.warnings.append(_("File {} contains binary mesh data (LSB format), which will not be imported.").format(self.config.filePath))
+        lsbname = zusicommon.resolve_file_path(node.getAttribute("Dateiname"),
+            self.config.fileDirectory, self.datapath, self.datapath_official)
+        self.lsbreader.set_lsb_file(lsbname)
 
     #
     # Visits a <Vertex> node.

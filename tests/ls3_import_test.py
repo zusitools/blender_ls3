@@ -86,6 +86,10 @@ class TestLs3Import(unittest.TestCase):
   # ---
   # Tests start here
   # ---
+  def test_import_lsb(self):
+    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
+    self.ls3_import("lsb.ls3")
+    self.assertEqual(12, len(bpy.data.objects["lsb.ls3.0"].data.polygons))
 
   def test_import_author_info(self):
     self.ls3_import("author_info_1.ls3", {"importFileMetadata": True})
