@@ -8,7 +8,7 @@ fi
 
 rm release/blender_ls3.zip
 mkdir io_scene_ls3
-cp -r README.md batchexport_settings.xml __init__.py ls3_export.py ls3_import.py ls_import.py zusiconfig.py.default zusiprops.py i18n.py l10n io_scene_ls3
+cp -r README.md batchexport_settings.xml __init__.py lsb.py ls3_export.py ls3_import.py ls_import.py zusiconfig.py.default zusiprops.py i18n.py l10n io_scene_ls3
 mkdir  -p io_scene_ls3/zusicommon/zusicommon
 cp zusicommon/zusicommon/__init__.py io_scene_ls3/zusicommon/zusicommon
 7z a -r -tzip release/blender_ls3.zip io_scene_ls3
