@@ -382,7 +382,8 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
     maxNormalAngle = bpy.props.FloatProperty(
         name = _("Max. normal angle"),
-        description = _("Maximum angle (degrees) between the normal vectors of two vertices to be merged"),
+        subtype = 'ANGLE',
+        description = _("Maximum angle between the normal vectors of two vertices to be merged"),
         default = ls3_export.get_exporter_setting("maxNormalAngle"),
         min = 0.0,
         max = 360.0
@@ -464,7 +465,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             self.properties.optimizeMesh,
             self.properties.maxUVDelta,
             self.properties.maxCoordDelta,
-            (self.properties.maxNormalAngle / 360) * 2 * pi,
+            self.properties.maxNormalAngle,
             [setting.variant_id for setting in self.properties.variant_export_setting if setting.export == True],
             selectedObjects,
         )

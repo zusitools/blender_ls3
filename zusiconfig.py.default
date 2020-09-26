@@ -8,7 +8,7 @@ default_export_settings = {
     #    "optimizeMesh" : True,
     #    "maxCoordDelta" : 0.001,
     #    "maxUVDelta" : 0.002,
-    #    "maxNormalAngle" : 10,
+    #    "maxNormalAngle" : radians(10),
 }
 
 # Linux users must enter the path to the Zusi data directory here, e.g.
