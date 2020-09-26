@@ -20,6 +20,7 @@
 import bpy
 import os
 import array
+import struct
 import xml.dom.minidom as dom
 import logging
 from . import zusiprops
@@ -51,6 +52,27 @@ default_export_settings = {
     "maxNormalAngle" : radians(10),
 }
 
+registry_export_settings = None
+
+def get_registry_export_settings():
+    result = {}
+    try:
+        import winreg
+        values = zusicommon.read_registry_strings([
+            (winreg.HKEY_CURRENT_USER, "Software\\Zusi3\\3DEditor\\Einstellungen"),
+        ], set(["MeshOptimierungAbstand", "MeshOptimierungUV", "MeshOptimierungWinkel"]))
+        if values is not None:
+            if "MeshOptimierungAbstand" in values:
+                result["maxCoordDelta"] = struct.unpack("d", values["MeshOptimierungAbstand"])[0]
+            if "MeshOptimierungUV" in values:
+                result["maxUVDelta"] = struct.unpack("d", values["MeshOptimierungUV"])[0]
+            if "MeshOptimierungWinkel" in values:
+                result["maxNormalAngle"] = struct.unpack("d", values["MeshOptimierungWinkel"])[0]
+    except Exception:
+        pass
+
+    return result
+
 EXPORT_ALL_OBJECTS = "0"
 EXPORT_SELECTED_OBJECTS = "1"
 EXPORT_SUBSETS_OF_SELECTED_OBJECTS = "2"
@@ -67,13 +89,19 @@ def info(msg, *args, **kwargs):
 def warn(msg, *args, **kwargs):
     logger.warn(msg.format(*args, **kwargs))
 
-# Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py
-# or the default value specified above if an error occurs.
+# Returns the value with the given key in the default_export_settings dictionary in zusiconfig.py,
+# the appropriate value from the Windows Registry or the default value specified above if an error occurs.
 def get_exporter_setting(key):
     try:
         return zusiconfig.default_export_settings[key]
-    except:
-        return default_export_settings[key]
+    except Exception:
+        try:
+            global registry_export_settings
+            if registry_export_settings is None:
+                registry_export_settings = get_registry_export_settings()
+            return registry_export_settings[key]
+        except Exception:
+            return default_export_settings[key]
 
 def fill_node_xyz(node, x, y, z, default = 0):
     if abs(x - default) > EPSILON:
