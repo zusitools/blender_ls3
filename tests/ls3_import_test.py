@@ -32,7 +32,6 @@ class TestLs3Import(unittest.TestCase):
     sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].datapath_official = ZUSI3_DATAPATH_OFFICIAL
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
-    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
 
     self._mock_fs = MockFS()
     self._mock_fs.start()
@@ -87,7 +86,6 @@ class TestLs3Import(unittest.TestCase):
   # Tests start here
   # ---
   def test_import_lsb(self):
-    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
     self.ls3_import("lsb.ls3")
     self.assertEqual(12, len(bpy.data.objects["lsb.ls3.0"].data.polygons))
 

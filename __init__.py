@@ -389,6 +389,12 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         max = 360.0
     )
 
+    writeLsb = bpy.props.BoolProperty(
+        name = _("Write mesh data to LSB file"),
+        description = _("Write vertex and face data to a separate file for better loading performance in Zusi"),
+        default = ls3_export.get_exporter_setting("writeLsb"),
+    )
+
     variant_export_setting = bpy.props.CollectionProperty(
         name = _("Variants to export"),
         description = _("Choose which variants to export"),
@@ -446,6 +452,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         col.prop(self, "maxCoordDelta")
         col.prop(self, "maxUVDelta")
         col.prop(self, "maxNormalAngle")
+        layout.prop(self, "writeLsb")
 
     def get_exporter(self, context):
         if self.properties.exportSelected == '4':  # Visible layers
@@ -466,6 +473,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             self.properties.maxUVDelta,
             self.properties.maxCoordDelta,
             self.properties.maxNormalAngle,
+            self.properties.writeLsb,
             [setting.variant_id for setting in self.properties.variant_export_setting if setting.export == True],
             selectedObjects,
         )

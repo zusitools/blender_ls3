@@ -50,6 +50,7 @@ default_export_settings = {
     "maxCoordDelta" : 0.001,
     "maxUVDelta" : 0.002,
     "maxNormalAngle" : radians(10),
+    "writeLsb" : True,
 }
 
 registry_export_settings = None
@@ -60,7 +61,7 @@ def get_registry_export_settings():
         import winreg
         values = zusicommon.read_registry_strings([
             (winreg.HKEY_CURRENT_USER, "Software\\Zusi3\\3DEditor\\Einstellungen"),
-        ], set(["MeshOptimierungAbstand", "MeshOptimierungUV", "MeshOptimierungWinkel"]))
+        ], set(["MeshOptimierungAbstand", "MeshOptimierungUV", "MeshOptimierungWinkel", "xmlls3Schreiben"]))
         if values is not None:
             if "MeshOptimierungAbstand" in values:
                 result["maxCoordDelta"] = struct.unpack("d", values["MeshOptimierungAbstand"])[0]
@@ -68,6 +69,8 @@ def get_registry_export_settings():
                 result["maxUVDelta"] = struct.unpack("d", values["MeshOptimierungUV"])[0]
             if "MeshOptimierungWinkel" in values:
                 result["maxNormalAngle"] = struct.unpack("d", values["MeshOptimierungWinkel"])[0]
+            if "xmlls3Schreiben" in values:
+                result["writeLsb"] = (values["xmlls3Schreiben"] == 0)
     except Exception:
         pass
 
@@ -402,6 +405,7 @@ class Ls3ExporterSettings:
                 maxUVDelta,
                 maxCoordDelta,
                 maxNormalAngle,  # in radians
+                writeLsb,
                 variantIDs = [],
                 selectedObjects = [],
                 ):
@@ -415,6 +419,7 @@ class Ls3ExporterSettings:
         self.maxUVDelta = maxUVDelta
         self.maxCoordDelta = maxCoordDelta
         self.maxNormalAngle = maxNormalAngle
+        self.writeLsb = writeLsb
         self.variantIDs = variantIDs
         self.selectedObjects = selectedObjects
 
@@ -424,11 +429,6 @@ class Ls3Exporter:
 
         # The XML document node
         self.xmldoc = None
-
-        try:
-            self.use_lsb = zusiconfig.use_lsb and not os.getenv('NO_LSB')
-        except:
-            self.use_lsb = False
 
         # Initialize map of Blender Z bias values (float) to integer values
         # e.g. if values (-0.1, -0.05, 0, 0.1) appear in the scene, they will be
@@ -622,7 +622,7 @@ class Ls3Exporter:
             if material.zusi_second_pass and material.zusi_texture_preset == '4':
                 subsetNode.setAttribute("DoppeltRendern", "1")
 
-        if not self.use_lsb:
+        if not self.config.writeLsb:
             # Generating all <Vertex> and <Face> nodes via the xmldoc functions is slooooow.
             # Therefore, a special node is inserted that generates the necessary <Vertex> and
             # <Face> XML on the fly. Yes, this is ugly.
@@ -1313,7 +1313,7 @@ class Ls3Exporter:
             ls3file.filename)
 
         lsbwriter = None
-        if self.use_lsb and sum(len(subset.vertexdata) + len(subset.facedata) for subset in ls3file.subsets) > 0:
+        if self.config.writeLsb and any(len(subset.vertexdata) > 0 or len(subset.facedata) > 0 for subset in ls3file.subsets):
             (basename, ext) = os.path.splitext(filepath)
             lsbpath = basename + ".lsb"
         

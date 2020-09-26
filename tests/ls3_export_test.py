@@ -74,11 +74,11 @@ class TestLs3Export(unittest.TestCase):
     sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].datapath_official = ZUSI3_DATAPATH_OFFICIAL
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH
-    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = False
     sys.modules["io_scene_ls3.zusiconfig"].default_export_settings = {
         "exportAnimations" : False,
         "optimizeMesh" : False,
         "exportSelected" : '0',
+        "writeLsb" : False,
     }
 
   def tearDown(self):
@@ -286,8 +286,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(set([("Author 1", "0"), ("Author 2", "5")]), licenses)
 
   def test_lsb_node_pos(self):
-    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
-    root = self.export_and_parse()
+    root = self.export_and_parse({ "writeLsb": True })
 
     landschaft_node = root.find("./Landschaft")
     lsb_node = root.find("./Landschaft/lsb")
@@ -297,9 +296,8 @@ class TestLs3Export(unittest.TestCase):
         landschaft_node.getchildren().index(lsb_node))
 
   def test_no_lsb_on_empty(self):
-    sys.modules["io_scene_ls3.zusiconfig"].use_lsb = True
     self.clear_scene()
-    root = self.export_and_parse()
+    root = self.export_and_parse({ "writeLsb": True })
 
     self.assertFalse(os.path.exists(os.path.join(ZUSI3_EXPORTPATH, "export.lsb")))
     self.assertEqual([], root.findall("./Landschaft/lsb"))
