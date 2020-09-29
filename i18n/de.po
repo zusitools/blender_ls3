@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: blender_ls 3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-04 17:02+0200\n"
+"POT-Creation-Date: 2020-09-28 19:53+0200\n"
 "PO-Revision-Date: 2014-10-21 18:23+0200\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -12,7 +12,7 @@ msgstr ""
 "X-Language: de_DE\n"
 "X-Source-Language: C\n"
 
-#: __init__.py:84 __init__.py:111 zusiprops.py:137
+#: __init__.py:84 __init__.py:111 zusiprops.py:142
 msgid "Variant ID"
 msgstr "Varianten-ID"
 
@@ -193,707 +193,710 @@ msgstr ""
 msgid "Max. normal angle"
 msgstr "Max. Winkel Normalen"
 
-#: __init__.py:385
-msgid ""
-"Maximum angle (degrees) between the normal vectors of two vertices to be "
-"merged"
+#: __init__.py:386
+#, fuzzy
+msgid "Maximum angle between the normal vectors of two vertices to be merged"
 msgstr ""
 "Maximaler Winkel (in Grad) zwischen den Normalenvektoren zweier "
 "zusammenzuführender Punkte"
 
-#: __init__.py:392
+#: __init__.py:393
+msgid "Write mesh data to LSB file"
+msgstr ""
+
+#: __init__.py:394
+msgid ""
+"Write vertex and face data to a separate file for better loading performance "
+"in Zusi"
+msgstr ""
+
+#: __init__.py:399
 msgid "Variants to export"
 msgstr "Zu exportierende Varianten"
 
-#: __init__.py:393
+#: __init__.py:400
 msgid "Choose which variants to export"
 msgstr "Festlegen, welche Varianten exportiert werden sollen "
 
-#: __init__.py:405
+#: __init__.py:412
 msgid "No author information entered"
 msgstr "Keine Autorenangabe"
 
-#: __init__.py:408
+#: __init__.py:415
 msgid "Author information added"
 msgstr "Autorenangabe hinzugefügt"
 
-#: __init__.py:410
+#: __init__.py:417
 #, python-format
 msgid "Name: %s"
 msgstr "Name: %s"
 
-#: __init__.py:411
+#: __init__.py:418
 #, python-format
 msgid "E-mail: %s"
 msgstr "E-Mail: %s"
 
-#: __init__.py:416
+#: __init__.py:423
 msgid "Materials with diffuse intensity < 1"
 msgstr "Materials mit Diffuse-Intensität < 1"
 
-#: __init__.py:421
+#: __init__.py:428
 msgid "Variants (leave empty to export all)"
 msgstr "Varianten (leer lassen, um alle zu exportieren)"
 
-#: __init__.py:428 __init__.py:652 zusiprops.py:1092
+#: __init__.py:435 __init__.py:647 zusiprops.py:1097
 msgid "Variants can be defined in the Scene settings."
 msgstr "Varianten können in den Szeneneinstellungen definiert werden."
 
-#: __init__.py:434
+#: __init__.py:441
 msgid "The following files will be overwritten:"
 msgstr "Folgende Dateien werden überschrieben:"
 
-#: __init__.py:501
+#: __init__.py:510
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr "Stapelexport in Zusi-Landschaftsdateien (.ls3)"
 
-#: __init__.py:502
+#: __init__.py:511
 msgid "Batch export LS3"
 msgstr "Stapelexport LS3"
 
-#: __init__.py:549
+#: __init__.py:558
 msgid "Unsaved file, no file name available"
 msgstr "Ungespeicherte Datei, kein Dateiname vorhanden"
 
-#: __init__.py:552
+#: __init__.py:561
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
-#: __init__.py:622
+#: __init__.py:617
 #, python-format
 msgid "Exported %d file"
 msgid_plural "Exported %d files"
 msgstr[0] "%d Datei exportiert"
 msgstr[1] "%d Dateien exportiert"
 
-#: __init__.py:631
+#: __init__.py:626
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 "Nur Objekte anzeigen, die in einer bestimmten Kombination von Varianten "
 "sichtbar sind"
 
-#: __init__.py:632
+#: __init__.py:627
 msgid "Show Variants"
 msgstr "Varianten anzeigen"
 
-#: __init__.py:636
+#: __init__.py:631
 msgid "Variants to show"
 msgstr "Anzuzeigende Varianten"
 
-#: __init__.py:637
+#: __init__.py:632
 msgid "Choose which variants to show"
 msgstr "Festlegen, welche Varianten angezeigt werden sollen "
 
-#: __init__.py:646
+#: __init__.py:641
 msgid "Variants (leave empty to show all)"
 msgstr "Varianten (leer lassen, um alle anzuzeigen)"
 
-#: __init__.py:683
+#: __init__.py:678
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr "Zusi-2-Landschaft (.ls) ..."
 
-#: __init__.py:686 __init__.py:689
+#: __init__.py:681 __init__.py:684
 msgid "Zusi Scenery (.ls3) ..."
 msgstr "Zusi-Landschaft (.ls3) ..."
 
-#: __init__.py:692
+#: __init__.py:687
 msgid "Show variants ..."
 msgstr "Varianten anzeigen ..."
 
-#: ls3_import.py:696
-msgid ""
-"File {} contains binary mesh data (LSB format), which will not be imported."
-msgstr ""
-"Datei {} enthält binäre Meshdaten (LSB-Format), die nicht importiert werden."
-
-#: zusiprops.py:75 zusiprops.py:166
+#: zusiprops.py:80 zusiprops.py:171
 msgid "ID"
 msgstr "ID"
 
-#: zusiprops.py:76
+#: zusiprops.py:81
 msgid "Unique ID of this variant"
 msgstr "Eindeutige ID dieser Variante"
 
-#: zusiprops.py:82
+#: zusiprops.py:87
 msgid "Undefined/signal controlled"
 msgstr "Undefiniert/signalgesteuert"
 
-#: zusiprops.py:83
+#: zusiprops.py:88
 msgid "Continuous over time"
 msgstr "Zeitlich kontinuierlich"
 
-#: zusiprops.py:84
+#: zusiprops.py:89
 msgid "Speed (powered, braked)"
 msgstr "Geschwindigkeit (angetrieben, gebremst)"
 
-#: zusiprops.py:85
+#: zusiprops.py:90
 msgid "Speed (braked)"
 msgstr "Geschwindigkeit (gebremst)"
 
-#: zusiprops.py:86
+#: zusiprops.py:91
 msgid "Speed (powered)"
 msgstr "Geschwindigkeit (angetrieben)"
 
-#: zusiprops.py:87
+#: zusiprops.py:92
 msgid "Speed"
 msgstr "Geschwindigkeit"
 
-#: zusiprops.py:88
+#: zusiprops.py:93
 msgid "Track curvature at front of vehicle"
 msgstr "Gleiskrümmung Fahrzeuganfang"
 
-#: zusiprops.py:89
+#: zusiprops.py:94
 msgid "Track curvature at rear of vehicle"
 msgstr "Gleiskrümmung Fahrzeugende"
 
-#: zusiprops.py:90
+#: zusiprops.py:95
 msgid "Pantograph A"
 msgstr "Stromabnehmer A"
 
-#: zusiprops.py:91
+#: zusiprops.py:96
 msgid "Pantograph B"
 msgstr "Stromabnehmer B"
 
-#: zusiprops.py:92
+#: zusiprops.py:97
 msgid "Pantograph C"
 msgstr "Stromabnehmer C"
 
-#: zusiprops.py:93
+#: zusiprops.py:98
 msgid "Pantograph D"
 msgstr "Stromabnehmer D"
 
-#: zusiprops.py:94
+#: zusiprops.py:99
 msgid "Doors left"
 msgstr "Türen links"
 
-#: zusiprops.py:95
+#: zusiprops.py:100
 msgid "Doors right"
 msgstr "Türen rechts"
 
-#: zusiprops.py:96
+#: zusiprops.py:101
 msgid "Tilt technology"
 msgstr "Neigetechnik"
 
-#: zusiprops.py:101 zusiprops.py:1019
+#: zusiprops.py:106 zusiprops.py:1024
 msgid "Animation type"
 msgstr "Animations-Typ"
 
-#: zusiprops.py:102 zusiprops.py:1020
+#: zusiprops.py:107 zusiprops.py:1025
 msgid "Defines how the animation is triggered in the simulator"
 msgstr "Legt fest, wie die Animation im Simulator angesteuert wird"
 
-#: zusiprops.py:108 zusiprops.py:121 zusiprops.py:172
+#: zusiprops.py:113 zusiprops.py:126 zusiprops.py:177
 msgid "Name"
 msgstr "Name"
 
-#: zusiprops.py:109
+#: zusiprops.py:114
 msgid "Animation name; leave empty for default"
 msgstr "Animationsname, leer=Standardname"
 
-#: zusiprops.py:122
+#: zusiprops.py:127
 msgid "Animation name"
 msgstr "Name der Animation"
 
-#: zusiprops.py:138
+#: zusiprops.py:143
 msgid "ID of the variant this object is visible in"
 msgstr "ID der Variante, in der dieses Objekt sichtbar ist"
 
-#: zusiprops.py:155
+#: zusiprops.py:160
 msgid "Default license (add-on pool, revenue goes to author)"
 msgstr "Standard-Lizenz (Add-On-Pool, Einnahmen an Autor)"
 
-#: zusiprops.py:156
+#: zusiprops.py:161
 msgid "Add-on pool, revenue goes to the add-on pool"
 msgstr "Add-On-Pool, Einnahmen in den Add-On-Pool "
 
-#: zusiprops.py:157
+#: zusiprops.py:162
 msgid "Add-on pool, revenue goes to Carsten Hölscher Software"
 msgstr "Add-On-Pool, Einnahmen an Carsten Hölscher Software"
 
-#: zusiprops.py:158
+#: zusiprops.py:163
 msgid "Add-on pool, no effort points, released for all types of use"
 msgstr "Add-On-Pool, keine Aufwandspunkte, Freigabe für jede Nutzung"
 
-#: zusiprops.py:159
+#: zusiprops.py:164
 msgid "Private file, not intended to be distributed"
 msgstr "Private Datei, keine Verteilung vorgesehen"
 
-#: zusiprops.py:160
+#: zusiprops.py:165
 msgid "Special commercial usage"
 msgstr "Kommerzielle Sondernutzung"
 
-#: zusiprops.py:167
+#: zusiprops.py:172
 msgid "The ID of the author"
 msgstr "Die ID des Autors"
 
-#: zusiprops.py:173
+#: zusiprops.py:178
 msgid "The name of the author"
 msgstr "Der Name des Autors"
 
-#: zusiprops.py:178
+#: zusiprops.py:183
 msgid "E-mail"
 msgstr "E-Mail"
 
-#: zusiprops.py:179
+#: zusiprops.py:184
 msgid "The e-mail address of the author"
 msgstr "Die E-Mail-Adresse des Autors"
 
-#: zusiprops.py:184
+#: zusiprops.py:189
 msgid "Effort"
 msgstr "Aufwand"
 
-#: zusiprops.py:185
+#: zusiprops.py:190
 msgid "The effort of the author (unit: one house)"
 msgstr "Der Aufwand des Autors (in Haus-Einheiten)"
 
-#: zusiprops.py:191
+#: zusiprops.py:196
 msgid "Remarks"
 msgstr "Bemerkungen"
 
-#: zusiprops.py:192
+#: zusiprops.py:197
 msgid "Remarks about the author"
 msgstr "Bemerkungen zum Autor"
 
-#: zusiprops.py:197 zusiprops.py:1000
+#: zusiprops.py:202 zusiprops.py:1005
 msgid "License"
 msgstr "Lizenz"
 
-#: zusiprops.py:198
+#: zusiprops.py:203
 msgid "The license under which the author has published this object"
 msgstr "Die Lizenz, unter der der Autor dieses Objekt veröffentlicht hat"
 
-#: zusiprops.py:218
+#: zusiprops.py:223
 msgid "File or folder name"
 msgstr "Datei- oder Ordnername"
 
-#: zusiprops.py:311
+#: zusiprops.py:316
 msgid "Value for D3DSAMP_MINFILTER"
 msgstr "Wert für D3DSAMP_MINFILTER "
 
-#: zusiprops.py:317
+#: zusiprops.py:322
 msgid "Value for D3DSAMP_MAGFILTER"
 msgstr "Wert für D3DSAMP_MAGFILTER "
 
-#: zusiprops.py:323
+#: zusiprops.py:328
 msgid "Value for D3DTSS_COLOROP"
 msgstr "Wert für D3DTSS_COLOROP "
 
-#: zusiprops.py:329
+#: zusiprops.py:334
 msgid "Value for D3DTSS_COLORARG1"
 msgstr "Wert für D3DTSS_COLORARG1 "
 
-#: zusiprops.py:335
+#: zusiprops.py:340
 msgid "Value for D3DTSS_COLORARG2"
 msgstr "Wert für D3DTSS_COLORARG2 "
 
-#: zusiprops.py:341
+#: zusiprops.py:346
 msgid "Value for D3DTSS_COLORARG0"
 msgstr "Wert für D3DTSS_COLORARG0 "
 
-#: zusiprops.py:347
+#: zusiprops.py:352
 msgid "Value for D3DSAMP_ALPHAOP"
 msgstr "Wert für D3DSAMP_ALPHAOP "
 
-#: zusiprops.py:353
+#: zusiprops.py:358
 msgid "Value for D3DTSS_ALPHAARG1"
 msgstr "Wert für D3DTSS_ALPHAARG1 "
 
-#: zusiprops.py:359
+#: zusiprops.py:364
 msgid "Value for D3DTSS_ALPHAARG2"
 msgstr "Wert für D3DTSS_ALPHAARG2 "
 
-#: zusiprops.py:365
+#: zusiprops.py:370
 msgid "Value for D3DTSS_ALPHAARG0"
 msgstr "Wert für D3DTSS_ALPHAARG0 "
 
-#: zusiprops.py:371
+#: zusiprops.py:376
 msgid "Value for D3DTSS_RESULTARG"
 msgstr "Wert für D3DTSS_RESULTARG "
 
-#: zusiprops.py:380
+#: zusiprops.py:385
 msgid "Value for D3DRS_DESTBLEND"
 msgstr "Wert für D3DRS_DESTBLEND "
 
-#: zusiprops.py:386
+#: zusiprops.py:391
 msgid "Value for D3DRS_SRCBLEND"
 msgstr "Wert für D3DRS_SRCBLEND "
 
-#: zusiprops.py:392
+#: zusiprops.py:397
 msgid "Value for D3DRS_ALPHABLENDENABLE"
 msgstr "Wert für D3DRS_ALPHABLENDENABLE "
 
-#: zusiprops.py:397
+#: zusiprops.py:402
 msgid "Value for D3DRS_ALPHATESTENABLE"
 msgstr "Wert für D3DRS_ALPHATESTENABLE "
 
-#: zusiprops.py:401
+#: zusiprops.py:406
 msgid "Alpha REF value"
 msgstr "Alpha-REF-Wert"
 
-#: zusiprops.py:543
+#: zusiprops.py:548
 msgid "Unspecified"
 msgstr "Nicht näher spezifiziert"
 
-#: zusiprops.py:544
+#: zusiprops.py:549
 msgid "Base plane"
 msgstr "Grundplatte"
 
-#: zusiprops.py:545
+#: zusiprops.py:550
 msgid "Embankment"
 msgstr "Bahndamm"
 
-#: zusiprops.py:546
+#: zusiprops.py:551
 msgid "Retaining wall"
 msgstr "Stützmauer"
 
-#: zusiprops.py:547
+#: zusiprops.py:552
 msgid "Track bed"
 msgstr "Gleisbett"
 
-#: zusiprops.py:548
+#: zusiprops.py:553
 msgid "Shoulder"
 msgstr "Schulter"
 
-#: zusiprops.py:549
+#: zusiprops.py:554
 msgid "Cess"
 msgstr "Randweg"
 
-#: zusiprops.py:550
+#: zusiprops.py:555
 msgid "Six foot"
 msgstr "Gleiszwischenraum"
 
-#: zusiprops.py:551
+#: zusiprops.py:556
 msgid "Rail"
 msgstr "Schiene"
 
-#: zusiprops.py:552
+#: zusiprops.py:557
 msgid "Guard rail"
 msgstr "Radlenker"
 
-#: zusiprops.py:553
+#: zusiprops.py:558
 msgid "Platform"
 msgstr "Bahnsteig"
 
-#: zusiprops.py:554
+#: zusiprops.py:559
 msgid "Road"
 msgstr "Straße"
 
-#: zusiprops.py:555
+#: zusiprops.py:560
 msgid "Water"
 msgstr "Wasser"
 
-#: zusiprops.py:556 zusiprops.py:571
+#: zusiprops.py:561 zusiprops.py:576
 msgid "Tunnel"
 msgstr "Tunnel"
 
-#: zusiprops.py:557 zusiprops.py:603
+#: zusiprops.py:562 zusiprops.py:608
 msgid "Overhead line equipment"
 msgstr "Fahrleitung"
 
-#: zusiprops.py:558
+#: zusiprops.py:563
 msgid "Forest"
 msgstr "Wald"
 
-#: zusiprops.py:559
+#: zusiprops.py:564
 msgid "Dummy (invisible in the simulator)"
 msgstr "Dummy (im Simulator unsichtbar)"
 
-#: zusiprops.py:560
+#: zusiprops.py:565
 msgid "Head light front"
 msgstr "Spitzenlicht vorne"
 
-#: zusiprops.py:561
+#: zusiprops.py:566
 msgid "Tail light front"
 msgstr "Schlusslicht vorne"
 
-#: zusiprops.py:562
+#: zusiprops.py:567
 msgid "Head light rear"
 msgstr "Spitzenlicht hinten"
 
-#: zusiprops.py:563
+#: zusiprops.py:568
 msgid "Tail light rear"
 msgstr "Schlusslicht hinten"
 
-#: zusiprops.py:564
+#: zusiprops.py:569
 msgid "Rail 2D"
 msgstr "Schiene 2D"
 
-#: zusiprops.py:565
+#: zusiprops.py:570
 msgid "Guard rail 2D"
 msgstr "Radlenker 2D"
 
-#: zusiprops.py:569
+#: zusiprops.py:574
 msgid "Ignore"
 msgstr "Ignorieren"
 
-#: zusiprops.py:570
+#: zusiprops.py:575
 msgid "Default"
 msgstr "Standard"
 
-#: zusiprops.py:572
+#: zusiprops.py:577
 msgid "Permanent way"
 msgstr "Oberbau"
 
-#: zusiprops.py:573
+#: zusiprops.py:578
 msgid "Forest edge"
 msgstr "Waldrand"
 
-#: zusiprops.py:574
+#: zusiprops.py:579
 msgid "Forest plane, generated by Terrain Former"
 msgstr "Waldfläche, GF-generiert"
 
-#: zusiprops.py:575
+#: zusiprops.py:580
 msgid "Base plane, generated by Terrain Former"
 msgstr "Grundplatte, GF-generiert"
 
-#: zusiprops.py:576
+#: zusiprops.py:581
 msgid "Background, generated by Terrain Former"
 msgstr "Hintergrund, GF-generiert"
 
-#: zusiprops.py:580
+#: zusiprops.py:585
 msgid "Custom"
 msgstr "Individuell"
 
-#: zusiprops.py:581
+#: zusiprops.py:586
 msgid "Default, one texture"
 msgstr "Standard, eine Textur"
 
-#: zusiprops.py:582
+#: zusiprops.py:587
 msgid "Default, one texture, full transparency"
 msgstr "Standard, eine Textur, Volltransparenz"
 
-#: zusiprops.py:583
+#: zusiprops.py:588
 msgid "Tex. 1 default, tex. 2 transparent"
 msgstr "Tex. 1 Standard, Tex. 2 transparent"
 
-#: zusiprops.py:584
+#: zusiprops.py:589
 msgid "Default, one texture, semi-transparency"
 msgstr "Standard, eine Textur, Halbtransparenz"
 
-#: zusiprops.py:585
+#: zusiprops.py:590
 msgid "Tex. 1 default, tex. 2 transp./illuminated"
 msgstr "Tex. 1 Standard, Tex. 2 transp./leuchtend"
 
-#: zusiprops.py:586
+#: zusiprops.py:591
 msgid "Signal lens (shine-through)"
 msgstr "Signalblende (durchleuchtet)"
 
-#: zusiprops.py:587
+#: zusiprops.py:592
 msgid "Dimmable signal lamp (with semi-transparency)"
 msgstr "Signallampe dimmbar (mit Halbtransparenz)"
 
-#: zusiprops.py:588
+#: zusiprops.py:593
 msgid "Semi-transparency for leaf-like structures, Alpha reference value 100"
 msgstr "Halbtransparenz für laubähnliche Strukturen, Alpharef 100"
 
-#: zusiprops.py:589
+#: zusiprops.py:594
 msgid "Overlaying window, dimming off at day"
 msgstr "Überlagertes Fenster, tagsüber ausdimmend"
 
-#: zusiprops.py:590
+#: zusiprops.py:595
 msgid "Overlaying window, switched off at day"
 msgstr "Überlagertes Fenster, tagsüber ausschaltend"
 
-#: zusiprops.py:591
+#: zusiprops.py:596
 msgid "Wall of fog"
 msgstr "Nebelwand"
 
-#: zusiprops.py:592
+#: zusiprops.py:597
 msgid "Semi-transparency for leaf-like structures, Alpha reference value 150"
 msgstr "Halbtransparenz für laubähnliche Strukturen, Alpharef 150"
 
-#: zusiprops.py:596
+#: zusiprops.py:601
 msgid "Visible in all variants"
 msgstr "In allen Varianten sichtbar"
 
-#: zusiprops.py:597
+#: zusiprops.py:602
 msgid "Visible only in the selected variants"
 msgstr "Nur in den ausgewählten Varianten sichtbar"
 
-#: zusiprops.py:598
+#: zusiprops.py:603
 msgid "Visible in all but the selected variants"
 msgstr "In allen außer den ausgewählten Varianten sichtbar"
 
-#: zusiprops.py:602 zusiprops.py:609
+#: zusiprops.py:607 zusiprops.py:614
 msgid "General"
 msgstr "Allgemein"
 
-#: zusiprops.py:604
+#: zusiprops.py:609
 msgid "Marker flags"
 msgstr "Markerfähnchen"
 
-#: zusiprops.py:605
+#: zusiprops.py:610
 msgid "Invisible"
 msgstr "Unsichtbar"
 
-#: zusiprops.py:610
+#: zusiprops.py:615
 msgid "Contact wire"
 msgstr "Fahrdraht"
 
-#: zusiprops.py:611
+#: zusiprops.py:616
 msgid "Catenary wire"
 msgstr "Tragseil"
 
-#: zusiprops.py:612
+#: zusiprops.py:617
 msgid "Attachment point of stitch wire"
 msgstr "Anbindung Y-Seil"
 
-#: zusiprops.py:613
+#: zusiprops.py:618
 msgid "Lower cross span wire"
 msgstr "Unteres Richtseil (Quertragwerk)"
 
-#: zusiprops.py:614
+#: zusiprops.py:619
 msgid "Upper cross span wire"
 msgstr "Oberes Richtseil (Quertragwerk)"
 
-#: zusiprops.py:615
+#: zusiprops.py:620
 msgid "Headspan wire"
 msgstr "Tragseil (Quertragwerk)"
 
-#: zusiprops.py:616
+#: zusiprops.py:621
 msgid "Out-of-running contact wire"
 msgstr "Ausfädelung Fahrdraht"
 
-#: zusiprops.py:617
+#: zusiprops.py:622
 msgid "Out-of-running catenary wire"
 msgstr "Ausfädelung Tragseil"
 
-#: zusiprops.py:618
+#: zusiprops.py:623
 msgid "Anchor wire for contact wire"
 msgstr "Abspannung Fahrdaht"
 
-#: zusiprops.py:619
+#: zusiprops.py:624
 msgid "Anchor wire for catenary wire"
 msgstr "Abspannung Tragseil"
 
-#: zusiprops.py:620
+#: zusiprops.py:625
 msgid "Balance weight anchor attachment pointer"
 msgstr "Anbaupunkt Radspanner"
 
-#: zusiprops.py:621
+#: zusiprops.py:626
 msgid "Cantilever attachment point"
 msgstr "Anbaupunkt Ausleger"
 
-#: zusiprops.py:622
+#: zusiprops.py:627
 msgid "Mid point anchor attachment point"
 msgstr "Anbaupunkt Anker"
 
-#: zusiprops.py:623
+#: zusiprops.py:628
 msgid "Hectometer board attachment point"
 msgstr "Anbaupunkt Hektometertafel "
 
-#: zusiprops.py:624
+#: zusiprops.py:629
 msgid "Feeder line attachment point"
 msgstr "Anbaupunkt Speiseleitung"
 
-#: zusiprops.py:625
+#: zusiprops.py:630
 msgid "Control wire attachment point"
 msgstr "Anbaupunkt Stelldraht"
 
-#: zusiprops.py:626
+#: zusiprops.py:631
 msgid "Telegraph line attachment point"
 msgstr "Anbaupunkt Telegrafenleitung"
 
-#: zusiprops.py:627
+#: zusiprops.py:632
 msgid "Power supply line attachment point"
 msgstr "Anbaupunkt Stromleitung"
 
-#: zusiprops.py:628
+#: zusiprops.py:633
 msgid "Signal"
 msgstr "Signal"
 
-#: zusiprops.py:636
+#: zusiprops.py:641
 msgid "Calculate normals for rail"
 msgstr "Normalenberechnung für Schiene"
 
-#: zusiprops.py:637
+#: zusiprops.py:642
 msgid "Make the normals always point upwards, for use in rail depictions"
 msgstr ""
 "Normalen immer nach oben zeigen lassen, zur Verwendung bei "
 "Schienendarstellungen"
 
-#: zusiprops.py:646
+#: zusiprops.py:651
 msgid "Night color"
 msgstr "Nachtfarbe"
 
-#: zusiprops.py:647
+#: zusiprops.py:652
 msgid "The night color aka emissive color of the material"
 msgstr "Die Nachtfarbe (Leuchtfarbe) des Materials"
 
-#: zusiprops.py:657
+#: zusiprops.py:662
 msgid "Use night color"
 msgstr "Nachtfarbe benutzen"
 
-#: zusiprops.py:658
+#: zusiprops.py:663
 msgid "Use a specific night color for this material"
 msgstr "Eine Nachtfarbe für dieses Material festlegen"
 
-#: zusiprops.py:663
+#: zusiprops.py:668
 msgid "Allow overexposure"
 msgstr "Überbelichtung erlauben"
 
-#: zusiprops.py:664
+#: zusiprops.py:669
 msgid "Allow the day color for this material to be overexposed"
 msgstr "Für die Tagfarbe dieses Materials Überbelichtung erlauben"
 
-#: zusiprops.py:669
+#: zusiprops.py:674
 msgid "Overexposure addition (Diffuse)"
 msgstr "Überbelichtungs-Addition (Diffuse)"
 
-#: zusiprops.py:670
+#: zusiprops.py:675
 msgid "Color to add to the diffuse day color in order to create overexposure"
 msgstr ""
 "Farbe, die auf die diffuse Tagfarbe addiert wird, um Überbelichtung zu "
 "erzeugen"
 
-#: zusiprops.py:680
+#: zusiprops.py:685
 msgid "Overexposure addition (Ambient)"
 msgstr "Überbelichtungs-Addition (Ambient)"
 
-#: zusiprops.py:681
+#: zusiprops.py:686
 msgid "Color to add to the ambient day color in order to create overexposure"
 msgstr ""
 "Farbe, die auf die Ambient-Tagfarbe addiert wird, um Überbelichtung zu "
 "erzeugen"
 
-#: zusiprops.py:691
+#: zusiprops.py:696
 msgid "Ambient color"
 msgstr "Ambient-Farbe"
 
-#: zusiprops.py:692
+#: zusiprops.py:697
 msgid "The ambient color of the material"
 msgstr "Die Ambient-Farbe des Materials"
 
-#: zusiprops.py:702
+#: zusiprops.py:707
 msgid "Ambient color alpha"
 msgstr "Ambientfarbe-Alpha"
 
-#: zusiprops.py:703
+#: zusiprops.py:708
 msgid "The alpha value of the ambient color"
 msgstr "Der Alpha-Wert der Ambient-Farbe"
 
-#: zusiprops.py:713
+#: zusiprops.py:718
 msgid "Use ambient color"
 msgstr "Ambient-Farbe benutzen"
 
-#: zusiprops.py:714
+#: zusiprops.py:719
 msgid "Use a specific ambient color for this material"
 msgstr "Eine Ambient-Farbe für dieses Material festlegen"
 
-#: zusiprops.py:719
+#: zusiprops.py:724
 msgid "Texture preset"
 msgstr "Textur-Voreinstellung"
 
-#: zusiprops.py:720
+#: zusiprops.py:725
 msgid "The texture preset to assign to this material"
 msgstr "Die Texturvoreinstellung für dieses Material"
 
-#: zusiprops.py:727
+#: zusiprops.py:732
 msgid "Day mode preset"
 msgstr "Tag-Voreinstellung"
 
-#: zusiprops.py:728
+#: zusiprops.py:733
 msgid ""
 "The texture preset to use when the environment brightness is greater than "
 "\"Night switch threshold\""
@@ -901,76 +904,76 @@ msgstr ""
 "Die Voreinstellung, die genutzt werden soll, wenn die Umgebung heller ist "
 "als der Nachtumschaltungs-Schwellwert "
 
-#: zusiprops.py:735
+#: zusiprops.py:740
 msgid "Scenery type"
 msgstr "Landschaftstyp"
 
-#: zusiprops.py:736
+#: zusiprops.py:741
 msgid "The scenery type to assign to this subset"
 msgstr "Der Landschaftstyp dieses Subsets"
 
-#: zusiprops.py:742
+#: zusiprops.py:747
 msgid "TF type"
 msgstr "GF-Typ"
 
-#: zusiprops.py:743
+#: zusiprops.py:748
 msgid "The Terrain Former type to assign to this subset"
 msgstr "Der Geländeformer-Typ dieses Subsets"
 
-#: zusiprops.py:749
+#: zusiprops.py:754
 msgid "Force brightness"
 msgstr "Zwangshelligkeit"
 
-#: zusiprops.py:750
+#: zusiprops.py:755
 msgid "Force this material to have a specific brightness"
 msgstr "Eine bestimmte Helligkeit für dieses Material festlegen"
 
-#: zusiprops.py:757
+#: zusiprops.py:762
 msgid "Signal magnification"
 msgstr "Signalvergrößerung"
 
-#: zusiprops.py:758
+#: zusiprops.py:763
 msgid "Enlarge this object when it is far away from the viewpoint"
 msgstr ""
 "Das Objekt vergrößern, wenn es weit vom Betrachterstandpunkt entfernt ist"
 
-#: zusiprops.py:765
+#: zusiprops.py:770
 msgid "Texture stage 1"
 msgstr "Erste Textur"
 
-#: zusiprops.py:766
+#: zusiprops.py:771
 msgid "Settings for the first texture stage"
 msgstr "Einstellungen des Texturierungs-Abschnitts für die erste Textur"
 
-#: zusiprops.py:771
+#: zusiprops.py:776
 msgid "Texture stage 2"
 msgstr "Zweite Textur"
 
-#: zusiprops.py:772
+#: zusiprops.py:777
 msgid "Settings for the second texture stage"
 msgstr "Einstellungen des Texturierungs-Abschnitts für die zweite Textur"
 
-#: zusiprops.py:777
+#: zusiprops.py:782
 msgid "Texture stage 3"
 msgstr "Dritter Texturierungs-Abschnitt"
 
-#: zusiprops.py:778
+#: zusiprops.py:783
 msgid "Settings for the third texture stage"
 msgstr "Einstellungen des dritten Texturierungs-Abschnitts"
 
-#: zusiprops.py:783 zusiprops.py:1383
+#: zusiprops.py:788 zusiprops.py:1388
 msgid "Result stage"
 msgstr "Ergebnis-Berechnung"
 
-#: zusiprops.py:784
+#: zusiprops.py:789
 msgid "Settings for the result stage"
 msgstr "Einstellung für die Berechnung des Texturierungs-Ergebnisses"
 
-#: zusiprops.py:789
+#: zusiprops.py:794
 msgid "Additional drawing pass without Z buffer"
 msgstr "Zusätzlicher Zeichenvorgang ohne Z-Buffer"
 
-#: zusiprops.py:790
+#: zusiprops.py:795
 msgid ""
 "Additional drawing pass without Z buffer. Only available for 'One texture, "
 "semi-transparency' preset."
@@ -978,37 +981,37 @@ msgstr ""
 "Zusätzlicher Zeichenvorgang ohne Z-Buffer. Nur verfügbar für die "
 "Voreinstellung 'Eine Textur, Halbtransparenz'."
 
-#: zusiprops.py:795
+#: zusiprops.py:800
 msgid "Night switch threshold"
 msgstr "Nachtumschaltungs-Schwellwert"
 
-#: zusiprops.py:796
+#: zusiprops.py:801
 msgid "Environment brightness below which the night texture is displayed"
 msgstr "Umgebungshelligkeit, unterhalb der die Nachttextur dargestellt wird"
 
-#: zusiprops.py:807
+#: zusiprops.py:812
 msgid "Meters per texture"
 msgstr "Meter pro Textur"
 
-#: zusiprops.py:808
+#: zusiprops.py:813
 msgid "Side length of a square which this texture would completely cover"
 msgstr ""
 "Seitenlänge eines Quadrates, das diese Textur vollständig überdecken würde"
 
-#: zusiprops.py:819 zusiprops.py:841
+#: zusiprops.py:824 zusiprops.py:846
 msgid "Variant visibility"
 msgstr "Varianten-Sichtbarkeit"
 
-#: zusiprops.py:820 zusiprops.py:842
+#: zusiprops.py:825 zusiprops.py:847
 msgid "Choose which variants this object is visible in when exporting"
 msgstr ""
 "Festlegen, in welchen Varianten dieses Objekt beim Exportieren sichtbar ist "
 
-#: zusiprops.py:829
+#: zusiprops.py:834
 msgid "Subset name"
 msgstr "Subset-Name"
 
-#: zusiprops.py:830
+#: zusiprops.py:835
 msgid ""
 "Name of the subset in which to export this object. Objects with different "
 "subset names will never be exported into the same subset."
@@ -1017,56 +1020,56 @@ msgstr ""
 "verschiedenen Subset-Namen werden beim Export nie zu einem Subset "
 "zusammengeführt."
 
-#: zusiprops.py:835
+#: zusiprops.py:840
 msgid "Variant visibility mode"
 msgstr "Varianten-Sichtbarkeits-Modus"
 
-#: zusiprops.py:850 zusiprops.py:1161
+#: zusiprops.py:855 zusiprops.py:1166
 msgid "Anchor point"
 msgstr "Ankerpunkt"
 
-#: zusiprops.py:851
+#: zusiprops.py:856
 msgid "Export this object as an anchor point"
 msgstr "Dieses Objekt als Ankerpunkt exportieren"
 
-#: zusiprops.py:856
+#: zusiprops.py:861
 msgid "Category"
 msgstr "Kategorie"
 
-#: zusiprops.py:857
+#: zusiprops.py:862
 msgid "Anchor point category"
 msgstr "Kategorie des Ankerpunkts"
 
-#: zusiprops.py:863
+#: zusiprops.py:868
 msgid "Type"
 msgstr "Typ"
 
-#: zusiprops.py:864
+#: zusiprops.py:869
 msgid "Anchor point type"
 msgstr "Typ des Ankerpunkts"
 
-#: zusiprops.py:870 zusiprops.py:1007
+#: zusiprops.py:875 zusiprops.py:1012
 msgid "Description"
 msgstr "Beschreibung"
 
-#: zusiprops.py:871
+#: zusiprops.py:876
 msgid "Anchor point description"
 msgstr "Beschreibung des Ankerpunkts"
 
-#: zusiprops.py:876
+#: zusiprops.py:881
 msgid "Suggested files/folders to be attached here"
 msgstr "Vorschlag für hier anzubauende Dateien/Ordner"
 
-#: zusiprops.py:877
+#: zusiprops.py:882
 msgid "List of files and folders of files that can be attached here"
 msgstr ""
 "Liste von Dateien und Ordnern von Dateien, die hier angebaut werden können"
 
-#: zusiprops.py:886 zusiprops.py:1113
+#: zusiprops.py:891 zusiprops.py:1118
 msgid "Linked file"
 msgstr "Verknüpfte Datei"
 
-#: zusiprops.py:887
+#: zusiprops.py:892
 msgid ""
 "Create a link to another file, with location, rotation, and scale taken from "
 "this object"
@@ -1074,118 +1077,118 @@ msgstr ""
 "Eine Verknüpfung zu einer anderen Datei erzeugen, wobei Verschiebung, "
 "Rotation und Skalierung diesem Objekt entnommen werden "
 
-#: zusiprops.py:897
+#: zusiprops.py:902
 msgid "File name"
 msgstr "Dateiname"
 
-#: zusiprops.py:904
+#: zusiprops.py:909
 msgid "Group"
 msgstr "Gruppe"
 
-#: zusiprops.py:908
+#: zusiprops.py:913
 msgid "Visible from [m]"
 msgstr "Sichtbar ab [m]"
 
-#: zusiprops.py:913
+#: zusiprops.py:918
 msgid "Visible to [m]"
 msgstr "Sichtbar bis [m]"
 
-#: zusiprops.py:919
+#: zusiprops.py:924
 msgid "Preload from [Factor]"
 msgstr "Vorladen ab [Faktor]"
 
-#: zusiprops.py:925
+#: zusiprops.py:930
 msgid "Radius [m]"
 msgstr "Radius [m]"
 
-#: zusiprops.py:929
+#: zusiprops.py:934
 msgid "Forced brightness [0..1]"
 msgstr "Zwangshelligkeit [0..1]"
 
-#: zusiprops.py:940
+#: zusiprops.py:945
 msgid "Level of detail"
 msgstr "Level of detail"
 
-#: zusiprops.py:944
+#: zusiprops.py:949
 msgid "Tile"
 msgstr "Kachel"
 
-#: zusiprops.py:949
+#: zusiprops.py:954
 msgid "Detail tile"
 msgstr "Detailkachel"
 
-#: zusiprops.py:954
+#: zusiprops.py:959
 msgid "Billboard"
 msgstr "Billboard"
 
-#: zusiprops.py:959
+#: zusiprops.py:964
 msgid "Read only"
 msgstr "Schreibgeschützt"
 
-#: zusiprops.py:964
+#: zusiprops.py:969
 msgid "Animations"
 msgstr "Animationen"
 
-#: zusiprops.py:965 zusiprops.py:1155
+#: zusiprops.py:970 zusiprops.py:1160
 msgid "Animations contained in the linked file"
 msgstr "In der verknüpften Datei enthaltene Animationen"
 
-#: zusiprops.py:976 zusiprops.py:1073 zusiprops.py:1529
+#: zusiprops.py:981 zusiprops.py:1078 zusiprops.py:1534
 msgid "Variants"
 msgstr "Varianten"
 
-#: zusiprops.py:977
+#: zusiprops.py:982
 msgid "Variants contained in this file"
 msgstr "In dieser Datei enthaltene Varianten"
 
-#: zusiprops.py:984
+#: zusiprops.py:989
 msgid "Authors"
 msgstr "Autoren"
 
-#: zusiprops.py:985
+#: zusiprops.py:990
 msgid "Information about this file's author(s)"
 msgstr "Information über den Autor/die Autoren dieser Datei"
 
-#: zusiprops.py:992
+#: zusiprops.py:997
 msgid "Object ID"
 msgstr "Objekt-ID"
 
-#: zusiprops.py:993
+#: zusiprops.py:998
 msgid "A unique ID of this object"
 msgstr "Eine eindeutige ID dieses Objektes"
 
-#: zusiprops.py:1001
+#: zusiprops.py:1006
 msgid "The license under which this object is published"
 msgstr "Die Lizenz, unter der dieses Objekt veröffentlicht wird"
 
-#: zusiprops.py:1008
+#: zusiprops.py:1013
 msgid "A short description of this object"
 msgstr "Kurze Beschreibung dieses Objekts"
 
-#: zusiprops.py:1026
+#: zusiprops.py:1031
 msgid "Animation speed"
 msgstr "Animations-Geschwindigkeit"
 
-#: zusiprops.py:1027
+#: zusiprops.py:1032
 msgid "Speed of the animation, meaning depends on animation type"
 msgstr "Geschwindigkeit der Animation, Bedeutung abhängig vom Animationstyp"
 
-#: zusiprops.py:1033
+#: zusiprops.py:1038
 msgid "Wheel diameter"
 msgstr "Raddurchmesser"
 
-#: zusiprops.py:1034
+#: zusiprops.py:1039
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
-"Rad-Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
+"Animationen "
 
-#: zusiprops.py:1043
+#: zusiprops.py:1048
 msgid "Animation duration"
 msgstr "Animationsdauer"
 
-#: zusiprops.py:1044
+#: zusiprops.py:1049
 msgid ""
 "The animation speed converted into an animation duration (in seconds) for "
 "door animations"
@@ -1193,86 +1196,86 @@ msgstr ""
 "Die Animationsgeschwindigkeit umgerechnet als Animationsdauer (in Sekunden) "
 "für Türanimationen "
 
-#: zusiprops.py:1053
+#: zusiprops.py:1058
 msgid "Animation names"
 msgstr "Animationsnamen"
 
-#: zusiprops.py:1054
+#: zusiprops.py:1059
 msgid ""
-"Animation names this action belongs to, if animation type is "
-"'Undefined/signal controlled'"
+"Animation names this action belongs to, if animation type is 'Undefined/"
+"signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
 
-#: zusiprops.py:1061
+#: zusiprops.py:1066
 msgid "Loop"
 msgstr "Loopen"
 
-#: zusiprops.py:1062
+#: zusiprops.py:1067
 msgid "Set this animation to looping in Zusi"
 msgstr "Diese Animation in Zusi auf \"loopend\" setzen"
 
-#: zusiprops.py:1090
+#: zusiprops.py:1095
 msgid "Variants:"
 msgstr "Varianten:"
 
-#: zusiprops.py:1099 zusiprops.py:1260 zusiprops.py:1453
+#: zusiprops.py:1104 zusiprops.py:1265 zusiprops.py:1458
 msgid "Zusi specific properties"
 msgstr "Zusi-spezifische Eigenschaften"
 
-#: zusiprops.py:1146
+#: zusiprops.py:1151
 msgid "LOD {}"
 msgstr "LOD {}"
 
-#: zusiprops.py:1183
+#: zusiprops.py:1188
 msgid "Suggested files/folders to be attached here:"
 msgstr "Vorschlag für hier anzubauende Dateien/Ordner:"
 
-#: zusiprops.py:1193
+#: zusiprops.py:1198
 msgid "Add file/folder"
 msgstr "Datei/Ordner hinzufügen"
 
-#: zusiprops.py:1194
+#: zusiprops.py:1199
 msgid "Add a suggested file or folder"
 msgstr "Eine vorgeschlagene Datei/Ordner hinzufügen"
 
-#: zusiprops.py:1207
+#: zusiprops.py:1212
 msgid "Remove file/folder"
 msgstr "Datei/Ordner entfernen"
 
-#: zusiprops.py:1208
+#: zusiprops.py:1213
 msgid "Remove the selected file or folder from the list of files"
 msgstr ""
 "Die ausgewählte Datei/den ausgewählten Ordner aus der Dateiliste löschen"
 
-#: zusiprops.py:1225
+#: zusiprops.py:1230
 msgid "Add linked animation"
 msgstr "Verknüpfte Animation hinzufügen"
 
-#: zusiprops.py:1226
+#: zusiprops.py:1231
 msgid "Add info about an animation contained in the linked file"
 msgstr ""
 "Information über eine in der verknüpften Datei enthaltene Animation "
 "hinzufügen"
 
-#: zusiprops.py:1239
+#: zusiprops.py:1244
 msgid "Remove linked animation"
 msgstr "Verknüpfte Animation löschen"
 
-#: zusiprops.py:1240
+#: zusiprops.py:1245
 msgid "Remove the selected animation info from the list"
 msgstr "Die ausgewählte Animationsinformation aus der Liste löschen"
 
-#: zusiprops.py:1291
+#: zusiprops.py:1296
 msgid "Ambient color:"
 msgstr "Ambient-Farbe:"
 
-#: zusiprops.py:1298
+#: zusiprops.py:1303
 msgid "Night color:"
 msgstr "Nachtfarbe:"
 
-#: zusiprops.py:1310
+#: zusiprops.py:1315
 #, python-format
 msgid ""
 "Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components."
@@ -1280,97 +1283,97 @@ msgstr ""
 "Muss in allen Komponenten dunkler als Diffuse (%.3f, %.3f, %.3f) und Ambient "
 "sein. "
 
-#: zusiprops.py:1313
+#: zusiprops.py:1318
 msgid "Overexposure"
 msgstr "Überbelichtung"
 
-#: zusiprops.py:1317
+#: zusiprops.py:1322
 msgid "Add to diffuse"
 msgstr "Zu Diffuse addieren"
 
-#: zusiprops.py:1325
+#: zusiprops.py:1330
 msgid "Must have Diffuse - Night + Overexposure <= 1.0 in all components"
 msgstr ""
 "Diffuse - Nacht + Überbelichtung <= 1,0 muss in allen Komponenten gelten"
 
-#: zusiprops.py:1330
+#: zusiprops.py:1335
 msgid "Add to ambient"
 msgstr "Zu Ambient addieren"
 
-#: zusiprops.py:1337
+#: zusiprops.py:1342
 msgid "Must have Ambient - Night + Overexposure <= 1.0 in all components"
 msgstr ""
 "Ambient - Nacht + Überbelichtung <= 1,0 muss in allen Komponenten gelten"
 
-#: zusiprops.py:1342
+#: zusiprops.py:1347
 msgid "Edit custom texture preset"
 msgstr "Individuelle Voreinstellung bearbeiten"
 
-#: zusiprops.py:1343
+#: zusiprops.py:1348
 msgid "Edit the custom texture preset"
 msgstr "Die individuelle Textur-Voreinstellung bearbeiten"
 
-#: zusiprops.py:1361
+#: zusiprops.py:1366
 msgid "First texture stage"
 msgstr "Erste Textur"
 
-#: zusiprops.py:1362
+#: zusiprops.py:1367
 msgid "Second texture stage"
 msgstr "Zweite Textur"
 
-#: zusiprops.py:1378
+#: zusiprops.py:1383
 msgid "Third texture stage"
 msgstr "Dritter Texturierungs-Abschnitt"
 
-#: zusiprops.py:1398
+#: zusiprops.py:1403
 msgid "Toggle linked file LOD"
 msgstr "LOD für verknüpfte Datei umschalten"
 
-#: zusiprops.py:1414
+#: zusiprops.py:1419
 msgid "Toggle visibility"
 msgstr "Sichtbarkeit umschalten"
 
-#: zusiprops.py:1438
+#: zusiprops.py:1443
 msgid "Subset (for LS3 export)"
 msgstr "Subset (für LS3-Export)"
 
-#: zusiprops.py:1467
+#: zusiprops.py:1472
 msgid "Zusi file properties"
 msgstr "Zusi-Dateieigenschaften"
 
-#: zusiprops.py:1485
+#: zusiprops.py:1490
 msgid "Add variant"
 msgstr "Variante hinzufügen"
 
-#: zusiprops.py:1486
+#: zusiprops.py:1491
 msgid "Add a variant to the scene"
 msgstr "Der Szene eine Variante hinzufügen"
 
-#: zusiprops.py:1495
+#: zusiprops.py:1500
 msgid "Variant"
 msgstr "Variante"
 
-#: zusiprops.py:1501
+#: zusiprops.py:1506
 msgid "Remove variant"
 msgstr "Variante löschen"
 
-#: zusiprops.py:1502
+#: zusiprops.py:1507
 msgid "Remove the selected variant from the scene"
 msgstr "Die ausgewählte Variante aus der Szene löschen"
 
-#: zusiprops.py:1553
+#: zusiprops.py:1558
 msgid "Add animation name"
 msgstr "Animationsname hinzufügen"
 
-#: zusiprops.py:1554
+#: zusiprops.py:1559
 msgid "Add the name of an animation this action belongs to"
 msgstr "Einen Namen einer dieser Action zugeordneten Animation hinzufügen "
 
-#: zusiprops.py:1563
+#: zusiprops.py:1568
 msgid "Remove animation name"
 msgstr "Animationsname löschen"
 
-#: zusiprops.py:1564
+#: zusiprops.py:1569
 msgid ""
 "Remove the selected animation name from the list of animations this action "
 "belongs to"
@@ -1378,50 +1381,50 @@ msgstr ""
 "Den ausgewählten Animationsnamen aus der Liste der dieser Action "
 "zugeordneten Animationen löschen"
 
-#: zusiprops.py:1582
+#: zusiprops.py:1587
 msgid "Set interpolation to linear"
 msgstr "Interpolation auf Linear setzen"
 
-#: zusiprops.py:1583
+#: zusiprops.py:1588
 msgid ""
 "Set the interpolation mode of all animation curves of this action to 'Linear'"
 msgstr ""
 "Den Interpolationsmodus aller Animationskurven dieser Action auf \"Linear\" "
 "setzen"
 
-#: zusiprops.py:1595
+#: zusiprops.py:1600
 msgid "Zusi animations"
 msgstr "Zusi-Animationen"
 
-#: zusiprops.py:1622
+#: zusiprops.py:1627
 msgid "Part of the following animations:"
 msgstr "Teil folgender Animationen:"
 
-#: zusiprops.py:1637
+#: zusiprops.py:1642
 msgid "Add author"
 msgstr "Autor hinzufügen"
 
-#: zusiprops.py:1638
+#: zusiprops.py:1643
 msgid "Add an author to the scene"
 msgstr "Der Szene einen Autoren hinzufügen"
 
-#: zusiprops.py:1642
+#: zusiprops.py:1647
 msgid "Author"
 msgstr "Autor"
 
-#: zusiprops.py:1647
+#: zusiprops.py:1652
 msgid "Remove author"
 msgstr "Autor löschen"
 
-#: zusiprops.py:1648
+#: zusiprops.py:1653
 msgid "Remove the selected author from the scene"
 msgstr "Den ausgewählten Autor aus der Szene löschen"
 
-#: zusiprops.py:1667
+#: zusiprops.py:1672
 msgid "Add default author information"
 msgstr "Standard-Autorenangabe hinzufügen"
 
-#: zusiprops.py:1668
+#: zusiprops.py:1673
 msgid ""
 "Add author information entered in the Zusi File Management application "
 "(Windows) or the configuration file (other operating systems)"
@@ -1429,9 +1432,16 @@ msgstr ""
 "Die \"Autorenangabe für neu erstellte Dateien\" aus der Zusi-Dateiverwaltung "
 "(Windows) oder der Konfigurationsdatei (andere Betriebssysteme) hinzufügen"
 
-#: zusiprops.py:1680
+#: zusiprops.py:1685
 msgid "Author information"
 msgstr "Autor-Information"
+
+#~ msgid ""
+#~ "File {} contains binary mesh data (LSB format), which will not be "
+#~ "imported."
+#~ msgstr ""
+#~ "Datei {} enthält binäre Meshdaten (LSB-Format), die nicht importiert "
+#~ "werden."
 
 #~ msgid "Set wheel diameter"
 #~ msgstr "Raddurchmesser setzen"
