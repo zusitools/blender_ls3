@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="expense" Version="A.1" MinVersion="A.0">
+<AutorEintrag AutorID="9002" AutorAufwand="7" AutorBeschreibung="Test only in .expense.xml"/>
+<AutorEintrag AutorID="9000" AutorAufwand="5" AutorBeschreibung="Test 3"/>
+<AutorEintrag AutorName="Author 2" AutorLizenz="1" AutorBeschreibung="Test 2"/>
+<AutorEintrag AutorID="42" AutorName="Author 1" AutorBeschreibung="Test 1"/>
+</Info>
+<expense/>
+</Zusi>

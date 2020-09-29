@@ -109,6 +109,24 @@ class TestLs3Import(unittest.TestCase):
 
     self.assertEqual(expected, actual)
 
+  def test_import_author_info_expense_xml(self):
+    self.ls3_import("author_info_expense_xml.ls3", {"importFileMetadata": True})
+
+    expected = set([
+        # name, id, aufwand, lizenz, email, beschreibung
+        ("Author 1", 42, 8, "0", "", "Test 1"),
+        ("Author 2", 0, 4, "0", "", "Test 2"),
+        ("", 9000, 5, "0", "", "Test 3"),
+        ("", 9001, 6, "0", "", "Test only in .ls3"),
+    ])
+
+    actual = set([
+        (a.name, a.id, a.effort, a.license, a.email, a.remarks)
+        for a in bpy.data.scenes[0].zusi_authors
+    ])
+
+    self.assertEqual(expected, actual)
+
   def test_import_trailing_semicolon(self):
     """Tests trailing semicolon in "i" attributes of <Face> nodes (occur in some older files)"""
     self.ls3_import("cube_trailing_semicolon.ls3")

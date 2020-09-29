@@ -723,6 +723,30 @@ class Ls3Importer:
         except(IndexError,  RuntimeError):
             pass
 
+    def read_effort_from_expense_xml(self, root):
+        print(root)
+        for child in root.firstChild.childNodes:
+            if child.nodeName != 'Info':
+                continue
+            info_node = child
+            break
+        else:
+            return
+
+        for child in info_node.childNodes:
+            if child.nodeName != 'AutorEintrag':
+                continue
+            if child.getAttribute('AutorAufwand') == "":
+                continue
+            effort = float(child.getAttribute("AutorAufwand"))
+            if not effort:
+                continue
+            author_id = 0 if child.getAttribute('AutorID') == "" else float(child.getAttribute("AutorID"))
+
+            for a in bpy.context.scene.zusi_authors:
+                if a.id == author_id:
+                    a.effort = effort
+
     def work_list_insert(level, node):
         assert level >= self.work_list_level
         if level == self.work_list_level:
@@ -747,5 +771,12 @@ class Ls3Importer:
                     for node in self.work_list[least_key]:
                         self.visitNode(node)
                     del self.work_list[least_key]
+
+        if self.config.importFileMetadata:
+            try:
+                with open(self.config.filePath + '.expense.xml', "rb") as fp:
+                    self.read_effort_from_expense_xml(dom.parse(fp))
+            except FileNotFoundError:
+                pass
 
         return self.subsets[0] if len(self.subsets) else None

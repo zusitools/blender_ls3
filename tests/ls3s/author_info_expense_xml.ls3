@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+<Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1">
+<AutorEintrag AutorID="42" AutorName="Author 1" AutorAufwand="8" AutorBeschreibung="Test 1"/>
+<AutorEintrag AutorName="Author 2" AutorAufwand="4" AutorBeschreibung="Test 2"/>
+<AutorEintrag AutorID="9000" AutorBeschreibung="Test 3"/>
+<AutorEintrag AutorID="9001" AutorAufwand="6" AutorBeschreibung="Test only in .ls3"/>
+</Info>
+<Landschaft/>
+</Zusi>
