@@ -580,6 +580,7 @@ class EXPORT_OT_ls3_batch(bpy.types.Operator):
                     ls3_export.get_exporter_setting("maxUVDelta"),
                     ls3_export.get_exporter_setting("maxCoordDelta"),
                     ls3_export.get_exporter_setting("maxNormalAngle"),
+                    ls3_export.get_exporter_setting("writeLsb"),
                     variantIDs = setting[1],
                     selectedObjects = setting[0],
                 )
