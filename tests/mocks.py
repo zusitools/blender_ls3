@@ -49,6 +49,7 @@ class MockFS():
     self.files = {}
     self.originalOpen = open
     self.originalOsPathExists = os.path.exists
+    self.originalOsRemove = os.remove
 
   def open(self, filename, mode):
     if not os.path.isabs(filename):
@@ -70,13 +71,22 @@ class MockFS():
   def path_exists(self, path):
     return path in self.files or self.originalOsPathExists(path)
 
+  def remove(self, path):
+    try:
+      del self.files[path]
+    except KeyError:
+      raise FileNotFoundError()
+
   def start(self):
     self._open_patch = patch('builtins.open', side_effect=lambda filename, mode, encoding='UTF-8': self.open(filename, mode))
     self._open_patch.start()
     self._pathexists_patch = patch('os.path.exists', side_effect=lambda path: self.path_exists(path))
     self._pathexists_patch.start()
+    self._remove_patch = patch('os.remove', side_effect=lambda path: self.remove(path))
+    self._remove_patch.start()
 
   def stop(self):
     self._open_patch.stop()
     self._pathexists_patch.stop()
+    self._remove_patch.stop()
 

@@ -285,6 +285,46 @@ class TestLs3Export(unittest.TestCase):
         for a in root.findall("./Info/AutorEintrag")])
     self.assertEqual(set([("Author 1", "0"), ("Author 2", "5")]), licenses)
 
+  def test_author_info_expense_xml(self):
+    self.open("author_info_expense_xml")
+    root = self.export_and_parse()
+
+    for a in root.findall("./Info/AutorEintrag"):
+        self.assertNotIn("AutorAufwand", a.attrib)
+
+    expensepath = os.path.join(ZUSI3_EXPORTPATH, "export.ls3.expense.xml")
+    self.assertTrue(os.path.exists(expensepath))
+
+    expenseroot = ET.parse(expensepath).getroot()
+    eintraege = expenseroot.findall("./Info/AutorEintrag")
+    self.assertEqual(3, len(eintraege))
+
+    self.assertEqual("Author 1", eintraege[0].attrib["AutorName"])
+    self.assertEqual(42, int(eintraege[0].attrib["AutorID"]))
+    self.assertEqual("Test 1", eintraege[0].attrib["AutorBeschreibung"])
+    self.assertNotIn("AutorAufwand", eintraege[0].attrib)
+
+    self.assertEqual("Author 2", eintraege[1].attrib["AutorName"])
+    self.assertNotIn("AutorID", eintraege[1].attrib)
+    self.assertEqual("Test 2", eintraege[1].attrib["AutorBeschreibung"])
+    self.assertEqual(3, float(eintraege[1].attrib["AutorAufwand"]))
+
+    self.assertEqual("Author 3", eintraege[2].attrib["AutorName"])
+    self.assertEqual(9000, int(eintraege[2].attrib["AutorID"]))
+    self.assertEqual("Test 3", eintraege[2].attrib["AutorBeschreibung"])
+    self.assertEqual(6, float(eintraege[2].attrib["AutorAufwand"]))
+
+    node = expenseroot.find("./expense")
+    self.assertIsNotNone(node)
+    self.assertEqual(0, len(node.attrib))
+    self.assertEqual(0, len(node))
+
+    # Test that .expense.xml is deleted if no expense information is available.
+    for i in range(3):
+        bpy.context.scene.zusi_authors[i].effort = 0
+    self.export_and_parse()
+    self.assertFalse(os.path.exists(expensepath))
+
   def test_lsb_node_pos(self):
     root = self.export_and_parse({ "writeLsb": True })
 
@@ -1290,6 +1330,14 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(author))
     self.assertEqual("Fritz Fleissig", author[0].attrib["AutorName"])
     self.assertEqual("Everything", author[0].attrib["AutorBeschreibung"])
+    self.assertNotIn("AutorAufwand", author[0].attrib)
+
+    expensepath = os.path.join(ZUSI3_EXPORTPATH, "export.ls3.expense.xml")
+    expenseroot = ET.parse(expensepath).getroot()
+    author = expenseroot.findall("./Info/AutorEintrag")
+    self.assertEqual(1, len(author))
+    self.assertEqual("Fritz Fleissig", author[0].attrib["AutorName"])
+    self.assertEqual("Everything", author[0].attrib["AutorBeschreibung"])
     self.assertEqual(5, float(author[0].attrib["AutorAufwand"]))
 
     author = files["Parent"].findall("./Info/AutorEintrag")
@@ -1297,6 +1345,9 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("Fritz Fleissig", author[0].attrib["AutorName"])
     self.assertEqual("Everything", author[0].attrib["AutorBeschreibung"])
     self.assertNotIn("AutorAufwand", author[0].attrib)
+
+    expensepath = os.path.join(ZUSI3_EXPORTPATH, "export_Parent.ls3.expense.xml")
+    self.assertFalse(os.path.exists(expensepath))
 
   def test_animation_spaces_in_object_name(self):
     self.open("animation_spaces_in_object_name")

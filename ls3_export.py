@@ -1158,6 +1158,23 @@ class Ls3Exporter:
                     loop)]
 
     def write_ls3_file(self, ls3file):
+        def fill_author_info(infoNode, authors, write_effort):
+            for author in sce.zusi_authors:
+                autorEintragNode = self.create_child_element(infoNode, "AutorEintrag")
+
+                if author.id != 0:
+                    autorEintragNode.setAttribute("AutorID", str(author.id))
+                if author.name != zusiprops.ZusiAuthor.name[1]["default"]:
+                    autorEintragNode.setAttribute("AutorName", author.name)
+                if author.email != zusiprops.ZusiAuthor.email[1]["default"]:
+                    autorEintragNode.setAttribute("AutorEmail", author.email)
+                if write_effort and author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
+                    autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
+                if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
+                    autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
+                if author.license != zusiprops.ZusiAuthor.license[1]["default"]:
+                    autorEintragNode.setAttribute("AutorLizenz", author.license)
+
         sce = self.config.context.scene
 
         # Create a new XML document
@@ -1177,21 +1194,7 @@ class Ls3Exporter:
             infoNode.setAttribute("Beschreibung", sce.zusi_description)
         # TODO: Einsatz ab/bis
 
-        for author in sce.zusi_authors:
-            autorEintragNode = self.create_child_element(infoNode, "AutorEintrag")
-
-            if author.id != 0:
-                autorEintragNode.setAttribute("AutorID", str(author.id))
-            if author.name != zusiprops.ZusiAuthor.name[1]["default"]:
-                autorEintragNode.setAttribute("AutorName", author.name)
-            if author.email != zusiprops.ZusiAuthor.email[1]["default"]:
-                autorEintragNode.setAttribute("AutorEmail", author.email)
-            if ls3file.is_main_file and author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
-                autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
-            if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
-                autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
-            if author.license != zusiprops.ZusiAuthor.license[1]["default"]:
-                autorEintragNode.setAttribute("AutorLizenz", author.license)
+        fill_author_info(infoNode, sce.zusi_authors, write_effort=False)
 
         # Write the Landschaft node.
         landschaftNode = self.create_child_element(self.xmldoc.documentElement, "Landschaft")
@@ -1352,6 +1355,26 @@ class Ls3Exporter:
         with open(filepath, 'wb') as fp:
             fp.write(b"\xef\xbb\xbf")
             fp.write(self.xmldoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep))
+
+        expensepath = filepath + ".expense.xml"
+        need_expense_xml = ls3file.is_main_file and any(author.effort for author in sce.zusi_authors)
+        if need_expense_xml:
+            info('Writing .expense.xml file {}', expensepath)
+            expensedoc = dom.getDOMImplementation().createDocument(None, "Zusi", None)
+            infoNode = self.create_child_element(expensedoc.documentElement, "Info")
+            infoNode.setAttribute("DateiTyp", "expense")
+            infoNode.setAttribute("Version", "A.1")
+            infoNode.setAttribute("MinVersion", "A.0")
+            fill_author_info(infoNode, sce.zusi_authors, write_effort=True)
+            expenseNode = self.create_child_element(expensedoc.documentElement, "expense")
+            with open(expensepath, 'wb') as fp:
+                fp.write(b"\xef\xbb\xbf")
+                fp.write(expensedoc.toprettyxml(indent = "  ", encoding = "UTF-8", newl = os.linesep))
+        else:
+            try:
+                os.remove(expensepath)
+            except FileNotFoundError:
+                pass
 
         info("Bounding radius: {} m", int(ceil(ls3file.boundingr)))
 
