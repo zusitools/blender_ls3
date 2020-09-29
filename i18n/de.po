@@ -194,21 +194,22 @@ msgid "Max. normal angle"
 msgstr "Max. Winkel Normalen"
 
 #: __init__.py:386
-#, fuzzy
 msgid "Maximum angle between the normal vectors of two vertices to be merged"
 msgstr ""
-"Maximaler Winkel (in Grad) zwischen den Normalenvektoren zweier "
-"zusammenzuführender Punkte"
+"Maximaler Winkel zwischen den Normalenvektoren zweier zusammenzuführender "
+"Punkte"
 
 #: __init__.py:393
 msgid "Write mesh data to LSB file"
-msgstr ""
+msgstr "Meshdaten in LSB-Datei schreiben"
 
 #: __init__.py:394
 msgid ""
 "Write vertex and face data to a separate file for better loading performance "
 "in Zusi"
 msgstr ""
+"Vertex- und Face-Daten in eine separate Datei schreiben, um die Ladezeit in "
+"Zusi zu verbessern"
 
 #: __init__.py:399
 msgid "Variants to export"
@@ -1181,8 +1182,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1048
 msgid "Animation duration"
@@ -1202,8 +1203,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1059
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
