@@ -1,3 +1,5 @@
+import math  # for radians
+
 # To change the default settings of the exporter, rename this file to zusiconfig.py
 # Then remove the "#" in front of the setting you wish to change and change the
 # value accordingly.
@@ -8,7 +10,8 @@ default_export_settings = {
     #    "optimizeMesh" : True,
     #    "maxCoordDelta" : 0.001,
     #    "maxUVDelta" : 0.002,
-    #    "maxNormalAngle" : radians(10),
+    #    "maxNormalAngle" : math.radians(10),
+    #    "writeLsb" : True,
 }
 
 # Linux users must enter the path to the Zusi data directory here, e.g.
