@@ -105,10 +105,9 @@ class TestLs3Export(unittest.TestCase):
         raise e
 
   def clear_scene(self):
-    for ob in bpy.context.scene.collection.objects:
-      bpy.context.scene.collection.objects.unlink(ob)
+    for ob in bpy.context.scene.objects:
       bpy.data.objects.remove(ob)
-    # bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
   def export(self, exportargs={}, noclose=False):
     context = bpy.context.copy()
@@ -349,16 +348,6 @@ class TestLs3Export(unittest.TestCase):
     self.assertFalse(os.path.exists(os.path.join(ZUSI3_EXPORTPATH, "export.lsb")))
     self.assertEqual([], root.findall("./Landschaft/lsb"))
 
-  def test_export_visible_layers(self):
-    self.open("export_visible_layers")
-    self.assertEqual([True, False, True] + [False] * 17, list(bpy.context.scene.layers))
-
-    root = self.export_and_parse({"exportSelected" : "0"})  # Export all objects
-    self.assertEqual(3, len(root.findall("./Landschaft/SubSet")))
-
-    root = self.export_and_parse({"exportSelected" : "4"})  # Export only visible layers
-    self.assertEqual(2, len(root.findall("./Landschaft/SubSet")))
-
   # ---
   # Mesh and texture export tests
   # ---
@@ -375,7 +364,7 @@ class TestLs3Export(unittest.TestCase):
     vertex_nodes = [n for n in landschaft_node[0] if n.tag == "Vertex"]
     face_nodes = [n for n in landschaft_node[0] if n.tag == "Face"]
 
-    self.assertEqual(24, len(vertex_nodes))
+    self.assertEqual(36, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
   def test_export_edit_mode(self):
@@ -385,7 +374,7 @@ class TestLs3Export(unittest.TestCase):
     root = self.export_and_parse()
 
     p_nodes = root.findall("./Landschaft/SubSet/Vertex/p")
-    self.assertEqual(24, len(p_nodes))
+    self.assertEqual(36, len(p_nodes))
     for v in p_nodes:
         self.assertAlmostEqual(1, abs(float(v.attrib["X"])), places=5)
         self.assertAlmostEqual(1, abs(float(v.attrib["Y"])), places=5)
@@ -411,7 +400,7 @@ class TestLs3Export(unittest.TestCase):
     self.open("scale")
     root = self.export_and_parse()
     vertex_pos_nodes = root.findall("./Landschaft/SubSet/Vertex/p")
-    self.assertEqual(24, len(vertex_pos_nodes))
+    self.assertEqual(36, len(vertex_pos_nodes))
     for v in vertex_pos_nodes:
         self.assertAlmostEqual(6, abs(float(v.attrib["X"])) + abs(float(v.attrib["Y"])) + abs(float(v.attrib["Z"])), places = 5)
 
@@ -539,7 +528,7 @@ class TestLs3Export(unittest.TestCase):
     root = self.export_and_parse()
 
     vertex_nodes = root.findall("./Landschaft/SubSet/Vertex")
-    self.assertEqual(24, len(vertex_nodes))
+    self.assertEqual(36, len(vertex_nodes))
 
     for vertex_node in vertex_nodes:
       u1 = float(vertex_node.attrib["U"])
@@ -552,6 +541,7 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
+  @unittest.skip("not implemented yet")
   def test_meters_per_texture(self):
     self.open("meters_per_texture")
     root = self.export_and_parse()
@@ -661,6 +651,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("FFFFFFFF", subsets[3].attrib["Ca"])
     self.assertEqual("00808080", subsets[3].attrib["Ce"])
 
+  @unittest.skip("not implemented yet")
   def test_zbias(self):
     self.open("zbias")
     mainfile = self.export_and_parse()
@@ -779,7 +770,7 @@ class TestLs3Export(unittest.TestCase):
     })
 
     vertices = root.findall("./Landschaft/SubSet/Vertex")
-    self.assertEqual(24, len(vertices))
+    self.assertEqual(36, len(vertices))
 
     # Optimized
     root = self.export_and_parse({
@@ -1064,7 +1055,7 @@ class TestLs3Export(unittest.TestCase):
     # the translation is applied in the parent file's Verknuepfte node) and
     # Z coordinates between -0.1 and 0.1 (the object's scale is applied!)
     vertices = files["RadRotation"].findall("./Landschaft/SubSet/Vertex/p")
-    self.assertEqual(4, len(vertices))
+    self.assertEqual(6, len(vertices))
     for i in range(0, len(vertices)):
       self.assertAlmostEqual(0.0, float(vertices[i].attrib["Y"]),
         places = 5, msg = "Y coordinate of vertex " + str(i))
@@ -1170,16 +1161,16 @@ class TestLs3Export(unittest.TestCase):
     nonanimated_subset = subsets[(animated_subset_index + 1) % 2]
 
     vertices = animated_subset.findall("./Vertex/p")
-    self.assertEqual(24, len(vertices))
-    for i in range(0, 24):
-      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Y"])), places = 5)
-      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Z"])), places = 5)
+    self.assertEqual(36, len(vertices))
+    for vertex in vertices:
+      self.assertAlmostEqual(0.5, abs(float(vertex.attrib["Y"])), places = 5)
+      self.assertAlmostEqual(0.5, abs(float(vertex.attrib["Z"])), places = 5)
 
     vertices = nonanimated_subset.findall("./Vertex/p")
-    self.assertEqual(24, len(vertices))
-    for i in range(0, 24):
-      self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Y"])), places = 5)
-      self.assertAlmostEqual(1.0, abs(float(vertices[i].attrib["Z"])), places = 5)
+    self.assertEqual(36, len(vertices))
+    for vertex in vertices:
+      self.assertAlmostEqual(1.0, abs(float(vertex.attrib["Y"])), places = 5)
+      self.assertAlmostEqual(1.0, abs(float(vertex.attrib["Z"])), places = 5)
 
   def test_animation_animated_child_of_scaled_object_without_animation(self):
     self.open("animation_animated_child_of_scaled_object")
@@ -1188,20 +1179,20 @@ class TestLs3Export(unittest.TestCase):
     subsets = mainfile.findall("./Landschaft/SubSet")
 
     vertices = subsets[0].findall("./Vertex/p")
-    self.assertEqual(24, len(vertices))
-    for i in range(0, 24):
+    self.assertEqual(36, len(vertices))
+    for vertex in vertices:
       # X coordinate between 2.5 and 3.5.
-      self.assertLess(abs(float(vertices[i].attrib["X"]) - 3), 1.01)
-      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Y"])), places = 5)
-      self.assertAlmostEqual(0.5, abs(float(vertices[i].attrib["Z"])), places = 5)
+      self.assertLess(abs(float(vertex.attrib["X"]) - 3), 1.01)
+      self.assertAlmostEqual(0.5, abs(float(vertex.attrib["Y"])), places = 5)
+      self.assertAlmostEqual(0.5, abs(float(vertex.attrib["Z"])), places = 5)
 
     vertices = subsets[1].findall("./Vertex/p")
-    self.assertEqual(24, len(vertices))
-    for i in range(0, 24):
+    self.assertEqual(36, len(vertices))
+    for vertex in vertices:
       # X coordinate between 5.75 and 6.25
-      self.assertLess(abs(float(vertices[i].attrib["X"]) - 6), 0.51)
-      self.assertAlmostEqual(0.25, abs(float(vertices[i].attrib["Y"])), places = 5)
-      self.assertAlmostEqual(0.25, abs(float(vertices[i].attrib["Z"])), places = 5)
+      self.assertLess(abs(float(vertex.attrib["X"]) - 6), 0.51)
+      self.assertAlmostEqual(0.25, abs(float(vertex.attrib["Y"])), places = 5)
+      self.assertAlmostEqual(0.25, abs(float(vertex.attrib["Z"])), places = 5)
 
   # Tests that keyframes that lie outside the start...end frame range defined in the scene
   # are exported
@@ -1332,7 +1323,7 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(1, len(subsets))
 
     vertex_nodes = [n for n in subsets[0] if n.tag == "Vertex"]
-    self.assertEqual(48, len(vertex_nodes))
+    self.assertEqual(72, len(vertex_nodes))
 
     vertices = set()
     for vertex_node in vertex_nodes:
