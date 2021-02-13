@@ -460,6 +460,29 @@ class TestLs3Export(unittest.TestCase):
         self.assertAlmostEqual(normal[1], float(n.attrib["Y"]), 5, "subset " + str(idx))
         self.assertAlmostEqual(normal[2], float(n.attrib["Z"]), 5, "subset " + str(idx))
 
+  def test_texture_export(self):
+    self.open("texture_blender28")
+    root = self.export_and_parse()
+
+    subset_nodes = root.findall("./Landschaft/SubSet")
+    self.assertEqual(1, len(subset_nodes))
+    subset_node = subset_nodes[0]
+
+    textur_nodes = subset_node.findall("./Textur")
+    self.assertEqual(1, len(textur_nodes))
+
+    datei_node = textur_nodes[0].find("./Datei")
+    self.assertEqual("texture.dds", datei_node.attrib["Dateiname"][-len("texture.dds"):])
+
+    # Check for correct UV coordinates.
+    vertex_nodes = [n for n in subset_node if n.tag == "Vertex"]
+    self.assertEqual(24, len(vertex_nodes))
+    for vertex_node in vertex_nodes:
+      self.assertIn(round(float(vertex_node.attrib["U"]), 2), [.25, .75])
+      self.assertIn(round(float(vertex_node.attrib["V"]), 2), [.25, .75])
+      self.assertAlmostEqual(0, float(vertex_node.attrib["U2"]), 5)
+      self.assertAlmostEqual(0, float(vertex_node.attrib["V2"]), 5)
+
   def test_multitexturing(self):
     self.open("multitexturing")
     self.assert_exported_cube_multitexturing()
