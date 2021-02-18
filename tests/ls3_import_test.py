@@ -29,6 +29,12 @@ class TestLs3Import(unittest.TestCase):
     shutil.rmtree(cls._tempdir)
 
   def setUp(self):
+    # Check that we are testing the right file
+    io_scene_ls3_module_file = sys.modules["io_scene_ls3"].__file__
+    expected_module_file = os.path.join(os.path.dirname(sys.modules[self.__module__].__file__), os.pardir, '__init__.py')
+    assert os.path.samefile(io_scene_ls3_module_file, expected_module_file), \
+        "Expected to test {}, but got {}".format(expected_module_file, io_scene_ls3_module_file)
+
     sys.modules["io_scene_ls3.zusiconfig"].datapath = ZUSI3_DATAPATH
     sys.modules["io_scene_ls3.zusiconfig"].datapath_official = ZUSI3_DATAPATH_OFFICIAL
     sys.modules["io_scene_ls3.zusiconfig"].z2datapath = ZUSI2_DATAPATH

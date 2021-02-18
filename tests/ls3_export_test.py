@@ -61,6 +61,12 @@ def mockEnumValueImpl(key, index):
 
 class TestLs3Export(unittest.TestCase):
   def setUp(self):
+    # Check that we are testing the right file
+    io_scene_ls3_module_file = sys.modules["io_scene_ls3"].__file__
+    expected_module_file = os.path.join(os.path.dirname(sys.modules[self.__module__].__file__), os.pardir, '__init__.py')
+    assert os.path.samefile(io_scene_ls3_module_file, expected_module_file), \
+        "Expected to test {}, but got {}".format(expected_module_file, io_scene_ls3_module_file)
+
     bpy.ops.wm.read_homefile()
     self._mock_fs = MockFS()
     self._mock_fs.start()
