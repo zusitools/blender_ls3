@@ -1,8 +1,8 @@
 #!/bin/bash
 
 branch=`git rev-parse --abbrev-ref HEAD`
-if [ "$branch" != "master" ]; then
-  echo "Not on master branch, exiting"
+if [ "$branch" != "blender-2.8" ]; then
+  echo "Not on blender-2.8 branch, exiting"
   exit
 fi
 
@@ -19,8 +19,8 @@ if [ "$1" != "upload" ]; then
   exit
 fi
 
-if [ `git rev-parse master` != `git rev-parse origin/master` ]; then
-  echo "Branch master is behind origin/master, please push first. Exiting"
+if [ `git rev-parse blender-2.8` != `git rev-parse origin/blender-2.8` ]; then
+  echo "Branch blender-2.8 is behind origin/blender-2.8, please push first. Exiting"
   exit
 fi
 
@@ -36,7 +36,7 @@ read descr
 echo -n "GitHub personal access token: "
 read token
 
-curl -H "Authorization: token $token" https://api.github.com/repos/zusitools/blender_ls3/releases -d "{\"tag_name\":\"$tag_name\",\"name\":\"$version_name\",\"body\":\"$descr\"}"
+curl -H "Authorization: token $token" https://api.github.com/repos/zusitools/blender_ls3/releases -d "{\"target_commitish\":\"blender-2.8\",\"tag_name\":\"$tag_name\",\"name\":\"$version_name\",\"body\":\"$descr\"}"
 
 echo -n "Release ID: "
 read release_id
