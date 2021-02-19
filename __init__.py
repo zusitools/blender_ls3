@@ -678,7 +678,7 @@ def menu_func_export(self, context):
 def menu_func_show_variants(self, context):
     self.layout.operator(VIEW_OT_show_variants.bl_idname, text=_("Show variants ..."))
 
-classes = {
+classes = (
 #    ZusiFileVariantExportSetting,
 #    ZusiFileVariantExportSettingList,
 #    ZusiFileVariantVisibilitySetting,
@@ -686,11 +686,11 @@ classes = {
 #    ZusiLodImportSettingList,
     IMPORT_OT_ls,
     IMPORT_OT_ls3,
-#    OBJECT_OT_embed_linked,
+    OBJECT_OT_embed_linked,
     EXPORT_OT_ls3,
     EXPORT_OT_ls3_batch,
     VIEW_OT_show_variants,
-}
+)
 
 generated_register, generated_unregister = bpy.utils.register_classes_factory(classes)
  

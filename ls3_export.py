@@ -31,6 +31,7 @@ except:
     pass
 from math import floor, ceil, sqrt, radians
 from mathutils import *
+from bpy_extras import node_shader_utils
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -664,29 +665,7 @@ class Ls3Exporter:
         # for texture i in the subset shall be taken. Can be None.
         uvlayers = {}
         for material_index, subset in subsets.items():
-            material = subset.identifier.material
-            active_texture_slots = self.get_active_texture_slots(material)
-            active_uvmaps = [slot.uv_layer for slot in active_texture_slots]
-            active_uvmaps_count = len(active_uvmaps)
-
-            uvlayers[material_index] = [None, None]
-            for texindex in range(0, 2):
-                if texindex >= active_uvmaps_count:
-                    break
-
-                # Find UV layer with the same name as the UV map.
-                # Use active UV layer if the current UV map has no name (which is the default)
-                if active_uvmaps[texindex] != "":
-                    found = False
-                    for uvlayer in mesh.uv_layers:
-                        if uvlayer.name == active_uvmaps[texindex]:
-                            uvlayers[material_index][texindex] = uvlayer
-                            found = True
-                            break
-                    if not found:
-                        warn("UV layer {} of texture slot {} not found", active_uvmaps[texindex], active_texture_slots[texindex].name)
-                else:
-                    uvlayers[material_index][texindex] = mesh.uv_layers.active
+            uvlayers[material_index] = [mesh.uv_layers.active, None]
 
         # Write vertices, faces and UV coordinates.
         # Access faces via the loop_triangles API which automatically triangulates the mesh.
@@ -694,25 +673,18 @@ class Ls3Exporter:
         # have to be exported as two Zusi vertices. Therefore, all vertices are exported once per face,
         # and mesh optimization will later re-merge vertices that have the same location, normal, and
         # UV coordinates.
-        for face_index, face in enumerate(mesh.loop_triangles):
+        for face in mesh.loop_triangles:
             if face.material_index not in subsets:
                 continue
             subset = subsets[face.material_index]
             maxvertexindex = len(subset.vertexdata)
 
-            # Write the first triangle of the face
+            # Write the triangle.
             # Optionally reverse order of faces to flip normals
             if must_flip_normals:
                 subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
             else:
                 subset.facedata.extend((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
-
-            # If the face is a quad, write the second triangle too.
-            if len(face.vertices) == 4:
-                if must_flip_normals:
-                    subset.facedata.extend((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
-                else:
-                    subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
 
             # Compile a list of all vertices to mark as "don't merge".
             # Those are the vertices that form a sharp edge in the current face.
@@ -720,21 +692,20 @@ class Ls3Exporter:
             face_no_merge_vertices = [pair[0] for pair in face_no_merge_vertex_pairs] + [pair[1] for pair in face_no_merge_vertex_pairs]
 
             # Write vertex coordinates (location, normal, and UV coordinates)
-            for vertex_no, vertex_index in enumerate(face.vertices):
-                v = mesh.vertices[vertex_index]
+            for i, loop_index in enumerate(face.loops):  # i in [0..2]
+                loop = mesh.loops[loop_index]
+                v = mesh.vertices[loop.vertex_index]
                 face_uv_layers = uvlayers[face.material_index]
 
                 # Retrieve UV data. The loop over range(0, min(active_uvmaps_count, 2)) is
                 # unrolled for performance reasons.
                 if face_uv_layers[0] is not None:
-                    uv_raw = face_uv_layers[0].data[face_index].uv_raw
-                    uvdata1 = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
+                    uvdata1 = face_uv_layers[0].data[loop_index].uv
                 else:
                     uvdata1 = (0.0, 1.0)
 
                 if face_uv_layers[1] is not None:
-                    uv_raw = face_uv_layers[1].data[face_index].uv_raw
-                    uvdata2 = (uv_raw[2 * vertex_no], uv_raw[2 * vertex_no + 1])
+                    uvdata2 = face_uv_layers[1].data[loop_index].uv_raw
                 else:
                     uvdata2 = (0.0, 1.0)
 
@@ -744,8 +715,7 @@ class Ls3Exporter:
                     normal = (0, 0, 1)
                 else:
                     if use_auto_smooth:
-                        split_normal = face.split_normals[vertex_no]
-                        normal = Vector((split_normal[1], -split_normal[0], -split_normal[2]))
+                        normal = Vector((loop.normal[1], -loop.normal[0], -loop.normal[2]))
                     elif face.use_smooth:
                         normal = Vector((v.normal[1], -v.normal[0], -v.normal[2]))
                         for g in v.groups:
@@ -777,8 +747,8 @@ class Ls3Exporter:
                     normal[0], normal[1], normal[2],
                     uvdata1[0], 1 - uvdata1[1],
                     uvdata2[0], 1 - uvdata2[1],
-                    maxvertexindex + vertex_no,
-                    vertex_index in face_no_merge_vertices
+                    maxvertexindex + i,
+                    loop.vertex_index in face_no_merge_vertices
                 ))
 
         # Remove the generated preview mesh -- seems not necessary any more ("is outside of main library and cannot be removed from it")
@@ -862,15 +832,13 @@ class Ls3Exporter:
                 texflagsNode.setAttribute("ALPHAARG0", texstage.D3DTSS_ALPHAARG0)
                 texflagsNode.setAttribute("RESULTARG", texstage.D3DTSS_RESULTARG)
 
-        # Write textures
-        for idx, texture_slot in enumerate(self.get_active_texture_slots(material)):
-            if idx >= 2:
-                break
+        # Write texture
+        wrapper = node_shader_utils.PrincipledBSDFWrapper(material)
+        texture = wrapper.base_color_texture
+        if texture and texture.image:
             texture_node = self.create_child_element(subsetNode, "Textur")
-            if texture_slot.texture.zusi_meters_per_texture != 0:
-              subsetNode.setAttribute("MeterProTex" if idx == 0 else "MeterProTex2", str(texture_slot.texture.zusi_meters_per_texture))
             datei_node = self.create_child_element(texture_node, "Datei")
-            datei_node.setAttribute("Dateiname", self.relpath(texture_slot.texture.image.filepath))
+            datei_node.setAttribute("Dateiname", self.relpath(texture.image.filepath))
 
     def write_ani_keyframes(self, keyframes, animation_node):
         """Writes a list of keyframes into an animation node (<MeshAnimation> or <VerknAnimation>)"""

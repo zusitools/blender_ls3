@@ -1696,7 +1696,7 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
             layout.prop(entry, "license")
             layout.prop(entry, "remarks")
 
-classes = {
+classes = (
     ZUSI_UL_ZusiLinkAnimationList,
     ZUSI_UL_ZusiFileVariantList,
     ZUSI_UL_ZusiFileVariantVisibilityList,
@@ -1728,6 +1728,6 @@ classes = {
     ZUSI_AUTHORS_OT_del,
     ZUSI_AUTHORS_OT_add_default,
     SCENE_PT_zusi_authors,
-}
+)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
