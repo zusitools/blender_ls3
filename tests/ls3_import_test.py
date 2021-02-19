@@ -156,6 +156,33 @@ class TestLs3Import(unittest.TestCase):
     ob = bpy.data.objects["doublesided.ls3.0"]
     self.assertEqual(4, len(ob.data.polygons))
 
+  def test_multitexture_import(self):
+    self.ls3_import("multitexture.ls3")
+    ob = bpy.data.objects["multitexture.ls3.0"]
+
+    texslots = ob.data.materials[0].texture_slots
+
+    self.assertEqual(2, len(ob.data.uv_layers))
+    self.assertNotEqual(None, texslots[0])
+    self.assertNotEqual(None, texslots[1])
+
+    self.assertEqual('UV', texslots[0].texture_coords)
+    self.assertEqual("UVLayer.1", texslots[0].uv_layer)
+
+    self.assertEqual('UV', texslots[1].texture_coords)
+    self.assertEqual("UVLayer.2", texslots[1].uv_layer)
+
+    self.assertEqual("UVLayer.1", ob.data.uv_layers[0].name)
+    has_uv_import = os.path.exists(os.path.join(os.path.dirname(sys.modules[self.__module__].__file__), os.pardir, 'uv_import.py'))
+    for idx, uv in enumerate(ob.data.uv_layers[0].data):
+        self.assertAlmostEqual(0.0, uv.uv[0], 5, "u coordinate of loop %d" % idx)
+        self.assertAlmostEqual(1.0 if has_uv_import else 0.0, uv.uv[1], 5, "v coordinate of loop %d" % idx)
+
+    self.assertEqual("UVLayer.2", ob.data.uv_layers[1].name)
+    for idx, uv in enumerate(ob.data.uv_layers[1].data):
+        self.assertAlmostEqual(1.0 if has_uv_import else 0.0, uv.uv[0], 5, "u coordinate of loop %d" % idx)
+        self.assertAlmostEqual(0.0, uv.uv[1], 5, "v coordinate of loop %d" % idx)
+
   def test_import_meters_per_tex(self):
     self.ls3_import("meters_per_tex.ls3")
 
@@ -313,6 +340,13 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual(Vector((20.0, -10.0, 30.0)), ob1.location)
 
     self.assertEqual(ob1, a1.parent)
+
+  def test_two_textures(self):
+    self.ls3_import("two_textures.ls3")
+    ob = bpy.data.objects["two_textures.ls3.0"]
+    mat = ob.data.materials[0]
+
+    self.assertEqual(mat.texture_slots[0].texture.image, mat.texture_slots[1].texture.image)
 
   def test_import_animated_subset(self):
     self.ls3_import("animated_subset.ls3")

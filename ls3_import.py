@@ -134,6 +134,12 @@ class Ls3Importer:
     def __init__(self, config):
         self.config = config
 
+        try:
+            from . import uv_import
+            self.import_uv_coordinates = uv_import.import_uv_coordinates
+        except ImportError:
+            self.import_uv_coordinates = None
+
         self.lsb_reader = None  # created on demand
 
         # Imported subsets (= Blender objects) indexed by their subset number.
@@ -338,6 +344,28 @@ class Ls3Importer:
                 v = self.currentvertices[f[i]]
                 normals += [v[4], -v[3], v[5]]
         self.currentmesh.loops.foreach_set("normal", normals)
+
+        # Set UV coordinates
+        # Additionally, if we found a texture image in one of the child nodes, assign it to all faces
+        texture_slots = self.currentmesh.materials[0].texture_slots
+        for idx in range(0, min(2, len(texture_slots))):
+            img = texture_slots[idx].texture.image if texture_slots[idx] else None
+            uvlayer_name = "UVLayer." + str(idx+1)
+            uv_texture = self.currentmesh.uv_textures.new(name = uvlayer_name)
+            uv_layer = self.currentmesh.uv_layers[idx]
+
+            if texture_slots[idx]:
+                texture_slots[idx].texture_coords = 'UV'
+                texture_slots[idx].uv_layer = uv_layer.name
+
+            for faceidx in range(len(self.currentfaces)):
+                uv_texture.data[faceidx].image = img
+
+            if self.import_uv_coordinates:
+                self.import_uv_coordinates(idx, uv_layer, self.currentvertices, self.currentfaces)
+            else:
+                for data in uv_layer.data:
+                    data.uv = [0, 0]
 
         # Set custom normals
         self.currentmesh.validate(clean_customdata = False) # False in order to preserve normals stored in loops
