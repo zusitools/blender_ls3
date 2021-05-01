@@ -639,8 +639,10 @@ class Ls3Exporter:
 
         # Apply modifiers and transform the mesh so that the vertex coordinates
         # are global coordinates. Also recalculate the vertex normals.
+        # preserve_all_data_layers=True: https://blender.stackexchange.com/a/170069
         depsgraph = self.config.context.evaluated_depsgraph_get()
-        mesh = ob.evaluated_get(depsgraph).to_mesh() # , settings="PREVIEW")
+        mesh = ob.evaluated_get(depsgraph).to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph) # , settings="PREVIEW")
+
         mesh.transform(self.transformation_relative(ob, self.get_animated_ob(ob), ls3file.root_obj))
         mesh.calc_normals()
         use_auto_smooth = mesh.use_auto_smooth
