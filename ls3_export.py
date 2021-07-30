@@ -571,11 +571,11 @@ class Ls3Exporter:
                 ankerpunktNode = self.create_element("Ankerpunkt")
                 anchor_points[ob.name] = ankerpunktNode
 
-                if ob.zusi_anchor_point_category != bpy.types.Object.zusi_anchor_point_category[1]["default"]:
+                if ob.zusi_anchor_point_category != "0":
                     ankerpunktNode.setAttribute("AnkerKat", ob.zusi_anchor_point_category)
-                if ob.zusi_anchor_point_type != bpy.types.Object.zusi_anchor_point_type[1]["default"]:
+                if ob.zusi_anchor_point_type != "0":
                     ankerpunktNode.setAttribute("AnkerTyp", ob.zusi_anchor_point_type)
-                if ob.zusi_anchor_point_description != bpy.types.Object.zusi_anchor_point_description[1]["default"]:
+                if ob.zusi_anchor_point_description != "":
                     ankerpunktNode.setAttribute("Beschreibung", ob.zusi_anchor_point_description)
 
                 translation, rotation_quaternion, scale = ob.matrix_world.decompose()
@@ -601,9 +601,9 @@ class Ls3Exporter:
 
         self.write_subset_material(subsetNode, material)
         if material is not None:
-            if material.zusi_landscape_type != bpy.types.Material.zusi_landscape_type[1]["default"]:
+            if material.zusi_landscape_type != "0":
                 subsetNode.setAttribute("TypLs3", material.zusi_landscape_type)
-            if material.zusi_gf_type != bpy.types.Material.zusi_gf_type[1]["default"]:
+            if material.zusi_gf_type != "0":
                 subsetNode.setAttribute("TypGF", material.zusi_gf_type)
             if material.zusi_force_brightness:
                 subsetNode.setAttribute("Zwangshelligkeit", str(material.zusi_force_brightness))
@@ -1117,15 +1117,15 @@ class Ls3Exporter:
 
                 if author.id != 0:
                     autorEintragNode.setAttribute("AutorID", str(author.id))
-                if author.name != zusiprops.ZusiAuthor.__annotations__['name'][1]["default"]:
+                if author.name != "":
                     autorEintragNode.setAttribute("AutorName", author.name)
-                if author.email != zusiprops.ZusiAuthor.__annotations__['email'][1]["default"]:
+                if author.email != "":
                     autorEintragNode.setAttribute("AutorEmail", author.email)
-                if write_effort and author.effort != zusiprops.ZusiAuthor.__annotations__['effort'][1]["default"]:
+                if write_effort and author.effort != 0:
                     autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
-                if author.remarks != zusiprops.ZusiAuthor.__annotations__['remarks'][1]["default"]:
+                if author.remarks != "":
                     autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
-                if author.license != zusiprops.ZusiAuthor.__annotations__['license'][1]["default"]:
+                if author.license != "":
                     autorEintragNode.setAttribute("AutorLizenz", author.license)
 
         sce = self.config.context.scene
@@ -1139,11 +1139,11 @@ class Ls3Exporter:
         infoNode.setAttribute("Version", "A.1")
         infoNode.setAttribute("MinVersion", "A.1")
 
-        if sce.zusi_object_id != bpy.types.Scene.zusi_object_id[1]["default"]:
+        if sce.zusi_object_id != 0:
             infoNode.setAttribute("ObjektID", str(sce.zusi_object_id))
-        if sce.zusi_license != bpy.types.Scene.zusi_license[1]["default"]:
+        if sce.zusi_license != 0:
             infoNode.setAttribute("Lizenz", sce.zusi_license) # Deprecated
-        if sce.zusi_description != bpy.types.Scene.zusi_description[1]["default"]:
+        if sce.zusi_description != "":
             infoNode.setAttribute("Beschreibung", sce.zusi_description)
         # TODO: Einsatz ab/bis
 
