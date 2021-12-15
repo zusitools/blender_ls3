@@ -338,8 +338,8 @@ class TestLs3Export(unittest.TestCase):
     lsb_node = root.find("./Landschaft/lsb")
     subset_node = root.find("./Landschaft/SubSet")
 
-    self.assertEqual(landschaft_node.getchildren().index(subset_node) - 1,
-        landschaft_node.getchildren().index(lsb_node))
+    children = list(landschaft_node)
+    self.assertEqual(children.index(subset_node) - 1, children.index(lsb_node))
 
   def test_no_lsb_on_empty(self):
     self.clear_scene()
