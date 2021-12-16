@@ -181,6 +181,7 @@ class IMPORT_OT_ls(bpy.types.Operator, ImportHelper):
     )
 
     def draw(self, context):
+        self.layout.use_property_split = True
         self.layout.prop(self, "loadLinkedMode")
 
     def execute(self, context):
@@ -235,6 +236,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
     def draw(self, context):
         layout = self.layout
 
+        layout.use_property_split = True
         layout.prop(self, "importFileMetadata")
         layout.prop(self, "loadLinkedMode")
 
@@ -405,6 +407,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         files = self.get_exporter(context).get_files()
 
         if not context.scene.zusi_authors or len(context.scene.zusi_authors) == 0:
@@ -630,6 +633,7 @@ class VIEW_OT_show_variants(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
+        layout.use_property_split = True
         layout.label(text=_("Variants (leave empty to show all)"))
 
         if len(context.scene.zusi_variants) > 0:

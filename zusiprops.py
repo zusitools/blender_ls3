@@ -1105,6 +1105,7 @@ class OBJECT_PT_data_zusi_properties(bpy.types.Panel):
         return context.mesh
 
     def draw(self, context):
+        self.layout.use_property_split = True
         if context.mesh:
             self.layout.prop(context.mesh, "zusi_is_rail")
 
@@ -1125,6 +1126,7 @@ class OBJECT_PT_data_linked_file(bpy.types.Panel):
         ob = context.object
         layout = self.layout
 
+        layout.use_property_split = True
         layout.active = ob.zusi_is_linked_file
 
         op = layout.operator("zusi_linked_file.embed")
@@ -1173,6 +1175,7 @@ class OBJECT_PT_data_anchor_point(bpy.types.Panel):
         ob = context.object
         layout = self.layout
 
+        layout.use_property_split = True
         layout.active = ob.zusi_is_anchor_point
 
         layout.prop(ob, "zusi_anchor_point_category")
@@ -1267,6 +1270,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
 
         mat = context.material
 
@@ -1352,6 +1356,7 @@ class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
 
         mat = context.object.data.materials[context.object.active_material_index]
 
@@ -1444,6 +1449,7 @@ class OBJECT_PT_subset_zusi_properties(bpy.types.Panel):
         return context.object is not None and (context.object.type == 'MESH' or context.object.type == 'EMPTY' or context.object.type == 'CURVE')
 
     def draw(self, context):
+        self.layout.use_property_split = True
         if context.object.type == 'MESH':
             self.layout.prop(context.object, "zusi_subset_name")
         draw_variants_visibility_box(context, self.layout, context.object)
@@ -1459,6 +1465,7 @@ class TEXTURE_PT_zusi_properties(bpy.types.Panel):
         return context.texture is not None
 
     def draw(self, context):
+        self.layout.use_property_split = True
         self.layout.prop(context.texture, "zusi_meters_per_texture")
         draw_variants_visibility_box(context, self.layout, context.texture, object_type = "Texture")
 
@@ -1472,6 +1479,7 @@ class SCENE_PT_zusi_properties(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
+        layout.use_property_split = True
         layout.prop(sce, "zusi_object_id")
         layout.prop(sce, "zusi_description")
 
@@ -1534,6 +1542,7 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
+        layout.use_property_split = True
         # Show list of variants with add/remove button
         template_list(layout.row(), "ZUSI_UL_ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index",
                 "zusi_variants.add", "zusi_variants.remove", rows = 3)
@@ -1595,6 +1604,7 @@ class SCENE_PT_zusi_animations(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
+        layout.use_property_split = True
         template_list(layout.row(), "UI_UL_list", "zusi_animation_list", bpy.data, "actions", context.scene, "zusi_animations_index", rows = 3)
 
         if len(bpy.data.actions) > 0 and len(bpy.data.actions) > context.scene.zusi_animations_index:
@@ -1680,6 +1690,7 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
         layout = self.layout
         sce = context.scene
 
+        layout.use_property_split = True
         layout.operator("zusi_authors.add_default")
 
         # Show list of authors with add/remove buttons.
