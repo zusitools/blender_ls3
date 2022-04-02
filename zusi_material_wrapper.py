@@ -95,7 +95,7 @@ class PrincipledBSDFWrapper:
         return None
 
     def get_texture(self, node_input, index):
-        logger.debug(f"get_texture {node_input}")
+        logger.debug(f"get_texture({index}) {node_input}")
         if not node_input.is_linked:
             return None
         node2 = node_input.links[0].from_node
@@ -104,8 +104,8 @@ class PrincipledBSDFWrapper:
                 return self.get_texture(node2.inputs["Color1"], 0)
             elif index == 1:
                 return self.get_texture(node2.inputs["Color2"], 0)
-        elif node2.bl_idname == "ShaderNodeTexImage":
-            logger.debug(f"get_texture: found image {node2.image} at {node2}")
+        elif node2.bl_idname == "ShaderNodeTexImage" and index == 0:
+            logger.debug(f"get_texture({index}): found image {node2.image} at {node2}")
             return node2.image
         return None
 

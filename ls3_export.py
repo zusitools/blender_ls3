@@ -683,10 +683,14 @@ class Ls3Exporter:
                 mat = ob.material_slots[material_index].material
                 wrapper = PrincipledBSDFWrapper(mat)
                 uvlayers[material_index] = [
-                    mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None else mesh.uv_layers.active,
-                    mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None else mesh.uv_layers.active]
+                    None if wrapper.base_texture_image is None
+                        else mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None
+                        else mesh.uv_layers.active,
+                    None if wrapper.secondary_texture_image is None
+                        else mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None
+                        else mesh.uv_layers.active]
             else:
-                uvlayers[material_index] = [mesh.uv_layers.active, mesh.uv_layers.active]
+                uvlayers[material_index] = [None, None]
 
         # Write vertices, faces and UV coordinates.
         # Access faces via the loop_triangles API which automatically triangulates the mesh.

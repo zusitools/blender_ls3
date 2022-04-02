@@ -367,6 +367,12 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(36, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
+    for vertex_node in vertex_nodes:
+      self.assertAlmostEqual(0, float(vertex_node.attrib["U"]), 5)
+      self.assertAlmostEqual(0, float(vertex_node.attrib["V"]), 5)
+      self.assertAlmostEqual(0, float(vertex_node.attrib["U2"]), 5)
+      self.assertAlmostEqual(0, float(vertex_node.attrib["V2"]), 5)
+
   def test_export_edit_mode(self):
     self.open("edit_mode")
     bpy.ops.object.editmode_toggle()
