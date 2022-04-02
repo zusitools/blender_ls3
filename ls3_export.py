@@ -602,6 +602,8 @@ class Ls3Exporter:
                 subsetNode.setAttribute("TypLs3", material.zusi_landscape_type)
             if material.zusi_gf_type != "0":
                 subsetNode.setAttribute("TypGF", material.zusi_gf_type)
+            if material.zusi_z_bias != 0:
+                subsetNode.setAttribute("zBias", str(material.zusi_z_bias))
             if material.zusi_force_brightness:
                 subsetNode.setAttribute("Zwangshelligkeit", str(material.zusi_force_brightness))
             if material.zusi_signal_magnification:

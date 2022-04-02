@@ -646,12 +646,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("FFFFFFFF", subsets[3].attrib["Ca"])
     self.assertEqual("00808080", subsets[3].attrib["Ce"])
 
-  @unittest.skip("not implemented yet")
   def test_zbias(self):
     self.open("zbias")
     mainfile = self.export_and_parse()
     subsets = mainfile.findall("./Landschaft/SubSet")
-    self.assertEqual('-1', subsets[0].attrib["zBias"])
+    self.assertEqual('-2', subsets[0].attrib["zBias"])
     self.assertNotIn("zBias", subsets[1].attrib)
     self.assertEqual('1', subsets[2].attrib["zBias"])
     self.assertEqual('1', subsets[3].attrib["zBias"])

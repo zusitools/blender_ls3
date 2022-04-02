@@ -744,6 +744,12 @@ bpy.types.Material.zusi_gf_type = bpy.props.EnumProperty(
     default = "0"
 )
 
+bpy.types.Material.zusi_z_bias = bpy.props.IntProperty(
+    name = _("Z bias"),
+    description = _("Display the subset in front of (<0) or behind (>0) other subsets with the same coordinates"),
+    default = 0
+)
+
 bpy.types.Material.zusi_force_brightness = bpy.props.FloatProperty(
     name = _("Force brightness"),
     description = _("Force this material to have a specific brightness"),
@@ -1297,6 +1303,7 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             if mat.zusi_texture_preset == '5':
                 layout.prop(mat, "zusi_day_mode_preset")
 
+            layout.prop(mat, "zusi_z_bias")
             layout.prop(mat, "zusi_force_brightness")
             layout.prop(mat, "zusi_signal_magnification")
 
