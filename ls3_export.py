@@ -658,10 +658,8 @@ class Ls3Exporter:
         mesh.calc_loop_triangles()
 
         # If the object is mirrored/negatively scaled, the normals will come out the wrong way
-        # when applying the transformation. Workaround from:
-        # http://projects.blender.org/tracker/index.php?func=detail&aid=18834&group_id=9&atid=264
-        ma = ob.matrix_world.to_3x3() # gets the rotation part
-        must_flip_normals = Vector.dot(ma[2], Vector.cross(ma[0], ma[1])) >= 0.00001
+        # when applying the transformation.
+        must_flip_normals = transform_matrix.determinant() < 0.0
 
         # List vertex indices of edges that are marked as "sharp edges",
         # which means we won't merge them later during mesh optimization.
@@ -735,24 +733,24 @@ class Ls3Exporter:
                     normal = (0, 0, 1)
                 else:
                     if use_auto_smooth:
-                        normal = Vector((loop.normal[1], -loop.normal[0], -loop.normal[2]))
+                        normal = loop.normal
                     elif face.use_smooth:
-                        normal = Vector((v.normal[1], -v.normal[0], -v.normal[2]))
+                        normal = v.normal
                         for g in v.groups:
                             if g.weight == 0.0:
                                 continue
-                            if g.group == vgroup_xy:
-                                normal[2] = 0
-                            elif g.group == vgroup_yz:
-                                normal[1] = 0
-                            elif g.group == vgroup_xz:
+                            if g.group == vgroup_yz:
                                 normal[0] = 0
+                            elif g.group == vgroup_xz:
+                                normal[1] = 0
+                            elif g.group == vgroup_xy:
+                                normal[2] = 0
                         normal.normalize()
                     else:
-                        normal = (face.normal[1], -face.normal[0], -face.normal[2])
+                        normal = face.normal
 
                     if must_flip_normals:
-                        normal = (-normal[0], -normal[1], -normal[2])
+                        normal = -normal
 
                 # Calculate square of vertex length (projected onto the XY plane)
                 # for the bounding radius.
@@ -764,7 +762,7 @@ class Ls3Exporter:
                 # The vertex index is appended for reordering vertices
                 subset.vertexdata.append((
                     -v.co[1], v.co[0], v.co[2],
-                    normal[0], normal[1], normal[2],
+                    -normal[1], normal[0], normal[2],
                     uvdata1[0], 1 - uvdata1[1],
                     uvdata2[0], 1 - uvdata2[1],
                     maxvertexindex + i,
