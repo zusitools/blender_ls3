@@ -168,7 +168,6 @@ class ZusiAuthor(bpy.types.PropertyGroup):
     id: bpy.props.IntProperty(
         name = _("ID"),
         description = _("The ID of the author"),
-        min = 0
     )
 
     name: bpy.props.StringProperty(
