@@ -96,13 +96,7 @@ class TestLs3Export(unittest.TestCase):
       self._enumvalue_patch.stop()
 
   def open(self, filename):
-    try:
-      bpy.ops.wm.open_mainfile(filepath=os.path.join(os.getcwd(), "blends", filename + ".blend"))
-    except RuntimeError as e:
-      if "newer Blender binary" in e.args[0]:
-        pass # try to run the test anyway
-      else:
-        raise e
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(os.getcwd(), "blends", filename + ".blend"))
 
   def clear_scene(self):
     for ob in bpy.context.scene.objects:
