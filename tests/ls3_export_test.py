@@ -1724,10 +1724,10 @@ class TestLs3Export(unittest.TestCase):
       self.assertEqual(["NonExistingMaterial"], settings.selectedObjects)
 
 if __name__ == '__main__':
-  suite = unittest.TestLoader().loadTestsFromTestCase(TestLs3Export)
   try:
-    if not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful():
-      raise Exception('Tests failed')
-  except Exception:
-    sys.exit(1)
+    # Arguments passed after "--" are not parsed by Blender.
+    argv = sys.argv[sys.argv.index("--") + 1:]
+  except ValueError:
+    argv = []
+  unittest.main(argv=['ls3_export_test.py'] + argv, verbosity=2)
   bpy.ops.wm.quit_blender()
