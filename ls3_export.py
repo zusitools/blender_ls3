@@ -46,7 +46,7 @@ vector_xy_length = lambda vec : sqrt(vec.x * vec.x + vec.y * vec.y)
 
 # The default settings for the exporter
 default_export_settings = {
-    "exportSelected" : "0",
+    "exportSelected" : "4",
     "exportAnimations" : False,
     "optimizeMesh" : True,
     "maxCoordDelta" : 0.001,
@@ -82,6 +82,7 @@ EXPORT_ALL_OBJECTS = "0"
 EXPORT_SELECTED_OBJECTS = "1"
 EXPORT_SUBSETS_OF_SELECTED_OBJECTS = "2"
 EXPORT_SELECTED_MATERIALS = "3"
+EXPORT_VISIBLE_COLLECTIONS = "4"
 
 EPSILON = 0.00001
 
@@ -1068,11 +1069,14 @@ class Ls3Exporter:
                 continue
 
             result[ob] = {}
-            # If export setting is "export only selected objects", filter out unselected objects
-            # from the beginning. Also, non-mesh objects are not exported.
-            if ((ob.type != 'MESH' and ob.type != 'CURVE') or
-                    (self.config.exportSelected == EXPORT_SELECTED_OBJECTS and
-                            ob.name not in self.config.selectedObjects)):
+            # Filter out complete objects.
+            if ob.type != 'MESH' and ob.type != 'CURVE':
+                continue
+            if (self.config.exportSelected == EXPORT_SELECTED_OBJECTS and
+                    ob.name not in self.config.selectedObjects):
+                continue
+            if (self.config.exportSelected == EXPORT_VISIBLE_COLLECTIONS and
+                    all(collection.hide_viewport for collection in ob.users_collection)):
                 continue
 
             for matidx, mat in get_used_materials_for_object(ob):

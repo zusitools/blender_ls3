@@ -17,4 +17,3 @@ Folgende Funktionen sind in der Version für Blender <= 2.79, aber nicht in der 
  - Einstellung, Import und Export von zBias
  - Einstellung, Import und Export von Alpha-Werten bei Farbangaben
  - Einstellung, Import und Export von "Meter pro Textur"
- - Objekte aus sichtbaren Ebenen exportieren (Blender 2.8 kennt keine Ebenen)
