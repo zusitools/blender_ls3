@@ -25,6 +25,7 @@ import xml.dom.minidom as dom
 import logging
 from . import zusiprops
 from .zusicommon import zusicommon
+from .zusi_material_wrapper import PrincipledBSDFWrapper
 try:
     from . import zusiconfig
 except:
@@ -666,8 +667,15 @@ class Ls3Exporter:
         # For each subset, and i in {0, 1}, get the UV layer from which the UV coordinates
         # for texture i in the subset shall be taken. Can be None.
         uvlayers = {}
-        for material_index, subset in subsets.items():
-            uvlayers[material_index] = [mesh.uv_layers.active, None]
+        for material_index in subsets.keys():
+            if material_index < len(ob.material_slots):
+                mat = ob.material_slots[material_index].material
+                wrapper = PrincipledBSDFWrapper(mat)
+                uvlayers[material_index] = [
+                    mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None else None,
+                    mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None else None]
+            else:
+                uvlayers[material_index] = [None, None]
 
         # Write vertices, faces and UV coordinates.
         # Access faces via the loop_triangles API which automatically triangulates the mesh.
@@ -707,7 +715,7 @@ class Ls3Exporter:
                     uvdata1 = (0.0, 1.0)
 
                 if face_uv_layers[1] is not None:
-                    uvdata2 = face_uv_layers[1].data[loop_index].uv_raw
+                    uvdata2 = face_uv_layers[1].data[loop_index].uv
                 else:
                     uvdata2 = (0.0, 1.0)
 
@@ -767,27 +775,29 @@ class Ls3Exporter:
             renderFlagsNode.setAttribute("TexVoreinstellung", "1")
             return
 
+        wrapper = PrincipledBSDFWrapper(material)
+
         # Set ambient, diffuse, and emit color.
         # Zusi's lighting model works as follows:
         # An object will always have its night color (day and night).
         # By day the diffuse and ambient color are added to the night color.
         # It follows from this that an object can only get darker at night, not lighter.
 
-        diffuse_color = Color(material.diffuse_color[0:3])
+        diffuse_color = wrapper.base_color
         ambient_color = material.zusi_ambient_color if material.zusi_use_ambient else Color((1, 1, 1))
 
         # Adjust emit color to be always darker than the diffuse and ambient color.
         emit_color = material.zusi_emit_color if material.zusi_use_emit else Color((0, 0, 0))
+        debug("Base values: Diffuse {}, Ambient {}, Emit {}", diffuse_color, ambient_color, emit_color)
         emit_color = Color((
-            min(emit_color.r, diffuse_color.r, ambient_color.r),
-            min(emit_color.g, diffuse_color.g, ambient_color.g),
-            min(emit_color.b, diffuse_color.b, ambient_color.b),
+            min(emit_color[0], diffuse_color[0], ambient_color[0]),
+            min(emit_color[1], diffuse_color[1], ambient_color[1]),
+            min(emit_color[2], diffuse_color[2], ambient_color[2]),
         ))
 
         # Subtract emit color from the diffuse and ambient color.
-        if material.zusi_use_emit:
-            diffuse_color -= emit_color
-            ambient_color -= emit_color
+        diffuse_color -= emit_color
+        ambient_color -= emit_color
 
         # Add overexposure to the diffuse color.
         if material.zusi_allow_overexposure:
@@ -798,7 +808,7 @@ class Ls3Exporter:
         if material.zusi_use_ambient:
             subsetNode.setAttribute("Ca", rgba_to_rgb_hex_string(ambient_color,
                 material.zusi_ambient_alpha))
-        if material.zusi_use_emit:
+        if emit_color != Color((0, 0, 0)):
             # Emit alpha is ignored in Zusi.
             subsetNode.setAttribute("Ce", rgba_to_rgb_hex_string(emit_color, 0))
         if material.zusi_texture_preset in ['5', '10'] and material.zusi_night_switch_threshold != 0.0:
@@ -834,13 +844,15 @@ class Ls3Exporter:
                 texflagsNode.setAttribute("ALPHAARG0", texstage.D3DTSS_ALPHAARG0)
                 texflagsNode.setAttribute("RESULTARG", texstage.D3DTSS_RESULTARG)
 
-        # Write texture
-        wrapper = node_shader_utils.PrincipledBSDFWrapper(material)
-        texture = wrapper.base_color_texture
-        if texture and texture.image:
+        # Write textures
+        if wrapper.base_texture_image:
             texture_node = self.create_child_element(subsetNode, "Textur")
             datei_node = self.create_child_element(texture_node, "Datei")
-            datei_node.setAttribute("Dateiname", self.relpath(texture.image.filepath))
+            datei_node.setAttribute("Dateiname", self.relpath(wrapper.base_texture_image.filepath))
+        if wrapper.secondary_texture_image:
+            texture_node = self.create_child_element(subsetNode, "Textur")
+            datei_node = self.create_child_element(texture_node, "Datei")
+            datei_node.setAttribute("Dateiname", self.relpath(wrapper.secondary_texture_image.filepath))
 
     def write_ani_keyframes(self, keyframes, animation_node):
         """Writes a list of keyframes into an animation node (<MeshAnimation> or <VerknAnimation>)"""

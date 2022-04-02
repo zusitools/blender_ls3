@@ -22,6 +22,7 @@ import mathutils
 import os
 from . import i18n
 from .zusicommon import zusicommon
+from .zusi_material_wrapper import PrincipledBSDFWrapper
 from math import pi
 
 _ = i18n.language.gettext
@@ -1275,6 +1276,14 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
         mat = context.material
 
         if mat:
+            wrapper = PrincipledBSDFWrapper(mat)
+            layout.label(text = _("Detected settings:"))
+            layout.label(text = _(" - Texture 1: %s") % (wrapper.base_texture_image.name if wrapper.base_texture_image is not None else "-"))
+            layout.label(text = _(" - UV map 1: %s") % (wrapper.base_uv_map or _("Use active UV map")))
+            layout.label(text = _(" - Texture 2: %s") % (wrapper.secondary_texture_image.name if wrapper.secondary_texture_image is not None else "-"))
+            layout.label(text = _(" - UV map 2: %s") % (wrapper.secondary_uv_map or _("Use active UV map")))
+            layout.label(text = _(" - Base color: (%.3f, %.3f, %.3f)") % wrapper.base_color[:])
+
             layout.prop(mat, "zusi_landscape_type")
             layout.prop(mat, "zusi_gf_type")
             layout.prop(mat, "zusi_texture_preset")
@@ -1291,27 +1300,16 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 
             layout.prop(mat, "zusi_force_brightness")
             layout.prop(mat, "zusi_signal_magnification")
-            layout.prop(mat, "zusi_use_ambient", text = _("Ambient color:"))
-
-            row = layout.row()
-            row.enabled = mat.zusi_use_ambient
-            row.prop(mat, "zusi_ambient_color", text="")
-            row.prop(mat, "zusi_ambient_alpha", slider=True, text="Alpha")
-
-            layout.prop(mat, "zusi_use_emit", text = _("Night color:"))
-            row = layout.row()
-            row.enabled = mat.zusi_use_emit
-            row.prop(mat, "zusi_emit_color", text="")
 
             # Warn the user when night color is not exportable.
             diffuse_color = mat.diffuse_color
             if mat.zusi_use_emit:
                 emit_color = mat.zusi_emit_color
                 ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else mathutils.Color((1, 1, 1))
-                if emit_color.r > diffuse_color.r or emit_color.g > diffuse_color.g or emit_color.b > diffuse_color.b \
-                        or emit_color.r > ambient_color.r or emit_color.g > ambient_color.g or emit_color.b > ambient_color.b:
+                if emit_color[0] > diffuse_color[0] or emit_color[1] > diffuse_color[1] or emit_color[2] > diffuse_color[2] \
+                        or emit_color[0] > ambient_color[0] or emit_color[1] > ambient_color[1] or emit_color[2] > ambient_color[2]:
                     layout.label(text = _("Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components.")
-                        % (diffuse_color.r, diffuse_color.g, diffuse_color.b), icon = "ERROR")
+                        % (diffuse_color[:]), icon = "ERROR")
 
             layout.prop(mat, "zusi_allow_overexposure", text = _("Overexposure"))
 
@@ -1339,6 +1337,60 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
                     # Intentionally cryptic error message, as only pros should use this feature :)
                     layout.label(text = _("Must have Ambient - Night + Overexposure <= 1.0 in all components"),
                         icon = "ERROR")
+
+class OBJECT_PT_material_zusi_properties_ambient_color(bpy.types.Panel):
+    bl_label = _("Use ambient color")
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_parent_id = "OBJECT_PT_material_zusi_properties"
+
+    @classmethod
+    def poll(self, context):
+        return context.material is not None
+
+    def draw_header(self, context):
+        mat = context.material
+        if mat:
+            self.layout.prop(mat, "zusi_use_ambient", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        mat = context.material
+
+        if mat:
+            layout.active = mat.zusi_use_ambient
+            layout.prop(mat, "zusi_ambient_color")
+            layout.prop(mat, "zusi_ambient_alpha")
+
+class OBJECT_PT_material_zusi_properties_emit_color(bpy.types.Panel):
+    bl_label = _("Use night color")
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_parent_id = "OBJECT_PT_material_zusi_properties"
+
+    @classmethod
+    def poll(self, context):
+        return context.material is not None
+
+    def draw_header(self, context):
+        mat = context.material
+        if mat:
+            self.layout.prop(mat, "zusi_use_emit", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        mat = context.material
+
+        if mat:
+            layout.active = mat.zusi_use_emit
+            layout.prop(mat, "zusi_emit_color")
+
 
 class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     bl_idname = 'zusi_texture_preset.edit'
@@ -1722,6 +1774,8 @@ classes = (
     ZUSI_LINK_ANIMATIONS_OT_add,
     ZUSI_LINK_ANIMATIONS_OT_del,
     OBJECT_PT_material_zusi_properties,
+    OBJECT_PT_material_zusi_properties_ambient_color,
+    OBJECT_PT_material_zusi_properties_emit_color,
     OBJECT_PT_material_edit_custom_texture_preset,
     OBJECT_OT_zusi_toggle_link_lod,
     OBJECT_OT_zusi_toggle_variant_visibility,

@@ -478,25 +478,16 @@ class TestLs3Export(unittest.TestCase):
       self.assertAlmostEqual(0, float(vertex_node.attrib["U2"]), 5)
       self.assertAlmostEqual(0, float(vertex_node.attrib["V2"]), 5)
 
-  @unittest.skip("not implemented yet")
   def test_multitexturing(self):
     self.open("multitexturing")
-    self.assert_exported_cube_multitexturing()
-
-  @unittest.skip("not implemented yet")
-  def test_multitexturing_inactive_texture(self):
-    self.open("multitexturing_activetextures")
-    self.assert_exported_cube_multitexturing()
-
-  def assert_exported_cube_multitexturing(self, exportargs={}):
-    root = self.export_and_parse(exportargs)
+    root = self.export_and_parse()
 
     subset_nodes = root.findall("./Landschaft/SubSet")
-    self.assertEqual(1, len(subset_nodes))
-    subset_node = subset_nodes[0]
+    self.assertEqual(2, len(subset_nodes))
+    subset_node_1 = subset_nodes[0]
 
     # Check that two textures are given.
-    textur_nodes = subset_node.findall("./Textur")
+    textur_nodes = subset_node_1.findall("./Textur")
     self.assertEqual(2, len(textur_nodes))
 
     # First texture must be the intransparent one, second texture the transparent one.
@@ -507,10 +498,10 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("texture_alpha.dds", datei2_node.attrib["Dateiname"][-len("texture_alpha.dds"):])
 
     # Check for correct UV coordinates.
-    vertex_nodes = [n for n in subset_node if n.tag == "Vertex"]
-    face_nodes = [n for n in subset_node if n.tag == "Face"]
+    vertex_nodes = [n for n in subset_node_1 if n.tag == "Vertex"]
+    face_nodes = [n for n in subset_node_1 if n.tag == "Face"]
 
-    self.assertEqual(24, len(vertex_nodes))
+    self.assertEqual(36, len(vertex_nodes))
     self.assertEqual(12, len(face_nodes))
 
     for vertex_node in vertex_nodes:
@@ -524,7 +515,6 @@ class TestLs3Export(unittest.TestCase):
       self.assertIn(round(u2, 2), [.25, .75])
       self.assertIn(round(v2, 2), [.25, .75])
 
-  @unittest.skip("not implemented yet")
   def test_multitexturing_same_texture(self):
     """Tests that UV coordinates are exported correctly when the same texture is used multiple times with different UV maps"""
     self.open("multitexturing_sametexture")
@@ -574,12 +564,12 @@ class TestLs3Export(unittest.TestCase):
 
     # Subset 1 has no night color, Cd (diffuse) is white.
     self.assertEqual("FFFFFFFF", subsets[0].attrib["Cd"])
-    self.assertNotIn("E", subsets[0].attrib)
+    self.assertNotIn("Ce", subsets[0].attrib)
 
     # Subset 2 has a night color of black and a day color of white.
     # It will be black at night and white by day.
     self.assertEqual("FFFFFFFF", subsets[1].attrib["Cd"])
-    self.assertEqual("00000000", subsets[1].attrib["Ce"])
+    self.assertNotIn("Ce", subsets[1].attrib)
 
     # Subset 3 has a night color of white and a day color of gray.
     # This does not work in Zusi's lighting model (night color must be darker),
@@ -789,7 +779,7 @@ class TestLs3Export(unittest.TestCase):
   def test_mesh_optimization_uv(self):
     self.open("mesh_optimization_uv")
 
-    # Max. UV delta 0.0
+    # Max. UV delta 0.0 - only merge vertices with exactly the same UV coordinates
     root = self.export_and_parse({
       "optimizeMesh" : True,
       "maxCoordDelta" : 9999,
