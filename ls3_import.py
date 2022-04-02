@@ -301,6 +301,8 @@ class Ls3Importer:
             mat.zusi_landscape_type = node.getAttribute("ls3Typ")
         if node.getAttribute("TypGF") != "":
             mat.zusi_gf_type = node.getAttribute("TypGF")
+        if node.getAttribute("zBias") != "":
+            mat.zusi_z_bias = int(node.getAttribute("zBias"))
         if node.getAttribute("Zwangshelligkeit") != "":
             mat.zusi_force_brightness = float(node.getAttribute("Zwangshelligkeit"))
         if node.getAttribute("zZoom") != "":

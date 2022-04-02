@@ -285,6 +285,7 @@ class TestLs3Import(unittest.TestCase):
   def test_zbias(self):
     self.ls3_import("zbias.ls3")
     mat = bpy.data.objects["zbias.ls3.0"].data.materials[0]
+    self.assertEqual(-1, mat.zusi_z_bias)
 
   def test_ls3typ(self):
     self.ls3_import("ls3typ.ls3")
