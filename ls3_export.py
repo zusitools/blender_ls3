@@ -623,11 +623,14 @@ class Ls3Exporter:
         return subsetNode
 
     # Writes the mesh of the specified object to the appropriate subsets.
-    def write_object_data(self, ob, ls3file):
-        debug("Exporting object {}", ob.name)
-        subsets = self.exported_subsets[ob]
+    def write_object_data(self, ob_original, ls3file):
+        debug("Exporting object {}", ob_original.name)
+        subsets = self.exported_subsets[ob_original]
         if not len(subsets):
             return
+
+        depsgraph = self.config.context.evaluated_depsgraph_get()
+        ob = ob_original.evaluated_get(depsgraph)
 
         # For each subset, the square of the length of the longest vertex belonging to that subset (projected onto the XY plane).
         # Used for bounding radius calculation.
@@ -642,11 +645,18 @@ class Ls3Exporter:
         # Apply modifiers and transform the mesh so that the vertex coordinates
         # are global coordinates. Also recalculate the vertex normals.
         # preserve_all_data_layers=True: https://blender.stackexchange.com/a/170069
-        depsgraph = self.config.context.evaluated_depsgraph_get()
-        mesh = ob.evaluated_get(depsgraph).to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph) # , settings="PREVIEW")
+        # TODO: use render settings
+        mesh = ob.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph) # , settings="PREVIEW")
 
-        mesh.transform(self.transformation_relative(ob, self.get_animated_ob(ob), ls3file.root_obj))
-        mesh.calc_normals()
+        transform_matrix = self.transformation_relative(ob_original, self.get_animated_ob(ob_original), ls3file.root_obj)
+        mesh.transform(transform_matrix)
+
+        if bpy.app.version == (3, 1, 0):
+            # Workaround for a Blender bug
+            mesh.flip_normals()
+            mesh.flip_normals()
+        else:
+            mesh.calc_normals()
         use_auto_smooth = mesh.use_auto_smooth
         if mesh.use_auto_smooth:
             mesh.calc_normals_split()
@@ -762,8 +772,8 @@ class Ls3Exporter:
                     loop.vertex_index in face_no_merge_vertices
                 ))
 
-        # Remove the generated preview mesh -- seems not necessary any more ("is outside of main library and cannot be removed from it")
-        # bpy.data.meshes.remove(mesh)
+        # Remove the generated preview mesh
+        ob.to_mesh_clear()
 
         for matidx, boundingr_squared in max_v_len_squared.items():
             subset = subsets[matidx]

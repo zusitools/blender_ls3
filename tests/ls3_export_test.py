@@ -449,11 +449,13 @@ class TestLs3Export(unittest.TestCase):
     xz = subsets[1]
     yz = subsets[2]
 
+    # The names of the axes refer to the Blender axes.
+    # In Zusi, the X and Y axes are swapped.
     for idx, (subset, normal) in enumerate([(xy, (0, 1, 0)), (xz, (0, 0, -1)), (yz, (0, 0, 1))]):
       for n in subset.findall("./Vertex/n"):
-        self.assertAlmostEqual(normal[0], float(n.attrib["X"]), 5, "subset " + str(idx))
-        self.assertAlmostEqual(normal[1], float(n.attrib["Y"]), 5, "subset " + str(idx))
-        self.assertAlmostEqual(normal[2], float(n.attrib["Z"]), 5, "subset " + str(idx))
+        self.assertAlmostEqual(normal[0], float(n.attrib["X"]), 5, f"subset {idx}: expected {normal}, got {n.attrib}")
+        self.assertAlmostEqual(normal[1], float(n.attrib["Y"]), 5, f"subset {idx}: expected {normal}, got {n.attrib}")
+        self.assertAlmostEqual(normal[2], float(n.attrib["Z"]), 5, f"subset {idx}: expected {normal}, got {n.attrib}")
 
   def test_texture_export(self):
     self.open("texture_blender28")
