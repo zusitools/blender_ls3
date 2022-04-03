@@ -144,9 +144,8 @@ msgid "Subsets containing selected objects"
 msgstr "Subsets der ausgewählten Objekte"
 
 #: __init__.py:353
-#, fuzzy
 msgid "Objects in visible collections"
-msgstr "Objekte auf sichtbaren Ebenen"
+msgstr "Objekte in sichtbaren Sammlungen"
 
 #: __init__.py:359
 msgid "Export animations"
@@ -920,13 +919,15 @@ msgstr "Der Geländeformer-Typ dieses Subsets"
 
 #: zusiprops.py:748
 msgid "Z bias"
-msgstr ""
+msgstr "Z-Bias"
 
 #: zusiprops.py:749
 msgid ""
 "Display the subset in front of (<0) or behind (>0) other subsets with the "
 "same coordinates"
 msgstr ""
+"Das Subset vor (<0) oder hinter (>0) anderen Subsets mit denselben "
+"Koordinaten darstellen"
 
 #: zusiprops.py:754
 msgid "Force brightness"
@@ -1189,8 +1190,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1048
 msgid "Animation duration"
@@ -1210,8 +1211,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1059
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
@@ -1277,36 +1278,36 @@ msgstr "Die ausgewählte Animationsinformation aus der Liste löschen"
 
 #: zusiprops.py:1285
 msgid "Detected settings:"
-msgstr ""
+msgstr "Erkannte Einstellungen:"
 
 #: zusiprops.py:1286
-#, fuzzy, python-format
+#, python-format
 msgid " - Texture 1: %s"
-msgstr "Textur-Voreinstellung"
+msgstr " - Textur 1: %s"
 
 #: zusiprops.py:1287
 #, python-format
 msgid " - UV map 1: %s"
-msgstr ""
+msgstr " - UV-Map 1: %s"
 
 #: zusiprops.py:1287 zusiprops.py:1289
 msgid "Use active UV map"
-msgstr ""
+msgstr "Aktive UV-Map benutzen"
 
 #: zusiprops.py:1288
-#, fuzzy, python-format
+#, python-format
 msgid " - Texture 2: %s"
-msgstr "Textur-Voreinstellung"
+msgstr " - Textur 2: %s"
 
 #: zusiprops.py:1289
 #, python-format
 msgid " - UV map 2: %s"
-msgstr ""
+msgstr " - UV-Map 2: %s"
 
 #: zusiprops.py:1290
 #, python-format
 msgid " - Base color: (%.3f, %.3f, %.3f)"
-msgstr ""
+msgstr " - Grundfarbe: (%.3f, %.3f, %.3f)"
 
 #: zusiprops.py:1317
 #, python-format
