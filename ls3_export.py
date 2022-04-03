@@ -648,20 +648,21 @@ class Ls3Exporter:
         transform_matrix = self.transformation_relative(ob_original, self.get_animated_ob(ob_original), ls3file.root_obj)
         mesh.transform(transform_matrix)
 
-        if bpy.app.version == (3, 1, 0):
-            # Workaround for a Blender bug
-            mesh.flip_normals()
+        # transform() documentation: "Warning: inverts normals if matrix is negative"
+        must_flip_normals = transform_matrix.determinant() < 0.0
+        if must_flip_normals:
             mesh.flip_normals()
         else:
-            mesh.calc_normals()
+            if bpy.app.version == (3, 1, 0):
+                # Workaround for https://developer.blender.org/T96999
+                mesh.flip_normals()
+                mesh.flip_normals()
+            else:
+                mesh.calc_normals()
         use_auto_smooth = mesh.use_auto_smooth
         if mesh.use_auto_smooth:
             mesh.calc_normals_split()
         mesh.calc_loop_triangles()
-
-        # If the object is mirrored/negatively scaled, the normals will come out the wrong way
-        # when applying the transformation.
-        must_flip_normals = transform_matrix.determinant() < 0.0
 
         # List vertex indices of edges that are marked as "sharp edges",
         # which means we won't merge them later during mesh optimization.
@@ -699,12 +700,8 @@ class Ls3Exporter:
             subset = subsets[face.material_index]
             maxvertexindex = len(subset.vertexdata)
 
-            # Write the triangle.
-            # Optionally reverse order of faces to flip normals
-            if must_flip_normals:
-                subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
-            else:
-                subset.facedata.extend((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
+            # Write the triangle, fixing the winding order.
+            subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
 
             # Compile a list of all vertices to mark as "don't merge".
             # Those are the vertices that form a sharp edge in the current face.
@@ -750,9 +747,6 @@ class Ls3Exporter:
                         normal.normalize()
                     else:
                         normal = face.normal
-
-                    if must_flip_normals:
-                        normal = -normal
 
                 # Calculate square of vertex length (projected onto the XY plane)
                 # for the bounding radius.

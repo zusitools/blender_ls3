@@ -367,6 +367,35 @@ class TestLs3Export(unittest.TestCase):
       self.assertAlmostEqual(0, float(vertex_node.attrib["U2"]), 5)
       self.assertAlmostEqual(0, float(vertex_node.attrib["V2"]), 5)
 
+  def test_negative_scale(self):
+    self.open("negative_scale")
+    root = self.export_and_parse()
+    p_nodes = root.findall("./Landschaft/SubSet/Vertex/p")
+    n_nodes = root.findall("./Landschaft/SubSet/Vertex/n")
+    self.assertEqual(12, len(p_nodes))
+    self.assertEqual(12, len(n_nodes))
+
+    # Check winding order by calculating the surface normal
+    face_nodes = root.findall("./Landschaft/SubSet/Face")
+    self.assertEqual(4, len(face_nodes))
+    for face_node in face_nodes:
+      vertex_indices = [int(i) for i in face_node.attrib["i"].split(';')]
+      self.assertEqual(3, len(vertex_indices))
+
+      coords = [
+        mathutils.Vector([float(p_nodes[vertex_indices[i]].attrib[name]) for name in "XYZ"])
+        for i in range(3)
+      ]
+      normal = (coords[2] - coords[0]).cross(coords[1] - coords[0]).normalized()
+      self.assertAlmostEqual(0, normal[0], places=5)
+      self.assertAlmostEqual(0, normal[1], places=5)
+      self.assertAlmostEqual(1, normal[2], places=5)
+
+    for v in n_nodes:
+      self.assertAlmostEqual(0, float(v.attrib["X"]), places=5)
+      self.assertAlmostEqual(0, float(v.attrib["Y"]), places=5)
+      self.assertAlmostEqual(1, float(v.attrib["Z"]), places=5)
+
   def test_export_edit_mode(self):
     self.open("edit_mode")
     bpy.ops.object.editmode_toggle()
