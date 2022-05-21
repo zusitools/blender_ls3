@@ -734,7 +734,7 @@ class Ls3Exporter:
                     if use_auto_smooth:
                         normal = loop.normal
                     elif face.use_smooth:
-                        normal = v.normal
+                        normal = v.normal.copy()
                         for g in v.groups:
                             if g.weight == 0.0:
                                 continue
