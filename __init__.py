@@ -44,6 +44,8 @@ if "bpy" in locals():
         imp.reload(zusicommon)
     if 'zusiconfig' in locals():
         imp.reload(zusiconfig)
+    if 'zusi_material_wrapper' in locals():
+        imp.reload(zusi_material_wrapper)
     if 'batchexport_settings' in locals():
         imp.reload(batchexport_settings)
     if 'i18n' in locals():
