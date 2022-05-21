@@ -141,7 +141,7 @@ class ZusiLodImportSetting(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiLodImportSetting)
 
-class ZusiLodImportSettingList(zusiprops.CheckBoxList, bpy.types.UIList):
+class ZUSI_UL_ZusiLodImportSettingList(zusiprops.CheckBoxList, bpy.types.UIList):
     def get_property_name(self):
         return "imp"
     
@@ -679,10 +679,10 @@ def menu_func_show_variants(self, context):
 
 classes = (
 #    ZusiFileVariantExportSetting,
-#    ZusiFileVariantExportSettingList,
+    ZUSI_UL_ZusiFileVariantExportSettingList,
 #    ZusiFileVariantVisibilitySetting,
 #    ZusiLodImportSetting,
-#    ZusiLodImportSettingList,
+    ZUSI_UL_ZusiLodImportSettingList,
     IMPORT_OT_ls,
     IMPORT_OT_ls3,
     OBJECT_OT_embed_linked,
