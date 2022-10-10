@@ -458,8 +458,9 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
         if self.properties.exportSelected == '4':  # Visible layers
             is_on_visible_layer = lambda ob: any((a and b) for a, b in zip(ob.layers, context.scene.layers))
             selectedObjects = [ob.name for ob in context.scene.objects if is_on_visible_layer(ob)]
-            self.properties.exportSelected = '1'  # Selected objects
+            exportSelected = '1'  # Selected objects
         else:
+            exportSelected = self.properties.exportSelected
             selectedObjects = [ob.name for ob in context.selected_objects]
 
         settings = ls3_export.Ls3ExporterSettings(
@@ -467,7 +468,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             self.properties.filepath,
             self.properties.filename,
             self.properties.directory,
-            self.properties.exportSelected,
+            exportSelected,
             self.properties.exportAnimations,
             self.properties.optimizeMesh,
             self.properties.maxUVDelta,
