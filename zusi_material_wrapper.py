@@ -78,15 +78,21 @@ class PrincipledBSDFWrapper:
                 )
 
     def get_color(self, node_input):
-        logger.debug(f"get_color {node_input}")
         if not node_input.is_linked:
+            logger.debug(f"get_color {node_input} -> not linked")
             return Color(node_input.default_value[:3])
         node2 = node_input.links[0].from_node
+        logger.debug(f"get_color {node_input} -> {node2.bl_idname}")
         if node2.bl_idname == "ShaderNodeMixRGB":
             result = self.get_color(node2.inputs["Color1"])
             if result:
                 return result
             return self.get_color(node2.inputs["Color2"])
+        elif node2.bl_idname == "ShaderNodeMix" and node2.data_type == "RGBA":
+            result = self.get_color(node2.inputs[6])
+            if result:
+                return result
+            return self.get_color(node2.inputs[6])
         elif node2.bl_idname == "ShaderNodeRGB":
             logger.debug(
                 f"get_color: found color {node2.outputs[0].default_value} at {node2}"
@@ -95,30 +101,42 @@ class PrincipledBSDFWrapper:
         return None
 
     def get_texture(self, node_input, index):
-        logger.debug(f"get_texture({index}) {node_input}")
         if not node_input.is_linked:
+            logger.debug(f"get_texture({index}) {node_input} -> not linked")
             return None
         node2 = node_input.links[0].from_node
+        logger.debug(f"get_texture({index}) {node_input} -> {node2.bl_idname}")
         if node2.bl_idname == "ShaderNodeMixRGB":
             if index == 0:
                 return self.get_texture(node2.inputs["Color1"], 0)
             elif index == 1:
                 return self.get_texture(node2.inputs["Color2"], 0)
+        elif node2.bl_idname == "ShaderNodeMix" and node2.data_type == "RGBA":
+            if index == 0:
+                return self.get_texture(node2.inputs[6], 0)
+            elif index == 1:
+                return self.get_texture(node2.inputs[7], 0)
         elif node2.bl_idname == "ShaderNodeTexImage" and index == 0:
             logger.debug(f"get_texture({index}): found image {node2.image} at {node2}")
             return node2.image
         return None
 
     def get_uv_map(self, node_input, index):
-        logger.debug(f"get_uv_map {node_input}")
         if not node_input.is_linked:
+            logger.debug(f"get_uv_map {node_input} -> not linked")
             return None
         node2 = node_input.links[0].from_node
+        logger.debug(f"get_uv_map {node_input} -> {node2.bl_idname}")
         if node2.bl_idname == "ShaderNodeMixRGB":
             if index == 0:
                 return self.get_uv_map(node2.inputs["Color1"], 0)
             elif index == 1:
                 return self.get_uv_map(node2.inputs["Color2"], 0)
+        elif node2.bl_idname == "ShaderNodeMix" and node2.data_type == "RGBA":
+            if index == 0:
+                return self.get_uv_map(node2.inputs[6], 0)
+            elif index == 1:
+                return self.get_uv_map(node2.inputs[7], 0)
         elif node2.bl_idname == "ShaderNodeTexImage":
             logger.debug(f"get_texture: found image {node2.image} at {node2}")
             return self.get_uv_map(node2.inputs["Vector"], 0)
