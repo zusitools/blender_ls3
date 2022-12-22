@@ -187,8 +187,8 @@ def get_ani_description(ani_id):
             "9"  : 'Stromabnehmer B',
             "10" : 'Stromabnehmer C',
             "11" : 'Stromabnehmer D',
-            "12" : 'Türen rechts',
-            "13" : 'Türen links',
+            "12" : 'Türen links',
+            "13" : 'Türen rechts',
             "14" : 'Neigetechnik',
         }[ani_id]
     except KeyError:
