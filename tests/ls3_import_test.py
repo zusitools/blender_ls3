@@ -322,8 +322,9 @@ class TestLs3Import(unittest.TestCase):
     self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_euler())
 
     self.assertEqual(2, len(a1.zusi_anchor_point_files))
-    self.assertEqual(r"zusi3:Loks\Elektroloks\file.ls3", a1.zusi_anchor_point_files[0].name)
-    self.assertEqual(r"zusi3:Loks\Elektroloks", a1.zusi_anchor_point_files[1].name)
+    if bpy.app.version >= (2, 74, 0): # Bug in Blender <= 2.73
+        self.assertEqual(r"zusi3:Loks\Elektroloks\file.ls3", a1.zusi_anchor_point_files[0].name)
+        self.assertEqual(r"zusi3:Loks\Elektroloks", a1.zusi_anchor_point_files[1].name)
 
     self.assertEqual('EMPTY', a2.type)
     self.assertEqual('ARROWS', a2.empty_draw_type)
@@ -401,7 +402,8 @@ class TestLs3Import(unittest.TestCase):
     ob = bpy.data.objects["linked_file.ls3_Blindlok.ls3.001"]
     self.assertEqual('EMPTY', ob.type)
     self.assertTrue(ob.zusi_is_linked_file)
-    self.assertEqual(r'zusi3:RollingStock\Diverse\Blindlok\Blindlok.ls3', ob.zusi_link_file_name)
+    if bpy.app.version >= (2, 74, 0): # Bug in Blender <= 2.73
+        self.assertEqual(r'zusi3:RollingStock\Diverse\Blindlok\Blindlok.ls3', ob.zusi_link_file_name)
     self.assertEqual("TestGroup", ob.zusi_link_group)
     self.assertEqual(1.5, ob.zusi_link_visible_from)
     self.assertEqual(5.5, ob.zusi_link_visible_to)
@@ -417,7 +419,8 @@ class TestLs3Import(unittest.TestCase):
     ob = bpy.data.objects["linked_file.ls3_101_vr.lod.ls3.002"]
     self.assertEqual('EMPTY', ob.type)
     self.assertTrue(ob.zusi_is_linked_file)
-    self.assertEqual(r'zusi3:RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3', ob.zusi_link_file_name)
+    if bpy.app.version >= (2, 74, 0): # Bug in Blender <= 2.73
+        self.assertEqual(r'zusi3:RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3', ob.zusi_link_file_name)
     self.assertEqual("", ob.zusi_link_group)
     self.assertEqual(0, ob.zusi_link_visible_from)
     self.assertEqual(0, ob.zusi_link_visible_to)
