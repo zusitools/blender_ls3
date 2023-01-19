@@ -530,15 +530,20 @@ def set_zusi_animation_duration(self, duration):
 
 # Unified wrapper for template lists both in Blender <= 2.65 and above.
 def template_list(layout, listtype_name, list_id, dataptr, propname, active_dataptr, active_propname,
-        add_operator_name = "", remove_operator_name = "", rows = 5):
+        add_operator_name = "", remove_operator_name = "", move_operator_name = "", rows = 5):
     layout.template_list(listtype_name, list_id, dataptr, propname, active_dataptr, active_propname, rows = rows)
 
-    if len(add_operator_name) or len(remove_operator_name):
+    if add_operator_name or remove_operator_name or move_operator_name:
         col = layout.column(align = True)
-        if len(add_operator_name):
+        if add_operator_name:
             col.operator(add_operator_name, icon = "ZOOMIN", text = "")
-        if len(remove_operator_name):
+        if remove_operator_name:
             col.operator(remove_operator_name, icon = "ZOOMOUT", text = "")
+
+        if move_operator_name:
+            col.separator()
+            col.operator(move_operator_name, icon = "TRIA_UP", text = "").move_up = True
+            col.operator(move_operator_name, icon = "TRIA_DOWN", text = "").move_up = False
 
 # ---
 # Custom properties
@@ -1530,6 +1535,26 @@ class ZUSI_VARIANTS_OT_del(bpy.types.Operator):
 
         return{'FINISHED'}
 
+class ZUSI_VARIANTS_OT_move(bpy.types.Operator):
+    bl_idname = 'zusi_variants.move'
+    bl_label = _("Move variant")
+    bl_description = _("Move a variant")
+    bl_options = {'INTERNAL'}
+
+    move_up = bpy.props.BoolProperty()
+
+    @classmethod
+    def poll(self, context):
+        return context.scene.zusi_variants
+
+    def execute(self, context):
+        new_variant_index = context.scene.zusi_variants_index + (-1 if self.move_up else 1)
+        if new_variant_index < 0 or new_variant_index >= len(context.scene.zusi_variants):
+            return{'FINISHED'}
+        context.scene.zusi_variants.move(context.scene.zusi_variants_index, new_variant_index)
+        context.scene.zusi_variants_index = new_variant_index
+        return{'FINISHED'}
+
 class SCENE_PT_zusi_variants(bpy.types.Panel):
     bl_label = _("Variants")
     bl_space_type = "PROPERTIES"
@@ -1542,7 +1567,7 @@ class SCENE_PT_zusi_variants(bpy.types.Panel):
 
         # Show list of variants with add/remove button
         template_list(layout.row(), "ZusiFileVariantList", "", sce, "zusi_variants", sce, "zusi_variants_index",
-                "zusi_variants.add", "zusi_variants.remove", rows = 3)
+                "zusi_variants.add", "zusi_variants.remove", "zusi_variants.move", rows = 3)
 
         # Show input field to change variant name (in Blender >= 2.70, this is instead done by double-clicking on the item)
         if bpy.app.version < (2, 70, 0) and sce.zusi_variants:
