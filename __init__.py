@@ -95,7 +95,7 @@ class ZusiFileVariantExportSetting(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(ZusiFileVariantExportSetting)
 
-class ZusiFileVariantExportSettingList(zusiprops.CheckBoxList, bpy.types.UIList):
+class ZUSI_UL_ZusiFileVariantExportSettingList(zusiprops.CheckBoxList, bpy.types.UIList):
     def get_property_name(self):
         return "export"
     
