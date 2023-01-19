@@ -792,7 +792,7 @@ bpy.types.Material.result_stage = bpy.props.PointerProperty(
 
 bpy.types.Material.zusi_second_pass = bpy.props.BoolProperty(
     name = _("Additional drawing pass without Z buffer"),
-    description = _("Additional drawing pass without Z buffer. Only available for 'One texture, semi-transparency' preset."),
+    description = _("Additional drawing pass without Z buffer. Only available for 'One texture, semi-transparency' preset"),
     default = False
 )
 
@@ -832,7 +832,7 @@ bpy.types.Texture.zusi_variants_visibility = bpy.props.CollectionProperty(
 
 bpy.types.Object.zusi_subset_name = bpy.props.StringProperty(
     name = _("Subset name"),
-    description = _("Name of the subset in which to export this object. Objects with different subset names will never be exported into the same subset."),
+    description = _("Name of the subset in which to export this object. Objects with different subset names will never be exported into the same subset"),
     default = ""
 )
 
