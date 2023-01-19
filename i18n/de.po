@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: blender_ls 3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-03 11:57+0200\n"
+"POT-Creation-Date: 2023-01-19 18:42+0100\n"
 "PO-Revision-Date: 2014-10-21 18:23+0200\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -12,97 +12,97 @@ msgstr ""
 "X-Language: de_DE\n"
 "X-Source-Language: C\n"
 
-#: __init__.py:84 __init__.py:111 zusiprops.py:140
+#: __init__.py:86 __init__.py:113 zusiprops.py:140
 msgid "Variant ID"
 msgstr "Varianten-ID"
 
-#: __init__.py:85 __init__.py:112
+#: __init__.py:87 __init__.py:114
 msgid "ID of the variant"
 msgstr "ID der Variante"
 
-#: __init__.py:89
+#: __init__.py:91
 msgid "Export this variant"
 msgstr "Diese Variante exportieren"
 
-#: __init__.py:116
+#: __init__.py:118
 msgid "Show this variant"
 msgstr "Diese Variante anzeigen"
 
-#: __init__.py:128
+#: __init__.py:130
 msgid "LOD bit"
 msgstr "LOD-Bit"
 
-#: __init__.py:132
+#: __init__.py:134
 msgid "Import this LOD"
 msgstr "Diesen LOD importieren"
 
-#: __init__.py:153
+#: __init__.py:155
 msgid "Don't import"
 msgstr "Nicht importieren"
 
-#: __init__.py:154
+#: __init__.py:156
 msgid "Import as links"
 msgstr "Als Verknüpfungen importieren"
 
-#: __init__.py:155
+#: __init__.py:157
 msgid "Embed"
 msgstr "Einbetten"
 
-#: __init__.py:164
+#: __init__.py:166
 msgid "Import from Zusi 2 Scenery file format (.ls)"
 msgstr "Zusi-2-Landschaftsdatei (.ls) importieren"
 
-#: __init__.py:165
+#: __init__.py:167
 msgid "Import LS"
 msgstr "LS importieren"
 
-#: __init__.py:177 __init__.py:223
+#: __init__.py:179 __init__.py:225
 msgid "Load linked files"
 msgstr "Verknüpfte Dateien laden"
 
-#: __init__.py:178
+#: __init__.py:180
 msgid "Import files that are linked in the LS file"
 msgstr "Dateien laden, die in dieser LS-Datei verknüpft sind"
 
-#: __init__.py:204
+#: __init__.py:206
 msgid "Import from Zusi Scenery file format (.ls3)"
 msgstr "Zusi-Landschaftsdatei (.ls3) importieren"
 
-#: __init__.py:205
+#: __init__.py:207
 msgid "Import LS3"
 msgstr "LS3 importieren"
 
-#: __init__.py:217
+#: __init__.py:219
 msgid "Load author information"
 msgstr "Autor-Informationen laden"
 
-#: __init__.py:218
+#: __init__.py:220
 msgid "Insert author information from the imported file into the .blend file"
 msgstr ""
 "Autor-Informationen aus der importierten Datei in die .blend-Datei einfügen"
 
-#: __init__.py:224
+#: __init__.py:226
 msgid "Import files that are linked in the LS3 file"
 msgstr "Dateien laden, die in dieser LS3-Datei verknüpft sind"
 
-#: __init__.py:230
+#: __init__.py:232
 msgid "LODs to import"
 msgstr "Zu importierende LODs"
 
-#: __init__.py:243
+#: __init__.py:245
 msgid "Import LODs (only embedded linked files)"
 msgstr "LODs importieren (eingebettete Verknüpfungen)"
 
-#: __init__.py:271
+#: __init__.py:273
 #, python-format
 msgid "LOD %d"
 msgstr "LOD %d"
 
-#: __init__.py:278
+#: __init__.py:280
 msgid "Embed linked file"
 msgstr "Verknüpfte Datei einbetten"
 
-#: __init__.py:279
+#: __init__.py:281
 msgid ""
 "Load the contents of the linked file specified at this object and insert "
 "them as children of this object"
@@ -110,48 +110,48 @@ msgstr ""
 "Den Inhalt der in diesem Objekt angegebenen verknüpften Datei laden und als "
 "Kindobjekte dieses Objekts einfügen"
 
-#: __init__.py:289
+#: __init__.py:291
 #, python-format
 msgid "File %s not found"
 msgstr "Datei %s nicht gefunden"
 
-#: __init__.py:330
+#: __init__.py:332
 msgid "Export to Zusi Scenery file format (.ls3)"
 msgstr "Zusi-Landschaftsdatei (.ls3) exportieren"
 
-#: __init__.py:331
+#: __init__.py:333
 msgid "Export LS3"
 msgstr "LS3 exportieren"
 
-#: __init__.py:347
+#: __init__.py:349
 msgid "Export mode"
 msgstr "Exportmodus"
 
-#: __init__.py:348
+#: __init__.py:350
 msgid "Choose which objects to export"
 msgstr "Festlegen, welche Objekte exportiert werden sollen "
 
-#: __init__.py:350
+#: __init__.py:352
 msgid "All objects"
 msgstr "Alle Objekte"
 
-#: __init__.py:351
+#: __init__.py:353
 msgid "Selected objects"
 msgstr "Ausgewählte Objekte"
 
-#: __init__.py:352
+#: __init__.py:354
 msgid "Subsets containing selected objects"
 msgstr "Subsets der ausgewählten Objekte"
 
-#: __init__.py:353
+#: __init__.py:355
 msgid "Objects in visible collections"
 msgstr "Objekte in sichtbaren Sammlungen"
 
-#: __init__.py:359
+#: __init__.py:361
 msgid "Export animations"
 msgstr "Animationen exportieren"
 
-#: __init__.py:360
+#: __init__.py:362
 msgid ""
 "Export animations from keyframes (this might create/overwrite additional "
 "files)"
@@ -159,11 +159,11 @@ msgstr ""
 "Keyframes als Animationen exportieren (hierdurch werden evtl. zusätzliche "
 "Dateien erzeugt/überschrieben) "
 
-#: __init__.py:365
+#: __init__.py:367
 msgid "Optimize mesh"
 msgstr "Mesh optimieren"
 
-#: __init__.py:366
+#: __init__.py:368
 msgid ""
 "Optimize meshes in the exported file (this will not modify any meshes in the "
 "Blender file)"
@@ -171,39 +171,39 @@ msgstr ""
 "Meshes in der exportierten Datei optimieren (Meshes in der Blender-Datei "
 "werden hierbei nicht verändert)"
 
-#: __init__.py:371
+#: __init__.py:373
 msgid "Max. distance"
 msgstr "Max. Abstand"
 
-#: __init__.py:372
+#: __init__.py:374
 msgid "Maximum distance between two vertices to be merged"
 msgstr "Maximaler Abstand zweier zusammenzuführender Punkte"
 
-#: __init__.py:378
+#: __init__.py:380
 msgid "Max. UV distance"
 msgstr "Max. UV-Abstand"
 
-#: __init__.py:379
+#: __init__.py:381
 msgid "Maximum UV coordinate distance between two vertices to be merged"
 msgstr ""
 "Maximaler Abstand zwischen den UV-Koordinaten zweier zusammenzuführender "
 "Punkte"
 
-#: __init__.py:386
+#: __init__.py:388
 msgid "Max. normal angle"
 msgstr "Max. Winkel Normalen"
 
-#: __init__.py:388
+#: __init__.py:390
 msgid "Maximum angle between the normal vectors of two vertices to be merged"
 msgstr ""
 "Maximaler Winkel zwischen den Normalenvektoren zweier zusammenzuführender "
 "Punkte"
 
-#: __init__.py:395
+#: __init__.py:397
 msgid "Write mesh data to LSB file"
 msgstr "Meshdaten in LSB-Datei schreiben"
 
-#: __init__.py:396
+#: __init__.py:398
 msgid ""
 "Write vertex and face data to a separate file for better loading performance "
 "in Zusi"
@@ -211,99 +211,99 @@ msgstr ""
 "Vertex- und Face-Daten in eine separate Datei schreiben, um die Ladezeit in "
 "Zusi zu verbessern"
 
-#: __init__.py:401
+#: __init__.py:403
 msgid "Variants to export"
 msgstr "Zu exportierende Varianten"
 
-#: __init__.py:402
+#: __init__.py:404
 msgid "Choose which variants to export"
 msgstr "Festlegen, welche Varianten exportiert werden sollen "
 
-#: __init__.py:415
+#: __init__.py:417
 msgid "No author information entered"
 msgstr "Keine Autorenangabe"
 
-#: __init__.py:418
+#: __init__.py:420
 msgid "Author information added"
 msgstr "Autorenangabe hinzugefügt"
 
-#: __init__.py:420
+#: __init__.py:422
 #, python-format
 msgid "Name: %s"
 msgstr "Name: %s"
 
-#: __init__.py:421
+#: __init__.py:423
 #, python-format
 msgid "E-mail: %s"
 msgstr "E-Mail: %s"
 
-#: __init__.py:423
+#: __init__.py:425
 msgid "Variants (leave empty to export all)"
 msgstr "Varianten (leer lassen, um alle zu exportieren)"
 
-#: __init__.py:430 __init__.py:636 zusiprops.py:1097
+#: __init__.py:432 __init__.py:638 zusiprops.py:1097
 msgid "Variants can be defined in the Scene settings."
 msgstr "Varianten können in den Szeneneinstellungen definiert werden."
 
-#: __init__.py:436
+#: __init__.py:438
 msgid "The following files will be overwritten:"
 msgstr "Folgende Dateien werden überschrieben:"
 
-#: __init__.py:498
+#: __init__.py:500
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr "Stapelexport in Zusi-Landschaftsdateien (.ls3)"
 
-#: __init__.py:499
+#: __init__.py:501
 msgid "Batch export LS3"
 msgstr "Stapelexport LS3"
 
-#: __init__.py:546
+#: __init__.py:548
 msgid "Unsaved file, no file name available"
 msgstr "Ungespeicherte Datei, kein Dateiname vorhanden"
 
-#: __init__.py:549
+#: __init__.py:551
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
-#: __init__.py:605
+#: __init__.py:607
 #, python-format
 msgid "Exported %d file"
 msgid_plural "Exported %d files"
 msgstr[0] "%d Datei exportiert"
 msgstr[1] "%d Dateien exportiert"
 
-#: __init__.py:614
+#: __init__.py:616
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 "Nur Objekte anzeigen, die in einer bestimmten Kombination von Varianten "
 "sichtbar sind"
 
-#: __init__.py:615
+#: __init__.py:617
 msgid "Show Variants"
 msgstr "Varianten anzeigen"
 
-#: __init__.py:619
+#: __init__.py:621
 msgid "Variants to show"
 msgstr "Anzuzeigende Varianten"
 
-#: __init__.py:620
+#: __init__.py:622
 msgid "Choose which variants to show"
 msgstr "Festlegen, welche Varianten angezeigt werden sollen "
 
-#: __init__.py:630
+#: __init__.py:632
 msgid "Variants (leave empty to show all)"
 msgstr "Varianten (leer lassen, um alle anzuzeigen)"
 
-#: __init__.py:667
+#: __init__.py:669
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr "Zusi-2-Landschaft (.ls) ..."
 
-#: __init__.py:670 __init__.py:673
+#: __init__.py:672 __init__.py:675
 msgid "Zusi Scenery (.ls3) ..."
 msgstr "Zusi-Landschaft (.ls3) ..."
 
-#: __init__.py:676
+#: __init__.py:678
 msgid "Show variants ..."
 msgstr "Varianten anzeigen ..."
 
@@ -983,9 +983,10 @@ msgid "Additional drawing pass without Z buffer"
 msgstr "Zusätzlicher Zeichenvorgang ohne Z-Buffer"
 
 #: zusiprops.py:795
+#, fuzzy
 msgid ""
 "Additional drawing pass without Z buffer. Only available for 'One texture, "
-"semi-transparency' preset."
+"semi-transparency' preset"
 msgstr ""
 "Zusätzlicher Zeichenvorgang ohne Z-Buffer. Nur verfügbar für die "
 "Voreinstellung 'Eine Textur, Halbtransparenz'."
@@ -1021,9 +1022,10 @@ msgid "Subset name"
 msgstr "Subset-Name"
 
 #: zusiprops.py:835
+#, fuzzy
 msgid ""
 "Name of the subset in which to export this object. Objects with different "
-"subset names will never be exported into the same subset."
+"subset names will never be exported into the same subset"
 msgstr ""
 "Name des Subsets, in das dieses Objekt exportiert wird. Objekte mit "
 "verschiedenen Subset-Namen werden beim Export nie zu einem Subset "
@@ -1190,8 +1192,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
-"Rad-Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
+"Animationen "
 
 #: zusiprops.py:1048
 msgid "Animation duration"
@@ -1211,8 +1213,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1059
 msgid ""
-"Animation names this action belongs to, if animation type is "
-"'Undefined/signal controlled'"
+"Animation names this action belongs to, if animation type is 'Undefined/"
+"signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
