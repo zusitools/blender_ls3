@@ -983,13 +983,12 @@ msgid "Additional drawing pass without Z buffer"
 msgstr "Zusätzlicher Zeichenvorgang ohne Z-Buffer"
 
 #: zusiprops.py:795
-#, fuzzy
 msgid ""
 "Additional drawing pass without Z buffer. Only available for 'One texture, "
 "semi-transparency' preset"
 msgstr ""
 "Zusätzlicher Zeichenvorgang ohne Z-Buffer. Nur verfügbar für die "
-"Voreinstellung 'Eine Textur, Halbtransparenz'."
+"Voreinstellung 'Eine Textur, Halbtransparenz'"
 
 #: zusiprops.py:800
 msgid "Night switch threshold"
@@ -1022,14 +1021,13 @@ msgid "Subset name"
 msgstr "Subset-Name"
 
 #: zusiprops.py:835
-#, fuzzy
 msgid ""
 "Name of the subset in which to export this object. Objects with different "
 "subset names will never be exported into the same subset"
 msgstr ""
 "Name des Subsets, in das dieses Objekt exportiert wird. Objekte mit "
 "verschiedenen Subset-Namen werden beim Export nie zu einem Subset "
-"zusammengeführt."
+"zusammengeführt"
 
 #: zusiprops.py:840
 msgid "Variant visibility mode"
@@ -1192,8 +1190,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1048
 msgid "Animation duration"
@@ -1213,8 +1211,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1059
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
