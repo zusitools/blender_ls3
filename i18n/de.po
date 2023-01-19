@@ -1182,8 +1182,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1053
 msgid "Animation duration"
@@ -1203,8 +1203,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1064
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
@@ -1363,14 +1363,12 @@ msgid "Remove the selected variant from the scene"
 msgstr "Die ausgewählte Variante aus der Szene löschen"
 
 #: zusiprops.py:1540
-#, fuzzy
 msgid "Move variant"
-msgstr "Variante löschen"
+msgstr "Variante verschieben"
 
 #: zusiprops.py:1541
-#, fuzzy
 msgid "Move a variant"
-msgstr "Variante löschen"
+msgstr "Eine Variante verschieben"
 
 #: zusiprops.py:1583
 msgid "Add animation name"
