@@ -977,11 +977,17 @@ class Ls3Exporter:
         result = { None : main_file }
 
         def is_object_exported(ob):
-            return ((
-                len(self.exported_subsets[ob]) or
-                ob.zusi_is_linked_file and
-                    (ob.name in self.config.selectedObjects or self.config.exportSelected in [EXPORT_ALL_OBJECTS, EXPORT_SELECTED_MATERIALS])
-                ) and zusicommon.is_object_visible(ob, self.config.variantIDs))
+            if not zusicommon.is_object_visible(ob, self.config.variantIDs):
+                return False
+            if ob.zusi_is_linked_file:
+                if self.config.exportSelected in (EXPORT_SELECTED_OBJECTS, EXPORT_SUBSETS_OF_SELECTED_OBJECTS):
+                    return ob.name in self.config.selectedObjects
+                elif self.config.exportSelected == EXPORT_VISIBLE_COLLECTIONS:
+                    return any(not collection.hide_viewport for collection in ob.users_collection)
+                else:
+                    return True
+            else:
+                return len(self.exported_subsets[ob]) > 0
 
         # Collect all objects that have to be the root of a file.
         # Those are the root objects for all exported objects, then the root objects of those objects, and so on.
