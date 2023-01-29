@@ -245,7 +245,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         layout.label(text=_("Import LODs (only embedded linked files)"))
         row = layout.row()
         row.enabled = self.properties.loadLinkedMode == "2"
-        row.template_list("ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
+        row.template_list("ZUSI_UL_ZusiLodImportSettingList", "", self, "lod_import_setting", self, "lod_import_setting_index")
 
     def execute(self, context):
         from . import ls3_import
