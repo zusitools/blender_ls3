@@ -758,7 +758,7 @@ bpy.types.Material.zusi_gf_type = bpy.props.EnumProperty(
 bpy.types.Material.zusi_force_brightness = bpy.props.FloatProperty(
     name = _("Force brightness"),
     description = _("Force this material to have a specific brightness"),
-    min = 0.0,
+    min = -1.0,
     max = 1.0,
     default = 0.0
 )
@@ -936,7 +936,7 @@ bpy.types.Object.zusi_link_radius = bpy.props.IntProperty(
 )
 
 bpy.types.Object.zusi_link_forced_brightness = bpy.props.FloatProperty(
-    name = _("Forced brightness [0..1]"),
+    name = _("Forced brightness [-1..1]"),
 )
 
 # Due to an implementation error in older versions of blender_ls3,
