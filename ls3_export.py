@@ -1207,7 +1207,7 @@ class Ls3Exporter:
         subset_nodes = [self.write_subset_node(landschaftNode, subset, ls3file) for subset in ls3file.subsets]
 
         # Write animation definitions for this file and any linked file.
-        ani_nr = 0
+        ani_nr = 1
         ani_nrs_by_key = defaultdict(list)
         animation_nodes = []
 

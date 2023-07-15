@@ -912,34 +912,34 @@ class TestLs3Export(unittest.TestCase):
     # Test animation of linked file "Unterarm" in main file.
     animation_nodes = files[""].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
-    self.assertAniNrs(animation_nodes[0], [0])
+    self.assertAniNrs(animation_nodes[0], [1])
 
     self.assertEqual([], files[""].findall(".//MeshAnimation"))
     verkn_animation_nodes = files[""].findall(".//VerknAnimation")
     self.assertEqual(1, len(verkn_animation_nodes))
-    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("1", verkn_animation_nodes[0].attrib["AniNr"])
     self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
 
     # Test animation of linked file "Oberarm" in file "Unterarm"
     animation_nodes = files["Unterarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
-    self.assertAniNrs(animation_nodes[0], [0])
+    self.assertAniNrs(animation_nodes[0], [1])
 
     self.assertEqual([], files["Unterarm"].findall(".//MeshAnimation"))
     verkn_animation_nodes = files["Unterarm"].findall(".//VerknAnimation")
     self.assertEqual(1, len(verkn_animation_nodes))
-    self.assertEqual("0", verkn_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("1", verkn_animation_nodes[0].attrib["AniNr"])
     self.assertEqual("0", verkn_animation_nodes[0].attrib["AniIndex"])
 
     # Test animation of subset "Schleifstueck" in file "Oberarm"
     animation_nodes = files["Oberarm"].findall(".//Animation")
     self.assertEqual(1, len(animation_nodes))
-    self.assertAniNrs(animation_nodes[0], [0])
+    self.assertAniNrs(animation_nodes[0], [1])
 
     self.assertEqual([], files["Oberarm"].findall(".//VerknAnimation"))
     mesh_animation_nodes = files["Oberarm"].findall(".//MeshAnimation")
     self.assertEqual(1, len(mesh_animation_nodes))
-    self.assertEqual("0", mesh_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("1", mesh_animation_nodes[0].attrib["AniNr"])
     self.assertEqual("1", mesh_animation_nodes[0].attrib["AniIndex"])
 
   # No animation is exported => no additional files are created
@@ -975,13 +975,13 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(3, len(animation_nodes))
 
     self.assertEqual("Hp0-Hp1", animation_nodes[0].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[0], [0])
+    self.assertAniNrs(animation_nodes[0], [1])
 
     self.assertEqual("Hp0-Hp2", animation_nodes[1].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[1], [0, 1])
+    self.assertAniNrs(animation_nodes[1], [1, 2])
 
     self.assertEqual("Stromabnehmer A", animation_nodes[2].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[2], [2])
+    self.assertAniNrs(animation_nodes[2], [3])
 
   def test_animation_names_id_0(self):
     self.open("animation_names_id0")
@@ -989,7 +989,7 @@ class TestLs3Export(unittest.TestCase):
     animation_nodes = mainfile.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animation_nodes))
     self.assertNotEqual("", animation_nodes[0].attrib["AniBeschreibung"])
-    self.assertAniNrs(animation_nodes[0], [0])
+    self.assertAniNrs(animation_nodes[0], [1])
 
 
   def test_animation_index_linked_file(self):
@@ -1018,11 +1018,11 @@ class TestLs3Export(unittest.TestCase):
 
     # Check for <AniNrs> node in <Animation> node.
     animation_node = files[""].find("./Landschaft/Animation")
-    self.assertAniNrs(animation_node, [0])
+    self.assertAniNrs(animation_node, [1])
 
     # Check for correct <VerknAnimation> node.
     verkn_animation_node = files[""].find("./Landschaft/VerknAnimation")
-    self.assertEqual("0", verkn_animation_node.attrib["AniNr"])
+    self.assertEqual("1", verkn_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
     self.assertKeyframes(verkn_animation_node, [0, 0.25, 0.5, 0.75, 1.0])
@@ -1041,7 +1041,7 @@ class TestLs3Export(unittest.TestCase):
     # Check linked file #1.
     # Check for correct <VerknAnimation> node.
     mesh_animation_node = files["RadRotation"].find("./Landschaft/MeshAnimation")
-    self.assertEqual("0", mesh_animation_node.attrib["AniNr"])
+    self.assertEqual("1", mesh_animation_node.attrib["AniNr"])
 
     # Check for keyframes.
     self.assertKeyframes(mesh_animation_node, [0.0, 0.25, 0.5, 0.75, 1.0])
@@ -1084,11 +1084,11 @@ class TestLs3Export(unittest.TestCase):
 
     animationNodes = mainfile.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animationNodes))
-    self.assertAniNrs(animationNodes[0], [0])
+    self.assertAniNrs(animationNodes[0], [1])
 
     meshAnimationNodes = mainfile.findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(meshAnimationNodes))
-    self.assertEqual("0", meshAnimationNodes[0].attrib["AniNr"])
+    self.assertEqual("1", meshAnimationNodes[0].attrib["AniNr"])
 
     self.assertKeyframes(meshAnimationNodes[0], [0.0, 0.25, 0.5, 0.75, 1.0])
     p_nodes = meshAnimationNodes[0].findall("./AniPunkt/p")
@@ -1116,11 +1116,11 @@ class TestLs3Export(unittest.TestCase):
 
     animationNodes = mainfile.findall("./Landschaft/Animation")
     self.assertEqual(1, len(animationNodes))
-    self.assertAniNrs(animationNodes[0], [0])
+    self.assertAniNrs(animationNodes[0], [1])
 
     meshAnimationNodes = mainfile.findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(meshAnimationNodes))
-    self.assertEqual("0", meshAnimationNodes[0].attrib["AniNr"])
+    self.assertEqual("1", meshAnimationNodes[0].attrib["AniNr"])
 
     self.assertKeyframes(meshAnimationNodes[0], [0.0, 0.25, 0.5, 0.75, 1.0])
 
@@ -1271,11 +1271,11 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual("5", animation_node.attrib["AniID"])
     ani_nrs_nodes = animation_node.findall("AniNrs")
     self.assertEqual(2, len(ani_nrs_nodes))
-    self.assertNotEqual(None, animation_node.find("./AniNrs[@AniNr='0']"))
+    self.assertNotEqual(None, animation_node.find("./AniNrs[@AniNr='1']"))
 
     mesh_animation_nodes = mainfile.findall("./Landschaft/MeshAnimation")
     self.assertEqual(1, len(mesh_animation_nodes))
-    self.assertEqual("0", mesh_animation_nodes[0].attrib["AniNr"])
+    self.assertEqual("1", mesh_animation_nodes[0].attrib["AniNr"])
 
   def test_animation_rotation_axes(self):
     self.open("animation9")
