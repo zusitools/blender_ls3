@@ -1307,16 +1307,6 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             layout.prop(mat, "zusi_force_brightness")
             layout.prop(mat, "zusi_signal_magnification")
 
-            # Warn the user when night color is not exportable.
-            diffuse_color = mat.diffuse_color
-            if mat.zusi_use_emit:
-                emit_color = mat.zusi_emit_color
-                ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else mathutils.Color((1, 1, 1))
-                if emit_color[0] > diffuse_color[0] or emit_color[1] > diffuse_color[1] or emit_color[2] > diffuse_color[2] \
-                        or emit_color[0] > ambient_color[0] or emit_color[1] > ambient_color[1] or emit_color[2] > ambient_color[2]:
-                    layout.label(text = _("Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components.")
-                        % (diffuse_color[:]), icon = "ERROR")
-
             layout.prop(mat, "zusi_allow_overexposure", text = _("Overexposure"))
 
             row = layout.row()
@@ -1325,9 +1315,10 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
 
             # Warn the user when overexposure is not exportable.
             if row.enabled:
-                emit_color = mat.zusi_emit_color if mat.zusi_use_emit else mathutils.Color((0, 0, 0))
+                diffuse_color = wrapper.base_color
+                emit_color = mat.zusi_emit_color if mat.zusi_use_emit else (0, 0, 0, 0)
                 resulting_diffuse = diffuse_color - emit_color + mat.zusi_overexposure_addition
-                if (resulting_diffuse.r > 1.0 or resulting_diffuse.g > 1.0 or resulting_diffuse.b > 1.0):
+                if (resulting_diffuse[0] > 1.0) or (resulting_diffuse[1] > 1.0) or (resulting_diffuse[2] > 1.0):
                     # Intentionally cryptic error message, as only pros should use this feature :)
                     layout.label(text = _("Must have Diffuse - Night + Overexposure <= 1.0 in all components"),
                         icon = "ERROR")
@@ -1337,9 +1328,9 @@ class OBJECT_PT_material_zusi_properties(bpy.types.Panel):
             row.prop(mat, "zusi_overexposure_addition_ambient", text = _("Add to ambient"))
 
             if row.enabled:
-                emit_color = mat.zusi_emit_color if mat.zusi_use_emit else mathutils.Color((0, 0, 0))
+                emit_color = mat.zusi_emit_color if mat.zusi_use_emit else (0, 0, 0, 0)
                 resulting_ambient = mat.zusi_ambient_color - emit_color + mat.zusi_overexposure_addition_ambient
-                if (resulting_ambient.r > 1.0 or resulting_ambient.g > 1.0 or resulting_ambient.b > 1.0):
+                if (resulting_ambient[0] > 1.0) or (resulting_ambient[1] > 1.0) or (resulting_ambient[2] > 1.0):
                     # Intentionally cryptic error message, as only pros should use this feature :)
                     layout.label(text = _("Must have Ambient - Night + Overexposure <= 1.0 in all components"),
                         icon = "ERROR")
@@ -1392,11 +1383,22 @@ class OBJECT_PT_material_zusi_properties_emit_color(bpy.types.Panel):
         layout.use_property_split = True
 
         mat = context.material
+        if not mat:
+            return
 
-        if mat:
-            layout.active = mat.zusi_use_emit
-            layout.prop(mat, "zusi_emit_color")
+        layout.active = mat.zusi_use_emit
+        layout.prop(mat, "zusi_emit_color")
 
+        # Warn the user if night color is not exportable.
+        if mat.zusi_use_emit:
+            wrapper = PrincipledBSDFWrapper(mat)
+            emit_color = mat.zusi_emit_color
+            diffuse_color = wrapper.base_color
+            ambient_color = mat.zusi_ambient_color if mat.zusi_use_ambient else (1, 1, 1, 1)
+            if emit_color[0] > diffuse_color[0] or emit_color[1] > diffuse_color[1] or emit_color[2] > diffuse_color[2] \
+                    or emit_color[0] > ambient_color[0] or emit_color[1] > ambient_color[1] or emit_color[2] > ambient_color[2]:
+                layout.label(text = _("Must be darker than diffuse (%.3f, %.3f, %.3f) and ambient in all components.")
+                    % diffuse_color[0:3], icon = "ERROR")
 
 class OBJECT_PT_material_edit_custom_texture_preset(bpy.types.Operator):
     bl_idname = 'zusi_texture_preset.edit'
