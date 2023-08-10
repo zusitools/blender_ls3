@@ -3,8 +3,6 @@ blender_ls3
 
 Ein Blender-Plugin (Blender 2.66 und höher) für den Im- und Export von LS3-Dateien. Dieses XML-basierte Dateiformat wird von [Zusi 3](http://www.zusi.de) verwendet.
 
-**Hinweis:** In der öffentlich verfügbaren Version werden keine Texturkoordinaten importiert.
-
 **Installation und Bedienung:**
 
 siehe [Dokumentation](http://zusitools.github.io/blender_ls3/)

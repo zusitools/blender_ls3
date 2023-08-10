@@ -133,13 +133,6 @@ class Ls3ImporterSettings:
 class Ls3Importer:
     def __init__(self, config):
         self.config = config
-
-        try:
-            from . import uv_import
-            self.import_uv_coordinates = uv_import.import_uv_coordinates
-        except ImportError:
-            self.import_uv_coordinates = None
-
         self.lsb_reader = None  # created on demand
 
         # Imported subsets (= Blender objects) indexed by their subset number.
@@ -361,14 +354,12 @@ class Ls3Importer:
                 texture_slots[idx].texture_coords = 'UV'
                 texture_slots[idx].uv_layer = uv_layer.name
 
-            for faceidx in range(len(self.currentfaces)):
+            for faceidx, face in enumerate(self.currentfaces):
                 uv_texture.data[faceidx].image = img
-
-            if self.import_uv_coordinates:
-                self.import_uv_coordinates(idx, uv_layer, self.currentvertices, self.currentfaces)
-            else:
-                for data in uv_layer.data:
-                    data.uv = [0, 0]
+                for i in range(0, 3):
+                    # Take UV coordinates from old facedata (from when the mesh was not optimized yet)
+                    v = self.currentvertices[face[i]]
+                    uv_layer.data[3 * faceidx + i].uv = [v[6 + 2 * idx], 1 - v[7 + 2 * idx]]
 
         # Set custom normals
         if bpy.app.version >= (2, 74, 0):
