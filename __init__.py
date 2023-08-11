@@ -429,7 +429,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
 
         if len(context.scene.zusi_variants) > 0:
             num_rows = min(5, len(self.properties.variant_export_setting))
-            layout.template_list("ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
+            layout.template_list("ZUSI_UL_ZusiFileVariantExportSettingList", "", self, "variant_export_setting", self, "variant_export_setting_index", rows = num_rows)
         else:
             box = layout.box()
             box.label(_("Variants can be defined in the Scene settings."))
