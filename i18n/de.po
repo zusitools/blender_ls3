@@ -704,9 +704,8 @@ msgid "Semi-transparency for leaf-like structures, Alpha reference value 150"
 msgstr "Halbtransparenz für laubähnliche Strukturen, Alpharef 150"
 
 #: zusiprops.py:592
-#, fuzzy
 msgid "Overlaying window, switched off at night"
-msgstr "Überlagertes Fenster, tagsüber ausschaltend"
+msgstr "Überlagertes Fenster, nachts ausschaltend"
 
 #: zusiprops.py:596
 msgid "Visible in all variants"
@@ -1116,9 +1115,8 @@ msgid "Radius [m]"
 msgstr "Radius [m]"
 
 #: zusiprops.py:935
-#, fuzzy
 msgid "Forced brightness [-1..1]"
-msgstr "Zwangshelligkeit [0..1]"
+msgstr "Zwangshelligkeit [-1..1]"
 
 #: zusiprops.py:946
 msgid "Level of detail"
@@ -1196,8 +1194,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1049
 msgid "Animation duration"
@@ -1217,8 +1215,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1060
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
