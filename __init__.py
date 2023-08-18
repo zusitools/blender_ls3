@@ -18,7 +18,7 @@
 bl_info = {
     'name': 'Zusi Scenery Format (.ls3)',
     'author': 'Johannes',
-    'version': (2, 0, 20),
+    'version': (2, 0, 21),
     'blender': (2, 80, 0),
     'location': 'File > Import -> Zusi Scenery (.ls3) / File -> Export > Zusi Scenery (.ls3)',
     'description': 'Import and export files from/to the Zusi Scenery format (.ls3)',
