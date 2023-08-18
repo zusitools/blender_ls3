@@ -173,14 +173,13 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual("UVLayer.2", texslots[1].uv_layer)
 
     self.assertEqual("UVLayer.1", ob.data.uv_layers[0].name)
-    has_uv_import = os.path.exists(os.path.join(os.path.dirname(sys.modules[self.__module__].__file__), os.pardir, 'uv_import.py'))
     for idx, uv in enumerate(ob.data.uv_layers[0].data):
         self.assertAlmostEqual(0.0, uv.uv[0], 5, "u coordinate of loop %d" % idx)
-        self.assertAlmostEqual(1.0 if has_uv_import else 0.0, uv.uv[1], 5, "v coordinate of loop %d" % idx)
+        self.assertAlmostEqual(1.0, uv.uv[1], 5, "v coordinate of loop %d" % idx)
 
     self.assertEqual("UVLayer.2", ob.data.uv_layers[1].name)
     for idx, uv in enumerate(ob.data.uv_layers[1].data):
-        self.assertAlmostEqual(1.0 if has_uv_import else 0.0, uv.uv[0], 5, "u coordinate of loop %d" % idx)
+        self.assertAlmostEqual(1.0, uv.uv[0], 5, "u coordinate of loop %d" % idx)
         self.assertAlmostEqual(0.0, uv.uv[1], 5, "v coordinate of loop %d" % idx)
 
   @unittest.skip("not implemented yet")

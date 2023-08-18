@@ -133,13 +133,6 @@ class Ls3ImporterSettings:
 class Ls3Importer:
     def __init__(self, config):
         self.config = config
-
-        try:
-            from . import uv_import
-            self.import_uv_coordinates = uv_import.import_uv_coordinates
-        except ImportError:
-            self.import_uv_coordinates = None
-
         self.lsb_reader = None  # created on demand
 
         # Imported subsets (= Blender objects) indexed by their subset number.
