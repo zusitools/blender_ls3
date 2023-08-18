@@ -600,6 +600,7 @@ texture_presets = [
     ("10", _("Overlaying window, switched off at day"), ""),
     ("11", _("Wall of fog"), ""),
     ("12", _("Semi-transparency for leaf-like structures, Alpha reference value 150"), ""),
+    ("13", _("Overlaying window, switched off at night"), ""),
 ]
 
 variant_visibility_modes = [
