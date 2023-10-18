@@ -82,7 +82,7 @@ EXPORT_ALL_OBJECTS = "0"
 EXPORT_SELECTED_OBJECTS = "1"
 EXPORT_SUBSETS_OF_SELECTED_OBJECTS = "2"
 EXPORT_SELECTED_MATERIALS = "3"
-EXPORT_VISIBLE_COLLECTIONS = "4"
+EXPORT_VISIBLE_OBJECTS = "4"
 
 EPSILON = 0.00001
 
@@ -982,8 +982,8 @@ class Ls3Exporter:
             if ob.zusi_is_linked_file:
                 if self.config.exportSelected in (EXPORT_SELECTED_OBJECTS, EXPORT_SUBSETS_OF_SELECTED_OBJECTS):
                     return ob.name in self.config.selectedObjects
-                elif self.config.exportSelected == EXPORT_VISIBLE_COLLECTIONS:
-                    return any(not collection.hide_viewport for collection in ob.users_collection)
+                elif self.config.exportSelected == EXPORT_VISIBLE_OBJECTS:
+                    return ob.visible_get()
                 else:
                     return True
             else:
@@ -1084,8 +1084,8 @@ class Ls3Exporter:
             if (self.config.exportSelected == EXPORT_SELECTED_OBJECTS and
                     ob.name not in self.config.selectedObjects):
                 continue
-            if (self.config.exportSelected == EXPORT_VISIBLE_COLLECTIONS and
-                    all(collection.hide_viewport for collection in ob.users_collection)):
+            if (self.config.exportSelected == EXPORT_VISIBLE_OBJECTS and
+                    not ob.visible_get()):
                 continue
 
             for matidx, mat in get_used_materials_for_object(ob):

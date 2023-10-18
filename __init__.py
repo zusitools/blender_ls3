@@ -352,7 +352,7 @@ class EXPORT_OT_ls3(bpy.types.Operator, ExportHelper):
             ("0", _("All objects"), ""),
             ("1", _("Selected objects"), ""),
             ("2", _("Subsets containing selected objects"), ""),
-            ("4", _("Objects in visible collections"), ""),
+            ("4", _("Visible objects"), ""),
         ],
         default = ls3_export.get_exporter_setting("exportSelected"),
     )
