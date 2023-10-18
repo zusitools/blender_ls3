@@ -680,10 +680,10 @@ class Ls3Exporter:
                 wrapper = PrincipledBSDFWrapper(mat)
                 uvlayers[material_index] = [
                     None if wrapper.base_texture_image is None
-                        else mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None
+                        else mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None and wrapper.base_uv_map in mesh.uv_layers
                         else mesh.uv_layers.active,
                     None if wrapper.secondary_texture_image is None
-                        else mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None
+                        else mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None and wrapper.secondary_uv_map in mesh.uv_layers
                         else mesh.uv_layers.active]
             else:
                 uvlayers[material_index] = [None, None]
