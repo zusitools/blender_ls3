@@ -144,9 +144,8 @@ msgid "Subsets containing selected objects"
 msgstr "Subsets der ausgewählten Objekte"
 
 #: __init__.py:355
-#, fuzzy
 msgid "Visible objects"
-msgstr "Alle Objekte"
+msgstr "Sichtbare Objekte"
 
 #: __init__.py:361
 msgid "Export animations"
@@ -1195,8 +1194,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1049
 msgid "Animation duration"
@@ -1216,8 +1215,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1060
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
