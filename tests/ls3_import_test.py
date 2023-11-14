@@ -52,13 +52,13 @@ class TestLs3Import(unittest.TestCase):
     self._mock_fs.stop()
 
   def ls3_import(self, filename, importargs={}):
-    bpy.ops.import_scene.ls3(bpy.context.copy(),
+    bpy.ops.import_scene.ls3(
       files=[{"name":filename}],
       directory=os.path.join(self._tempdir, "ls3s"),
       **importargs)
 
   def ls_import(self, filename, importargs={}):
-    bpy.ops.import_scene.ls(bpy.context.copy(),
+    bpy.ops.import_scene.ls(
       files=[{"name":filename}],
       directory=os.path.join(self._tempdir, "ls"),
       **importargs)
@@ -298,7 +298,7 @@ class TestLs3Import(unittest.TestCase):
     self.assertFalse(bpy.data.objects["second_drawing_pass.ls3.2"].data.materials[0].zusi_second_pass)
 
   def test_import_multiple_files(self):
-    bpy.ops.import_scene.ls3(bpy.context.copy(),
+    bpy.ops.import_scene.ls3(
       files=[{"name":"nightcolor1.ls3"}, {"name":"zbias.ls3"}],
       directory=os.path.join(self._tempdir, "ls3s"))
     self.assertIn("nightcolor1.ls3.0", bpy.data.objects)

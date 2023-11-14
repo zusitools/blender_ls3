@@ -657,7 +657,7 @@ class Ls3Exporter:
                 # Workaround for https://developer.blender.org/T96999
                 mesh.flip_normals()
                 mesh.flip_normals()
-            else:
+            elif bpy.app.version < (4, 0, 0):
                 mesh.calc_normals()
         use_auto_smooth = mesh.use_auto_smooth
         if mesh.use_auto_smooth:

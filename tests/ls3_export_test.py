@@ -104,12 +104,10 @@ class TestLs3Export(unittest.TestCase):
     bpy.context.view_layer.update()
 
   def export(self, exportargs={}, noclose=False):
-    context = bpy.context.copy()
+    selected_objects = []
     if 'selected_objects' in exportargs:
-        context['selected_objects'] = [ob for ob in bpy.data.objects if ob.name in exportargs["selected_objects"]]
+        selected_objects = [ob for ob in bpy.data.objects if ob.name in exportargs["selected_objects"]]
         del exportargs["selected_objects"]
-    else:
-        context['selected_objects'] = []
 
     if "ext" in exportargs:
       filename = "export" + exportargs["ext"]
@@ -129,9 +127,17 @@ class TestLs3Export(unittest.TestCase):
     args = copy(sys.modules["io_scene_ls3.zusiconfig"].default_export_settings)
     args.update(exportargs)
 
-    bpy.ops.export_scene.ls3(context,
-      filepath=exportpath, filename=filename, directory=ZUSI3_EXPORTPATH, variant_export_setting=variants,
-      **args)
+    if bpy.app.version >= (4, 0, 0):
+        with bpy.context.temp_override(selected_objects=selected_objects):
+            bpy.ops.export_scene.ls3(
+              filepath=exportpath, filename=filename, directory=ZUSI3_EXPORTPATH, variant_export_setting=variants,
+              **args)
+    else:
+        context = bpy.context.copy()
+        context['selected_objects'] = selected_objects
+        bpy.ops.export_scene.ls3(context,
+          filepath=exportpath, filename=filename, directory=ZUSI3_EXPORTPATH, variant_export_setting=variants,
+          **args)
 
     return exportpath
 
