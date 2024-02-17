@@ -637,6 +637,10 @@ anchor_point_types = [
     ("17", _("Telegraph line attachment point"), ""),
     ("18", _("Power supply line attachment point"), ""),
     ("19", _("Signal"), ""),
+    ("20", _("Catenary wire swivel clamp attachment point"), ""),
+    ("21", _("Registration tube dropper attachment point"), ""),
+    ("22", _("Position of load"), ""),
+    ("23", _("View point position"), ""),
 ]
 
 #
