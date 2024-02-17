@@ -812,23 +812,20 @@ msgid "Signal"
 msgstr "Signal"
 
 #: zusiprops.py:640
-#, fuzzy
 msgid "Catenary wire swivel clamp attachment point"
-msgstr "Anbaupunkt Stelldraht"
+msgstr "Anbaupunkt Tragseildrehklemme"
 
 #: zusiprops.py:641
-#, fuzzy
 msgid "Registration tube dropper attachment point"
-msgstr "Anbaupunkt Ausleger"
+msgstr "Anbaupunkt Stützrohrhänger"
 
 #: zusiprops.py:642
 msgid "Position of load"
-msgstr ""
+msgstr "Position Beladung"
 
 #: zusiprops.py:643
-#, fuzzy
 msgid "View point position"
-msgstr "Beschreibung des Ankerpunkts"
+msgstr "Position Blickpunkt"
 
 #: zusiprops.py:651
 msgid "Calculate normals for rail"
@@ -1205,8 +1202,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1058
 msgid "Animation duration"
@@ -1226,8 +1223,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1069
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
