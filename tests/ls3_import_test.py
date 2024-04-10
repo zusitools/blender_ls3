@@ -141,7 +141,8 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("custom_normals.ls3")
     ob = bpy.data.objects["custom_normals.ls3.0"]
     me = ob.data
-    me.calc_normals_split()
+    if bpy.app.version < (4, 1, 0):
+      me.calc_normals_split()
 
     vertex_normals = [None] * len(me.loops) * 3
     me.loops.foreach_get("normal", vertex_normals)

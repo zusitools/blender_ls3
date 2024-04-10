@@ -332,13 +332,18 @@ class Ls3Importer:
         self.currentmesh.polygons.foreach_set("loop_start", range(0, 3 * len(self.currentfaces), 3))
         self.currentmesh.polygons.foreach_set("loop_total", [3] * len(self.currentfaces))
 
-        self.currentmesh.create_normals_split()
+        if bpy.app.version < (4, 1, 0):
+            self.currentmesh.create_normals_split()
         normals = []
         for f in self.currentfaces:
             for i in range(0, 3):
                 v = self.currentvertices[f[i]]
                 normals += [v[4], -v[3], v[5]]
-        self.currentmesh.loops.foreach_set("normal", normals)
+        if bpy.app.version < (4, 1, 0):
+            self.currentmesh.loops.foreach_set("normal", normals)
+        else:
+            self.currentmesh.attributes.new("temp_custom_normals", 'FLOAT_VECTOR', 'CORNER')
+            self.currentmesh.attributes["temp_custom_normals"].data.foreach_set("vector", normals)
 
         # Set UV coordinates
         # Additionally, if we found a texture image in one of the child nodes, assign it to all faces
@@ -349,9 +354,13 @@ class Ls3Importer:
         self.currentmesh.update(calc_edges = False)
 
         custom_normals = array.array('f', [0.0] * (len(self.currentmesh.loops) * 3))
-        self.currentmesh.loops.foreach_get("normal", custom_normals)
+        if bpy.app.version < (4, 1, 0):
+            self.currentmesh.loops.foreach_get("normal", custom_normals)
+        else:
+            self.currentmesh.attributes["temp_custom_normals"].data.foreach_get("vector", custom_normals)
         self.currentmesh.normals_split_custom_set(tuple(zip(*(iter(custom_normals),) * 3)))
-        self.currentmesh.use_auto_smooth = True
+        if bpy.app.version < (4, 1, 0):
+            self.currentmesh.use_auto_smooth = True
 
         self.currentmesh.update(calc_edges = True)
 

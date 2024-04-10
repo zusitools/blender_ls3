@@ -659,8 +659,8 @@ class Ls3Exporter:
                 mesh.flip_normals()
             elif bpy.app.version < (4, 0, 0):
                 mesh.calc_normals()
-        use_auto_smooth = mesh.use_auto_smooth
-        if mesh.use_auto_smooth:
+        use_auto_smooth = mesh.use_auto_smooth if bpy.app.version < (4, 1, 0) else False
+        if use_auto_smooth:
             mesh.calc_normals_split()
         mesh.calc_loop_triangles()
 
@@ -731,22 +731,24 @@ class Ls3Exporter:
                 if use_rail_normals:
                     normal = (0, 0, 1)
                 else:
-                    if use_auto_smooth:
+                    if bpy.app.version >= (4, 1, 0):
+                        normal = mesh.corner_normals[loop_index].vector
+                    elif use_auto_smooth:
                         normal = loop.normal
                     elif face.use_smooth:
-                        normal = v.normal.copy()
-                        for g in v.groups:
-                            if g.weight == 0.0:
-                                continue
-                            if g.group == vgroup_yz:
-                                normal[0] = 0
-                            elif g.group == vgroup_xz:
-                                normal[1] = 0
-                            elif g.group == vgroup_xy:
-                                normal[2] = 0
-                        normal.normalize()
+                        normal = v.normal
                     else:
                         normal = face.normal
+
+                    for g in v.groups:
+                        if g.weight == 0.0:
+                            continue
+                        if g.group == vgroup_yz:
+                            normal = Vector((0, normal[1], normal[2])).normalized()
+                        elif g.group == vgroup_xz:
+                            normal = Vector((normal[0], 0, normal[2])).normalized()
+                        elif g.group == vgroup_xy:
+                            normal = Vector((normal[0], normal[1], 0)).normalized()
 
                 # Calculate square of vertex length (projected onto the XY plane)
                 # for the bounding radius.
