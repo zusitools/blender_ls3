@@ -156,22 +156,18 @@ class TestLs3Import(unittest.TestCase):
     ob = bpy.data.objects["doublesided.ls3.0"]
     self.assertEqual(4, len(ob.data.polygons))
 
-  @unittest.skip("not implemented yet")
   def test_multitexture_import(self):
     self.ls3_import("multitexture.ls3")
     ob = bpy.data.objects["multitexture.ls3.0"]
 
-    texslots = ob.data.materials[0].texture_slots
+    mat_wrapper = sys.modules["io_scene_ls3.zusi_material_wrapper"].PrincipledBSDFWrapper(ob.data.materials[0])
 
     self.assertEqual(2, len(ob.data.uv_layers))
-    self.assertNotEqual(None, texslots[0])
-    self.assertNotEqual(None, texslots[1])
 
-    self.assertEqual('UV', texslots[0].texture_coords)
-    self.assertEqual("UVLayer.1", texslots[0].uv_layer)
-
-    self.assertEqual('UV', texslots[1].texture_coords)
-    self.assertEqual("UVLayer.2", texslots[1].uv_layer)
+    self.assertEqual(mat_wrapper.base_texture_image, bpy.data.images['texture.dds'])
+    self.assertEqual(mat_wrapper.base_uv_map, ob.data.uv_layers[0].name)
+    self.assertEqual(mat_wrapper.secondary_texture_image, bpy.data.images['texture_alpha.dds'])
+    self.assertEqual(mat_wrapper.secondary_uv_map, ob.data.uv_layers[1].name)
 
     self.assertEqual("UVLayer.1", ob.data.uv_layers[0].name)
     for idx, uv in enumerate(ob.data.uv_layers[0].data):
@@ -343,13 +339,12 @@ class TestLs3Import(unittest.TestCase):
 
     self.assertEqual(ob1, a1.parent)
 
-  @unittest.skip("not implemented yet")
   def test_two_textures(self):
     self.ls3_import("two_textures.ls3")
     ob = bpy.data.objects["two_textures.ls3.0"]
-    mat = ob.data.materials[0]
+    mat_wrapper = sys.modules["io_scene_ls3.zusi_material_wrapper"].PrincipledBSDFWrapper(ob.data.materials[0])
 
-    self.assertEqual(mat.texture_slots[0].texture.image, mat.texture_slots[1].texture.image)
+    self.assertEqual(mat_wrapper.base_texture_image, mat_wrapper.secondary_texture_image)
 
   def test_import_animated_subset(self):
     self.ls3_import("animated_subset.ls3")

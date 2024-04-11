@@ -162,6 +162,7 @@ class Ls3Importer:
         # Each item contains a tuple of three vertex indices.
         self.currentfaces = []
 
+        self.current_texture_images = []
         self.current_meters_per_tex = [0, 0]
 
         # Path to Zusi data dir
@@ -210,6 +211,7 @@ class Ls3Importer:
     def visitSubSetNode(self, node):
         self.currentvertices = []
         self.currentfaces = []
+        self.current_texture_images = []
 
         # Create new mesh
         self.currentmesh = bpy.data.meshes.new(self.config.fileName + "." + str(self.subsetno))
@@ -321,6 +323,40 @@ class Ls3Importer:
             if self.lsb_reader.lsbfile is not None:
                 (self.currentvertices, self.currentfaces) = self.lsb_reader.read_subset_data(node)
 
+        # Build shader node tree
+        mat.use_nodes = True
+        for node in mat.node_tree.nodes:
+            mat.node_tree.nodes.remove(node)
+        node_output = mat.node_tree.nodes.new('ShaderNodeOutputMaterial')
+        node_principled = mat.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
+        mat.node_tree.links.new(node_principled.outputs[0], node_output.inputs[0])
+
+        node_current_color_output = None
+        if len(self.current_texture_images) >= 1:
+            node_tex1 = mat.node_tree.nodes.new('ShaderNodeTexImage')
+            node_tex1.image = self.current_texture_images[0]
+            node_uv1 = mat.node_tree.nodes.new('ShaderNodeUVMap')
+            node_uv1.uv_map = "UVLayer.1"
+            mat.node_tree.links.new(node_uv1.outputs[0], node_tex1.inputs["Vector"])
+
+            if len(self.current_texture_images) >= 2:
+                node_tex2 = mat.node_tree.nodes.new('ShaderNodeTexImage')
+                node_tex2.image = self.current_texture_images[1]
+                node_uv2 = mat.node_tree.nodes.new('ShaderNodeUVMap')
+                node_uv2.uv_map = "UVLayer.2"
+                mat.node_tree.links.new(node_uv2.outputs[0], node_tex2.inputs["Vector"])
+                node_current_color_output = mat.node_tree.nodes.new('ShaderNodeMixRGB')
+                mat.node_tree.links.new(node_tex1.outputs[1], node_current_color_output.inputs["Fac"])
+                mat.node_tree.links.new(node_tex1.outputs[0], node_current_color_output.inputs["Color1"])
+                mat.node_tree.links.new(node_tex2.outputs[0], node_current_color_output.inputs["Color2"])
+            else:
+                node_current_color_output = node_tex1
+
+        if node_current_color_output:
+            mat.node_tree.links.new(node_current_color_output.outputs[0], node_principled.inputs['Base Color'])
+        elif mat.diffuse_color != (0, 0, 0, 1):
+            node_principled.inputs['Base Color'].default_value = mat.diffuse_color
+
         # Fill the mesh with verts, edges, faces
         self.currentmesh.vertices.add(len(self.currentvertices))
         self.currentmesh.loops.add(3 * len(self.currentfaces))
@@ -347,7 +383,16 @@ class Ls3Importer:
 
         # Set UV coordinates
         # Additionally, if we found a texture image in one of the child nodes, assign it to all faces
-        # TODO
+        for idx in range(0, min(2, len(self.current_texture_images))):
+            img = self.current_texture_images[idx] if idx < len(self.current_texture_images) else None
+            uvlayer_name = "UVLayer." + str(idx+1)
+            uv_layer = self.currentmesh.uv_layers.new(name = uvlayer_name)
+
+            for faceidx, face in enumerate(self.currentfaces):
+                for i in range(0, 3):
+                    # Take UV coordinates from old facedata (from when the mesh was not optimized yet)
+                    v = self.currentvertices[face[i]]
+                    uv_layer.data[3 * faceidx + i].uv = [v[6 + 2 * idx], 1 - v[7 + 2 * idx]]
 
         # Set custom normals
         self.currentmesh.validate(clean_customdata = False) # False in order to preserve normals stored in loops
@@ -710,31 +755,18 @@ class Ls3Importer:
     def visitTexturNode(self, node):
         try:
             dateinode = [x for x in node.childNodes if x.nodeName == "Datei"][0] # may raise IndexError
-
-            # Add texture to current object
-            mat = self.currentmesh.materials[0]
-            # XXX slotidx = sum(s is not None for s in mat.texture_slots)
-
             imgpath = zusicommon.resolve_file_path(dateinode.getAttribute("Dateiname"),
                     self.config.fileDirectory, self.datapath, self.datapath_official) # may raise RuntimeError
-            existing_images = [i for i in bpy.data.images if bpy.path.abspath(i.filepath) == bpy.path.abspath(imgpath)]
-            img = existing_images[0] if len(existing_images) else bpy.data.images.load(imgpath)
-            tex = bpy.data.textures.new(self.config.fileName + "." + str(self.subsetno),  type='IMAGE')
-            tex.image = img
-
-            # XXX texslot = mat.texture_slots.create(slotidx)
-            # XXX texslot.texture = tex
-            # XXX texslot.texture_coords = 'UV'
-            # XXX texslot.blend_type = 'COLOR'
-
-            # XXX if slotidx < 2:
-            # XXX     tex.zusi_meters_per_texture = self.current_meters_per_tex[slotidx]
-
+            for i in bpy.data.images:
+                if bpy.path.abspath(i.filepath) == bpy.path.abspath(imgpath):
+                    self.current_texture_images.append(i)
+                    break
+            else:
+                self.current_texture_images.append(bpy.data.images.load(imgpath))
         except(IndexError,  RuntimeError):
             pass
 
     def read_effort_from_expense_xml(self, root):
-        print(root)
         for child in root.firstChild.childNodes:
             if child.nodeName != 'Info':
                 continue

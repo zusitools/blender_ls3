@@ -123,10 +123,10 @@ class PrincipledBSDFWrapper:
 
     def get_uv_map(self, node_input, index):
         if not node_input.is_linked:
-            logger.debug(f"get_uv_map {node_input} -> not linked")
+            logger.debug(f"get_uv_map({index}) {node_input} -> not linked")
             return None
         node2 = node_input.links[0].from_node
-        logger.debug(f"get_uv_map {node_input} -> {node2.bl_idname}")
+        logger.debug(f"get_uv_map({index}) {node_input} -> {node2.bl_idname}")
         if node2.bl_idname == "ShaderNodeMixRGB":
             if index == 0:
                 return self.get_uv_map(node2.inputs["Color1"], 0)
@@ -138,9 +138,9 @@ class PrincipledBSDFWrapper:
             elif index == 1:
                 return self.get_uv_map(node2.inputs[7], 0)
         elif node2.bl_idname == "ShaderNodeTexImage":
-            logger.debug(f"get_texture: found image {node2.image} at {node2}")
+            logger.debug(f"get_uv_map({index}): found image {node2.image} at {node2}")
             return self.get_uv_map(node2.inputs["Vector"], 0)
         elif node2.bl_idname == "ShaderNodeUVMap":
-            logger.debug(f"get_texture: found uv map {node2.uv_map} at {node2}")
+            logger.debug(f"get_uv_map({index}): found uv map {node2.uv_map} at {node2}")
             return node2.uv_map
         return None
