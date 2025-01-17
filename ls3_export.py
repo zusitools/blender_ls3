@@ -1157,6 +1157,19 @@ class Ls3Exporter:
                     get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop else ""),
                     loop)]
 
+    def optimize_mesh(self, ls3file):
+        for index, subset in enumerate(ls3file.subsets):
+            if self.config.optimizeMesh:
+                new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
+                num_deleted_vertices = sum(v is None for v in subset.vertexdata)
+                if len(subset.vertexdata) - num_deleted_vertices > 65536:
+                    raise OverflowError("Subset {} has {} vertices after optimization, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata) - num_deleted_vertices))
+                subset.facedata = array.array('H', [new_vidx[x] for x in subset.facedata])
+                info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
+            else:
+                if len(subset.vertexdata) > 65536:
+                    raise OverflowError("Subset {} has {} vertices, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata)))
+
     def write_ls3_file(self, ls3file):
         def fill_author_info(infoNode, authors, write_effort):
             for author in sce.zusi_authors:
@@ -1320,35 +1333,17 @@ class Ls3Exporter:
             (basename, ext) = os.path.splitext(filepath)
             lsbpath = basename + ".lsb"
         
-            lsb_fp = open(lsbpath, 'wb')
-            from . import lsb
-            lsbwriter = lsb.LsbWriter(lsb_fp)
-            info('Exporting LSB file {}', lsbpath)
+            with open(lsbpath, 'wb') as lsb_fp:
+                from . import lsb
+                lsbwriter = lsb.LsbWriter(lsb_fp)
+                info('Exporting LSB file {}', lsbpath)
 
-            lsbNode = self.create_element("lsb")
-            lsbNode.setAttribute("Dateiname", os.path.basename(lsbpath))
-            landschaftNode.insertBefore(lsbNode, subset_nodes[0])
+                lsbNode = self.create_element("lsb")
+                lsbNode.setAttribute("Dateiname", os.path.basename(lsbpath))
+                landschaftNode.insertBefore(lsbNode, subset_nodes[0])
 
-        for index, subset in enumerate(ls3file.subsets):
-            if self.config.optimizeMesh:
-                new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-                num_deleted_vertices = sum(v is None for v in subset.vertexdata)
-                if len(subset.vertexdata) - num_deleted_vertices > 65536:
-                    raise OverflowError("Subset {} has {} vertices after optimization, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata) - num_deleted_vertices))
-                subset.facedata = array.array('H', [new_vidx[x] for x in subset.facedata])
-                info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
-            else:
-                if len(subset.vertexdata) > 65536:
-                    raise OverflowError("Subset {} has {} vertices, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata)))
-                if lsbwriter:
-                    # LSB writer needs its face data as unsigned short.
-                    subset.facedata = array.array('H', list(subset.facedata))
-
-            if lsbwriter:
-                lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata)
-
-        if lsbwriter:
-            lsb_fp.close()
+                for index, subset in enumerate(ls3file.subsets):
+                    lsbwriter.add_subset_data(subset_nodes[index], subset.vertexdata, subset.facedata if isinstance(subset.facedata, array.array) else array.array('H', list(subset.facedata)))
 
         # Write XML document to file
         info('Exporting LS3 file {}', filepath)
@@ -1397,4 +1392,5 @@ class Ls3Exporter:
             work_list.extend([f for f in cur_file.linked_files if f.must_export])
 
         for ls3file in write_list:
+            self.optimize_mesh(ls3file)
             self.write_ls3_file(ls3file)
