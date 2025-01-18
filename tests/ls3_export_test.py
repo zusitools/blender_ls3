@@ -418,18 +418,18 @@ class TestLs3Export(unittest.TestCase):
   @unittest.skip("very slow")
   def test_too_many_vertices(self):
     self.open("toomanyvertices")
-    with self.assertRaises(RuntimeError) as ctx:
-        self.export_and_parse()
-    self.assertTrue("OverflowError" in ctx.exception.args[0])
+    root = self.export_and_parse()
+    subset_nodes = root.findall("./Landschaft/SubSet")
+    self.assertEqual(7, len(subset_nodes))
 
-    with self.assertRaises(RuntimeError) as ctx:
-        self.export_and_parse({
+    root = self.export_and_parse({
           "optimizeMesh" : True,
           "maxCoordDelta" : 0.1,
           "maxUVDelta" : 1.0,
           "maxNormalAngle" : 1,
         })
-    self.assertTrue("OverflowError" in ctx.exception.args[0])
+    subset_nodes = root.findall("./Landschaft/SubSet")
+    self.assertEqual(2, len(subset_nodes))
 
   def test_scaled_object(self):
     self.open("scale")
