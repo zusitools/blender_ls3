@@ -20,6 +20,7 @@
 import bpy
 import os
 import array
+import copy
 import struct
 import xml.dom.minidom as dom
 import logging
@@ -1158,17 +1159,54 @@ class Ls3Exporter:
                     loop)]
 
     def optimize_mesh(self, ls3file):
-        for index, subset in enumerate(ls3file.subsets):
-            if self.config.optimizeMesh:
-                new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
-                num_deleted_vertices = sum(v is None for v in subset.vertexdata)
-                if len(subset.vertexdata) - num_deleted_vertices > 65536:
-                    raise OverflowError("Subset {} has {} vertices after optimization, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata) - num_deleted_vertices))
-                subset.facedata = array.array('H', [new_vidx[x] for x in subset.facedata])
-                info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
-            else:
-                if len(subset.vertexdata) > 65536:
-                    raise OverflowError("Subset {} has {} vertices, max. 65536 supported by Zusi".format(subset.identifier, len(subset.vertexdata)))
+        for subset in ls3file.subsets:
+            new_vidx = zusicommon.optimize_mesh(subset.vertexdata, self.config.maxCoordDelta, self.config.maxUVDelta, self.config.maxNormalAngle)
+            num_deleted_vertices = sum(v is None for v in subset.vertexdata)
+            subset.facedata = [new_vidx[x] for x in subset.facedata]
+            info("Mesh optimization for subset {}: {} of {} vertices deleted", subset.identifier, num_deleted_vertices, len(subset.vertexdata))
+
+    def split_mesh_with_too_many_vertices(self, ls3file):
+        i = 0
+        while i < len(ls3file.subsets):
+            subset = ls3file.subsets[i]
+            num_vertices = sum(v is not None for v in subset.vertexdata)
+            if num_vertices <= 65536:
+                i += 1
+                continue
+
+            # Split into multiple subsets where each vertex index is <= 65535.
+            # But not particularly elegantly, since this is such a rare case.
+            subset.vertexdata = [v for v in subset.vertexdata if v is not None]
+            debug("Splitting subset with %1 vertices", len(subset.vertexdata))
+            split_subsets_facedata = []
+            for j in range(0, len(subset.facedata) // 3):
+                vidxes = subset.facedata[3*j:3*j+3]
+                # Ensure that all vertices of a face lie in the same subset after splitting.
+                while (vidxes[0] // 65536 != vidxes[1] // 65536) or (vidxes[0] // 65536 != vidxes[2] // 65536):
+                    subset.vertexdata.append(subset.vertexdata[vidxes[0]])
+                    subset.vertexdata.append(subset.vertexdata[vidxes[1]])
+                    subset.vertexdata.append(subset.vertexdata[vidxes[2]])
+                    vidxes = range(len(subset.vertexdata) - 3, len(subset.vertexdata))
+
+                split_subset_idx = vidxes[0] // 65536  # == vidxes[1] // 65536 == vidxes[2] // 65536
+                while split_subset_idx >= len(split_subsets_facedata):
+                    debug("Creating new subset to hold vertex indices %1", vidxes)
+                    split_subsets_facedata.append([])
+                split_subsets_facedata[split_subset_idx].extend(vidx % 65536 for vidx in vidxes)
+
+            for split_subset_idx, facedata in enumerate(split_subsets_facedata):
+                if split_subset_idx == 0:
+                    continue  # will be handled afterwards
+                split_subset = copy.copy(subset)
+                split_subset.vertexdata = subset.vertexdata[split_subset_idx*65536:(split_subset_idx+1)*65536]
+                split_subset.facedata = facedata
+                ls3file.subsets.insert(i + split_subset_idx, split_subset)
+
+            subset.vertexdata = subset.vertexdata[:65536]
+            subset.facedata = split_subsets_facedata[0]
+
+            i += len(split_subsets_facedata)
+
 
     def write_ls3_file(self, ls3file):
         def fill_author_info(infoNode, authors, write_effort):
@@ -1392,5 +1430,7 @@ class Ls3Exporter:
             work_list.extend([f for f in cur_file.linked_files if f.must_export])
 
         for ls3file in write_list:
-            self.optimize_mesh(ls3file)
+            if self.config.optimizeMesh:
+                self.optimize_mesh(ls3file)
+            self.split_mesh_with_too_many_vertices(ls3file)
             self.write_ls3_file(ls3file)
