@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Zusi>
+  <Info DateiTyp="Landschaft" Version="A.1" MinVersion="A.1"/>
+  <Landschaft>
+    <SubSet Cd="FFCCCCCC">
+      <RenderFlags TexVoreinstellung="1"/>
+      <Vertex U="0.0" V="0.0" U2="0.0" V2="0.0"><p X="-1.0" Y="1.0" Z="1.0"/><n X="-0.40824827551841736" Y="-0.40824827551841736" Z="0.8164965510368347"/></Vertex>
+      <Vertex U="0.0" V="0.0" U2="0.0" V2="0.0"><p X="1.0" Y="1.0" Z="2.0"/><n X="-0.40824827551841736" Y="-0.40824827551841736" Z="0.8164965510368347"/></Vertex>
+      <Vertex U="0.0" V="0.0" U2="0.0" V2="0.0"><p X="1.0" Y="-1.0" Z="1.0"/><n X="-0.40824827551841736" Y="-0.40824827551841736" Z="0.8164965510368347"/></Vertex>
+      <Face i="2;0;1"/>
+    </SubSet>
+  </Landschaft>
+</Zusi>

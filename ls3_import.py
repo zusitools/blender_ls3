@@ -75,18 +75,6 @@ def fill_uv_vector(node, vector, suffix = ""):
     if node.getAttribute("V" + suffix) != "":
         vector[1] = float(node.getAttribute("V" + suffix))
 
-def blender_to_zusi(vector):
-    return Vector((-vector[1], vector[0], vector[2]))
-
-def zusi_to_blender(vector):
-    return Vector((vector[1], -vector[0], vector[2]))
-
-def zusi_to_blender_euler(euler):
-    return Euler((euler[1], -euler[0], euler[2]), 'YXZ')
-
-def zusi_to_blender_scale(scale):
-    return Vector((scale[1], scale[0], scale[2]))
-
 def lod_convert(lod):
     result = 0
     if (lod & 1) != 0:
@@ -107,6 +95,18 @@ def get_int_attr(node, name):
     attr = node.getAttribute(name)
     return int(attr) if len(attr) else 0
 
+if bpy.app.version >= (3, 0, 0):
+    matrix_from_loc_rot_scale = mathutils.Matrix.LocRotScale
+else:
+    def matrix_from_loc_rot_scale(loc, rot, scale):
+        loc_matrix = mathutils.Matrix.Translation(loc) if loc is not None else mathutils.Matrix.Identity(4)
+        loc_matrix.resize_4x4()
+        rot_matrix = rot.to_matrix() if (isinstance(rot, mathutils.Quaternion) or isinstance(rot, mathutils.Euler)) else (rot.copy() if rot is not None else mathutils.Matrix.Identity(4))
+        rot_matrix.resize_4x4()
+        scale_matrix = mathutils.Matrix.Diagonal(scale) if scale is not None else mathutils.Matrix.Identity(4)
+        scale_matrix.resize_4x4()
+        return loc_matrix @ rot_matrix @ scale_matrix
+
 class Ls3ImporterSettings:
     def __init__(self,
                 context,
@@ -115,9 +115,6 @@ class Ls3ImporterSettings:
                 fileDirectory,
                 importFileMetadata = True,
                 loadLinkedMode = IMPORT_LINKED_AS_EMPTYS,
-                location = [0.0, 0.0, 0.0], # in Blender coords
-                rotation = [0.0, 0.0, 0.0], # in Blender coords
-                scale = [1.0, 1.0, 1.0],    # in Blender coords
                 lod_bit = 15,
                 parent = None,
                 ):
@@ -127,9 +124,6 @@ class Ls3ImporterSettings:
         self.fileDirectory = fileDirectory
         self.importFileMetadata = importFileMetadata
         self.loadLinkedMode = loadLinkedMode
-        self.location = location
-        self.rotation = rotation
-        self.scale = scale
         self.lod_bit = lod_bit
         self.parent = parent
 
@@ -186,6 +180,30 @@ class Ls3Importer:
 
         self.warnings = []
 
+    def maybeAxisSwap(self, matrix):
+        if self.config.context.scene.zusi_coordinate_system == "0":
+            # Corresponds to a left multiplication with
+            # mathutils.Matrix((
+            #     ( 0.0, 1.0, 0.0, 0.0),
+            #     (-1.0, 0.0, 0.0, 0.0),
+            #     ( 0.0, 0.0, 1.0, 0.0),
+            #     ( 0.0, 0.0, 0.0, 1.0)
+            # ))
+            # which is the same as
+            # mathutils.Matrix.Rotation(
+            #     radians(-90), # angle
+            #     4, # size
+            #     'Z' # axis
+            # )
+            return mathutils.Matrix((
+                matrix[1].copy(),
+                -matrix[0],
+                matrix[2].copy(),
+                matrix[3].copy()
+            ))
+        else:
+            return matrix
+
     def visitNode(self, node):
         name = "visit" + node.nodeName + "Node"
 
@@ -221,11 +239,10 @@ class Ls3Importer:
 
         # Create new object
         self.currentobject = bpy.data.objects.new(self.config.fileName + "." + str(self.subsetno), self.currentmesh)
-        # TODO: only when not animated
-        #self.currentobject.location = self.config.location
-        #self.currentobject.rotation_euler = self.config.rotation
-        #self.currentobject.scale = self.config.scale
-        self.currentobject.parent = self.config.parent
+        if self.config.parent:
+            self.currentobject.parent = self.config.parent
+        else:
+            self.currentobject.matrix_basis = self.maybeAxisSwap(self.currentobject.matrix_basis)
         bpy.context.scene.collection.objects.link(self.currentobject)
 
         self.subsets.append(self.currentobject)
@@ -365,7 +382,7 @@ class Ls3Importer:
         self.currentmesh.loops.add(3 * len(self.currentfaces))
         self.currentmesh.polygons.add(len(self.currentfaces))
 
-        self.currentmesh.vertices.foreach_set("co", unpack_list([(v[1], -v[0], v[2]) for v in self.currentvertices]))
+        self.currentmesh.vertices.foreach_set("co", unpack_list([v[0:3] for v in self.currentvertices]))
         self.currentmesh.loops.foreach_set("vertex_index", unpack_list([(f[0], f[1], f[2]) for f in self.currentfaces]))
 
         self.currentmesh.polygons.foreach_set("loop_start", range(0, 3 * len(self.currentfaces), 3))
@@ -377,7 +394,7 @@ class Ls3Importer:
         for f in self.currentfaces:
             for i in range(0, 3):
                 v = self.currentvertices[f[i]]
-                normals += [v[4], -v[3], v[5]]
+                normals += v[3:6]
         if bpy.app.version < (4, 1, 0):
             self.currentmesh.loops.foreach_set("normal", normals)
         else:
@@ -513,19 +530,14 @@ class Ls3Importer:
             if len(scale_node) > 0:
                 fill_xyz_vector(scale_node[0], scale)
 
-            # Transform location and rotation into Blender coordinates
-            loc = zusi_to_blender(loc)
-            rot = zusi_to_blender_euler(rot)
-            scale = zusi_to_blender_scale(scale)
-
             (directory, filename) = os.path.split(dateiname)
 
             empty = bpy.data.objects.new("%s_%s.%03d" % (self.config.fileName, filename, len(self.linked_files) + 1), None)
-            empty.location = loc
-            empty.rotation_euler = rot
-            empty.rotation_mode = rot.order
-            empty.scale = scale
-            empty.parent = self.config.parent
+            empty.matrix_basis = matrix_from_loc_rot_scale(loc, Euler(rot, 'XYZ'), scale)
+            if self.config.parent:
+                empty.parent = self.config.parent
+            else:
+                empty.matrix_basis = self.maybeAxisSwap(empty.matrix_basis)
 
             empty.zusi_link_file_name_realpath = dateiname
             empty.zusi_link_group = node.getAttribute("GruppenName")
@@ -566,9 +578,6 @@ class Ls3Importer:
                         directory,
                         self.config.importFileMetadata,
                         self.config.loadLinkedMode,
-                        [loc[x] + self.config.location[x] for x in [0,1,2]],
-                        [rot[x] + self.config.rotation[x] for x in [0,1,2]],
-                        [scale[x] * self.config.scale[x] for x in [0,1,2]],
                         self.config.lod_bit,
                         empty,
                     )
@@ -613,13 +622,11 @@ class Ls3Importer:
             elif n.nodeName == "phi":
                 fill_xyz_vector(n, rot)
 
-        loc = zusi_to_blender(loc)
-        rot = zusi_to_blender_euler(rot)
-
-        empty.location = loc
-        empty.rotation_euler = rot
-        empty.rotation_mode = rot.order
-        empty.parent = self.config.parent
+        empty.matrix_basis = matrix_from_loc_rot_scale(loc, Euler(rot, 'XYZ'), None)
+        if self.config.parent:
+            empty.parent = self.config.parent
+        else:
+            empty.matrix_basis = self.maybeAxisSwap(empty.matrix_basis)
         bpy.context.scene.collection.objects.link(empty)
 
     #
@@ -709,15 +716,16 @@ class Ls3Importer:
 
         if len(loc_nodes):
             fill_xyz_vector(loc_nodes[0], loc_vector)
-            loc_vector = zusi_to_blender(loc_vector)
         if len(rot_nodes):
             fill_xyzw_vector(rot_nodes[0], rot_quaternion)
+
+        if not self.config.parent and self.config.context.scene.zusi_coordinate_system == "0":
+            loc_vector = mathutils.Vector((loc_vector[1], -loc_vector[0], loc_vector[2]))
 
         if self.last_rotation is None:
             rot_euler = rot_quaternion.to_euler('XYZ')
         else:
             rot_euler = rot_quaternion.to_euler('XYZ', self.last_rotation)
-        rot_euler = zusi_to_blender_euler(rot_euler)
         self.last_rotation = rot_euler
 
         # Write keyframe control points.
@@ -748,8 +756,7 @@ class Ls3Importer:
         fill_uv_vector(node, uv1)
         fill_uv_vector(node, uv2, "2")
 
-        # Add new vertex. (x,y,z) coordinates are calculated as (y, -x, z) from Zusi coordinates
-        # to fit the Blender coordinate system
+        # Add new vertex.
         self.currentvertices.append((loc + nor + uv1 + uv2))
 
     #

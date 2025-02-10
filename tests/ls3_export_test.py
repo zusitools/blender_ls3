@@ -520,6 +520,69 @@ class TestLs3Export(unittest.TestCase):
         self.assertAlmostEqual(normal[1], float(n.attrib["Y"]), 5, f"subset {idx}: expected {normal}, got {n.attrib}")
         self.assertAlmostEqual(normal[2], float(n.attrib["Z"]), 5, f"subset {idx}: expected {normal}, got {n.attrib}")
 
+  def test_coordinate_system(self):
+    self.open("coordinate_system")
+
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
+        root = self.export_and_parse()
+        subset_node = root.find("./Landschaft/SubSet")
+        vertex_nodes = [n for n in subset_node if n.tag == "Vertex"]
+        coords = []
+        for n in vertex_nodes:
+          p_node = n.find("./p")
+          n_node = n.find("./n")
+          coords.append((
+              float(p_node.attrib.get("X", 0)),
+              float(p_node.attrib.get("Y", 0)),
+              float(p_node.attrib.get("Z", 0)),
+              float(n_node.attrib.get("X", 0)),
+              float(n_node.attrib.get("Y", 0)),
+              float(n_node.attrib.get("Z", 0)),
+          ))
+        coords.sort()
+
+        expected_coords = [
+          (-1, -1, 0, -0.45, 0, .89),
+          (-1,  1, 0, -0.45, 0, .89),
+          ( 1,  0, 1, -0.45, 0, .89),
+        ] if coordinate_system == "0" else [
+          (-1,  1, 0, 0, 0.45, .89),
+          ( 0, -1, 1, 0, 0.45, .89),
+          ( 1,  1, 0, 0, 0.45, .89),
+        ]
+
+        for i in range(3):
+          for j in range(6):
+            self.assertAlmostEqual(expected_coords[i][j], coords[i][j], places=1, msg=f"i={i} j={j}")
+
+        verknuepfte_node = root.find("./Landschaft/Verknuepfte")
+        p_node = verknuepfte_node.find("./p")
+        coords = (
+          float(p_node.attrib.get("X", 0)),
+          float(p_node.attrib.get("Y", 0)),
+          float(p_node.attrib.get("Z", 0)),
+        )
+        expected_coords = (3, 2, 4) if coordinate_system == "0" else (2, -3, 4)
+        for i in range(3):
+          self.assertAlmostEqual(expected_coords[i], coords[i], places=1, msg=f"i={i}")
+
+        phi_node = verknuepfte_node.find("./phi")
+        coords = (
+          float(phi_node.attrib.get("X", 0)),
+          float(phi_node.attrib.get("Y", 0)),
+          float(phi_node.attrib.get("Z", 0)),
+        )
+
+        expected_coords = (
+          radians(-45), radians(-90), 0
+        ) if coordinate_system == "0" else (
+          radians(-135), radians(-90), 0
+        )
+        for i in range(3):
+          self.assertAlmostEqual(expected_coords[i], coords[i], places=1, msg=f"i={i}")
+
   def test_texture_export(self):
     self.open("texture_blender28")
     root = self.export_and_parse()
@@ -1468,15 +1531,31 @@ class TestLs3Export(unittest.TestCase):
 
   def test_rotation_translation_animation(self):
     self.open("rotation_translation_animation")
-    root = self.export_and_parse({"exportAnimations" : True})
-    verknuepfte_node = root.find("./Landschaft/Verknuepfte")
-    self.assertEqual(8, int(verknuepfte_node.attrib["BoundingR"]))
-    self.assertAlmostEqual(5, float(verknuepfte_node.find("./p").attrib["X"]))
 
-    ani_punkt_nodes = root.findall("./Landschaft/VerknAnimation/AniPunkt")
-    self.assertEqual(2, len(ani_punkt_nodes))
-    self.assertAlmostEqual(-5.0, float(ani_punkt_nodes[0].find("./p").attrib["X"]))
-    self.assertAlmostEqual(5.0, float(ani_punkt_nodes[1].find("./p").attrib["X"]))
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
+
+        root = self.export_and_parse({"exportAnimations" : True})
+        verknuepfte_node = root.find("./Landschaft/Verknuepfte")
+        self.assertEqual(8, int(verknuepfte_node.attrib["BoundingR"]))
+
+        if coordinate_system == "0":
+          self.assertAlmostEqual(5, float(verknuepfte_node.find("./p").attrib["X"]))
+          self.assertEqual(1, len(verknuepfte_node.find("./phi").attrib))
+          self.assertAlmostEqual(radians(90), float(verknuepfte_node.find("./phi").attrib["Z"]), places=6)
+        else:
+          self.assertAlmostEqual(-5, float(verknuepfte_node.find("./p").attrib["Y"]))
+          self.assertEqual(0, len(verknuepfte_node.find("./phi").attrib))
+
+        ani_punkt_nodes = root.findall("./Landschaft/VerknAnimation/AniPunkt")
+        self.assertEqual(2, len(ani_punkt_nodes))
+        if coordinate_system == "0":
+          self.assertAlmostEqual(-5.0, float(ani_punkt_nodes[0].find("./p").attrib["X"]))
+          self.assertAlmostEqual(5.0, float(ani_punkt_nodes[1].find("./p").attrib["X"]))
+        else:
+          self.assertAlmostEqual(5.0, float(ani_punkt_nodes[0].find("./p").attrib["Y"]))
+          self.assertAlmostEqual(-5.0, float(ani_punkt_nodes[1].find("./p").attrib["Y"]))
 
   def test_rotation_animation_translated(self):
     self.open("rotation_animation_translated")
@@ -1551,36 +1630,44 @@ class TestLs3Export(unittest.TestCase):
     bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[1].name = os.path.join(ZUSI3_EXPORTPATH, "folder")
     bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[2].name = os.path.join(ZUSI3_DATAPATH, "file.ls3")
     bpy.data.objects["01_Anchor_01"].zusi_anchor_point_files[3].name = os.path.join(ZUSI3_DATAPATH, "folder")
-    root = self.export_and_parse()
 
-    anchor_point_nodes = root.findall("./Landschaft/Ankerpunkt")
-    self.assertEqual(2, len(anchor_point_nodes))
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
 
-    a1 = anchor_point_nodes[0]
-    self.assertEqual("1", a1.attrib["AnkerKat"])
-    self.assertEqual("2", a1.attrib["AnkerTyp"])
-    self.assertEqual("Anchor point 1 description", a1.attrib["Beschreibung"])
+        root = self.export_and_parse()
 
-    a1files = a1.findall("./Datei")
-    self.assertEqual(4, len(a1files))
+        anchor_point_nodes = root.findall("./Landschaft/Ankerpunkt")
+        self.assertEqual(2, len(anchor_point_nodes))
 
-    # Paths must be relative to the data directory to work in Zusi 3D Editor
-    self.assertEqual("ExportTest\\file.ls3", a1files[0].attrib["Dateiname"])
-    self.assertEqual("ExportTest\\folder", a1files[1].attrib["Dateiname"])
-    self.assertEqual("\\file.ls3", a1files[2].attrib["Dateiname"])
-    self.assertEqual("\\folder", a1files[3].attrib["Dateiname"])
+        a1 = anchor_point_nodes[0]
+        self.assertEqual("1", a1.attrib["AnkerKat"])
+        self.assertEqual("2", a1.attrib["AnkerTyp"])
+        self.assertEqual("Anchor point 1 description", a1.attrib["Beschreibung"])
 
-    for i in range(0, 4):
-        self.assertEqual("1", a1files[1].attrib["NurInfo"])
+        a1files = a1.findall("./Datei")
+        self.assertEqual(4, len(a1files))
 
-    a2 = anchor_point_nodes[1]
-    self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
-    self.assertXYZ(a2.find("./p"), -2, 1, 3)
-    rot = mathutils.Euler((radians(10), radians(20), radians(30))).to_quaternion().to_euler('YXZ')
-    self.assertXYZ(a2.find("./phi"), -rot.y, rot.x, rot.z)
+        # Paths must be relative to the data directory to work in Zusi 3D Editor
+        self.assertEqual("ExportTest\\file.ls3", a1files[0].attrib["Dateiname"])
+        self.assertEqual("ExportTest\\folder", a1files[1].attrib["Dateiname"])
+        self.assertEqual("\\file.ls3", a1files[2].attrib["Dateiname"])
+        self.assertEqual("\\folder", a1files[3].attrib["Dateiname"])
 
-    a2files = a2.findall("./Datei")
-    self.assertEqual(0, len(a2files))
+        for i in range(0, 4):
+            self.assertEqual("1", a1files[1].attrib["NurInfo"])
+
+        a2 = anchor_point_nodes[1]
+        self.assertEqual("Anchor point 2 description", a2.attrib["Beschreibung"])
+        if coordinate_system == "0":
+            self.assertXYZ(a2.find("./p"), -2, 1, 3)
+            self.assertXYZ(a2.find("./phi"), radians(10), radians(20), radians(120))
+        else:
+            self.assertXYZ(a2.find("./p"), 1, 2, 3)
+            self.assertXYZ(a2.find("./phi"), radians(10), radians(20), radians(30))
+
+        a2files = a2.findall("./Datei")
+        self.assertEqual(0, len(a2files))
 
   def test_anchor_points_variants(self):
     self.open("anchor_points_variants")
@@ -1606,18 +1693,18 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(5, len(verknuepfte_nodes))
 
     v1phi = verknuepfte_nodes[0].find("phi")
-    self.assertXYZ(v1phi, 0, radians(40), 0)
+    self.assertXYZ(v1phi, radians(40), 0, radians(90))
 
     v2phi = verknuepfte_nodes[1].find("phi")
-    self.assertXYZ(v2phi, radians(-30), 0, 0)
+    self.assertXYZ(v2phi, 0, radians(30), radians(90))
 
     v3phi = verknuepfte_nodes[2].find("phi")
-    self.assertXYZ(v3phi, 0, 0, radians(20))
+    self.assertXYZ(v3phi, 0, 0, radians(110))
 
     v4 = verknuepfte_nodes[3]
     self.assertEqual(r"RollingStock\Diverse\Blindlok\Blindlok.ls3", v4.find("Datei").attrib["Dateiname"])
     self.assertEqual(0, len(v4.find("p").attrib))
-    self.assertEqual(0, len(v4.find("phi").attrib))
+    self.assertXYZ(v4.find("phi"), 0, 0, radians(90))
     self.assertEqual(0, len(v4.find("sk").attrib))
     self.assertEqual("TestGroup", v4.attrib["GruppenName"])
     self.assertEqual(1.5, float(v4.attrib["SichtbarAb"]))
@@ -1632,10 +1719,9 @@ class TestLs3Export(unittest.TestCase):
     self.assertEqual(r"RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3", v5.find("Datei").attrib["Dateiname"])
     self.assertXYZ(v5.find("p"), -1, 2, -3)
 
-    rot = mathutils.Euler((radians(20), radians(-21), radians(45))).to_quaternion().to_euler('YXZ')
-    self.assertXYZ(v5.find("phi"), -rot.y, rot.x, rot.z)
+    self.assertXYZ(v5.find("phi"), radians(20), radians(-21), radians(135))
 
-    self.assertXYZ(v5.find("sk"), 1.5, 2.5, 3.5)
+    self.assertXYZ(v5.find("sk"), 2.5, 1.5, 3.5)
 
     self.assertNotIn("GruppenName", v5.attrib)
     self.assertNotIn("SichtbarAb", v5.attrib)

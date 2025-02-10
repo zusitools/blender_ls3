@@ -31,6 +31,12 @@ class TestLs3Import(unittest.TestCase):
   def tearDownClass(cls):
     shutil.rmtree(cls._tempdir)
 
+  def clearScene(self):
+    bpy.ops.wm.read_homefile()
+    for ob in bpy.context.scene.objects:
+      bpy.data.objects.remove(ob)
+    bpy.context.view_layer.update()
+
   def setUp(self):
     # Check that we are testing the right file
     io_scene_ls3_module_file = sys.modules["io_scene_ls3"].__file__
@@ -45,11 +51,7 @@ class TestLs3Import(unittest.TestCase):
     self._mock_fs = MockFS()
     self._mock_fs.start()
 
-    # Clear scene.
-    bpy.ops.wm.read_homefile()
-    for ob in bpy.context.scene.objects:
-      bpy.data.objects.remove(ob)
-    bpy.context.view_layer.update()
+    self.clearScene()
 
   def tearDown(self):
     self._mock_fs.stop()
@@ -93,6 +95,32 @@ class TestLs3Import(unittest.TestCase):
   # ---
   # Tests start here
   # ---
+  def test_coordinate_system(self):
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
+        self.ls3_import("triangle.ls3")
+        ob = bpy.data.objects["triangle.ls3.0"]
+        if coordinate_system == "0":
+            self.assertEqual(Euler((0, 0, radians(-90))), ob.rotation_euler)
+        else:
+            self.assertEqual(Euler((0, 0, 0)), ob.rotation_euler)
+        me = ob.data
+
+        expected = set([
+            Vector((-1, 1, 1)).freeze(),
+            Vector((1, 1, 2)).freeze(),
+            Vector((1, -1, 1)).freeze(),
+        ])
+        actual = set([v.co.copy().freeze() for v in me.vertices])
+        self.assertEqual(expected, actual)
+
+        for v in me.vertices:
+            self.assertAlmostEqual(-0.40824827551841736, v.normal.x, places=5)
+            self.assertAlmostEqual(-0.40824827551841736, v.normal.y, places=5)
+            self.assertAlmostEqual(0.8164965510368347, v.normal.z, places=5)
+
   def test_import_lsb(self):
     self.ls3_import("lsb.ls3")
     self.assertEqual(12, len(bpy.data.objects["lsb.ls3.0"].data.polygons))
@@ -161,17 +189,21 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(12, len(bpy.data.objects["cube_trailing_semicolon.ls3.0"].data.polygons))
 
   def test_import_normals(self):
-    self.ls3_import("custom_normals.ls3")
-    ob = bpy.data.objects["custom_normals.ls3.0"]
-    me = ob.data
-    if bpy.app.version < (4, 1, 0):
-      me.calc_normals_split()
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
+        self.ls3_import("custom_normals.ls3")
+        ob = bpy.data.objects["custom_normals.ls3.0"]
+        me = ob.data
+        if bpy.app.version < (4, 1, 0):
+          me.calc_normals_split()
 
-    vertex_normals = [None] * len(me.loops) * 3
-    me.loops.foreach_get("normal", vertex_normals)
+        vertex_normals = [None] * len(me.loops) * 3
+        me.loops.foreach_get("normal", vertex_normals)
 
-    for normal in tuple(zip(*(iter(vertex_normals),) * 3)):
-      self.assertVectorEqual((1, 0, 0), normal, places = 3) # normals are less accurate
+        for normal in tuple(zip(*(iter(vertex_normals),) * 3)):
+          self.assertVectorEqual((0, 1, 0), normal, places = 3) # normals are less accurate
 
   @unittest.skip("Does not work at the moment")
   def test_import_double_sided(self):
@@ -325,42 +357,53 @@ class TestLs3Import(unittest.TestCase):
     self.assertIn("zbias.ls3.0", bpy.data.objects)
 
   def test_anchor_points(self):
-    self.ls3_import("anchor_points.ls3")
-    a1 = bpy.data.objects["anchor_points.ls3_AnchorPoint.001"]
-    a2 = bpy.data.objects["anchor_points.ls3_AnchorPoint.002"]
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
 
-    self.assertEqual('EMPTY', a1.type)
-    self.assertEqual('ARROWS', a1.empty_display_type)
-    self.assertTrue(a1.zusi_is_anchor_point)
-    self.assertEqual("1", a1.zusi_anchor_point_category)
-    self.assertEqual("2", a1.zusi_anchor_point_type)
-    self.assertEqual("Anchor point 1 description", a1.zusi_anchor_point_description)
-    self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_translation())
-    self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_euler())
+        self.ls3_import("anchor_points.ls3")
+        a1 = bpy.data.objects["anchor_points.ls3_AnchorPoint.001"]
+        a2 = bpy.data.objects["anchor_points.ls3_AnchorPoint.002"]
 
-    self.assertEqual(2, len(a1.zusi_anchor_point_files))
-    self.assertEqual(r"zusi3:Loks\Elektroloks\file.ls3", a1.zusi_anchor_point_files[0].name)
-    self.assertEqual(r"zusi3:Loks\Elektroloks", a1.zusi_anchor_point_files[1].name)
+        self.assertEqual('EMPTY', a1.type)
+        self.assertEqual('ARROWS', a1.empty_display_type)
+        self.assertTrue(a1.zusi_is_anchor_point)
+        self.assertEqual("1", a1.zusi_anchor_point_category)
+        self.assertEqual("2", a1.zusi_anchor_point_type)
+        self.assertEqual("Anchor point 1 description", a1.zusi_anchor_point_description)
+        self.assertVectorEqual((0.0, 0.0, 0.0), a1.matrix_world.to_translation())
+        self.assertVectorEqual((0.0, 0.0, radians(-90.0) if coordinate_system == "0" else 0.0), a1.matrix_world.to_euler())
 
-    self.assertEqual('EMPTY', a2.type)
-    self.assertEqual('ARROWS', a2.empty_display_type)
-    self.assertTrue(a2.zusi_is_anchor_point)
-    self.assertEqual("0", a2.zusi_anchor_point_category)
-    self.assertEqual("0", a2.zusi_anchor_point_type)
-    self.assertEqual("Anchor point 2 description", a2.zusi_anchor_point_description)
-    self.assertVectorEqual((1.0, 2.0, 3.0), a2.matrix_world.to_translation())
-    self.assertVectorEqual((radians(10), radians(20), radians(30)), a2.matrix_world.to_euler('YXZ'))
+        self.assertEqual(2, len(a1.zusi_anchor_point_files))
+        self.assertEqual(r"zusi3:Loks\Elektroloks\file.ls3", a1.zusi_anchor_point_files[0].name)
+        self.assertEqual(r"zusi3:Loks\Elektroloks", a1.zusi_anchor_point_files[1].name)
+
+        self.assertEqual('EMPTY', a2.type)
+        self.assertEqual('ARROWS', a2.empty_display_type)
+        self.assertTrue(a2.zusi_is_anchor_point)
+        self.assertEqual("0", a2.zusi_anchor_point_category)
+        self.assertEqual("0", a2.zusi_anchor_point_type)
+        self.assertEqual("Anchor point 2 description", a2.zusi_anchor_point_description)
+        self.assertVectorEqual((1.0, 2.0, 3.0) if coordinate_system == "0" else (-2.0, 1.0, 3.0), a2.matrix_world.to_translation())
+        self.assertVectorEqual((radians(-20), radians(10), radians(-60) if coordinate_system == "0" else radians(30)), a2.matrix_world.to_euler())
 
   def test_import_anchor_point_linked_file(self):
-    self.ls3_import("anchor_point_linked_file.ls3", {"loadLinkedMode": "2"})
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
 
-    a1 = bpy.data.objects["anchor_point_linked_file_2.ls3_AnchorPoint.001"]
-    self.assertVectorEqual(Vector((2.0, -1.0, 3.0)), a1.location)
+        self.ls3_import("anchor_point_linked_file.ls3", {"loadLinkedMode": "2"})
 
-    ob1 = bpy.data.objects["anchor_point_linked_file.ls3_anchor_point_linked_file_2.ls3.001"]
-    self.assertVectorEqual(Vector((20.0, -10.0, 30.0)), ob1.location)
+        a1 = bpy.data.objects["anchor_point_linked_file_2.ls3_AnchorPoint.001"]
+        self.assertVectorEqual(Vector((1.0, 2.0, 3.0)), a1.location)
 
-    self.assertEqual(ob1, a1.parent)
+        ob1 = bpy.data.objects["anchor_point_linked_file.ls3_anchor_point_linked_file_2.ls3.001"]
+        self.assertVectorEqual(Vector((20.0, -10.0, 30.0) if coordinate_system == "0" else (10.0, 20.0, 30.0)), ob1.location)
+        self.assertVectorEqual(Vector((0, 0, radians(-90) if coordinate_system == "0" else 0)), ob1.rotation_euler)
+
+        self.assertEqual(ob1, a1.parent)
 
   def test_two_textures(self):
     self.ls3_import("two_textures.ls3")
@@ -370,87 +413,101 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(mat_wrapper.base_texture_image, mat_wrapper.secondary_texture_image)
 
   def test_import_animated_subset(self):
-    self.ls3_import("animated_subset.ls3")
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
 
-    ob = bpy.data.objects["animated_subset.ls3.0"]
-    if bpy.app.version >= (4, 4, 0):
-        fcurves = anim_utils.action_get_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
-    else:
-        fcurves = ob.animation_data.action.fcurves
-    self.assertEqual(6, len(fcurves))
+        self.ls3_import("animated_subset.ls3")
 
-    self.assertKeyframes(fcurves, "location", 0, [(0, 0), (1, 0)])
-    self.assertKeyframes(fcurves, "location", 1, [(0, 3), (1, -3)])
-    self.assertKeyframes(fcurves, "location", 2, [(0, -3), (1, -3)])
+        ob = bpy.data.objects["animated_subset.ls3.0"]
+        if bpy.app.version >= (4, 4, 0):
+            fcurves = anim_utils.action_get_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
+        else:
+            fcurves = ob.animation_data.action.fcurves
+        self.assertEqual(6, len(fcurves))
 
-    self.assertKeyframes(fcurves, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
-    self.assertKeyframes(fcurves, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
-    self.assertKeyframes(fcurves, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
+        self.assertKeyframes(fcurves, "location", 0, [(0, 0), (1, 0)] if coordinate_system == "0" else [(0, -3), (1, 3)])
+        self.assertKeyframes(fcurves, "location", 1, [(0, 3), (1, -3)] if coordinate_system == "0" else [(0, 0), (1, 0)])
+        self.assertKeyframes(fcurves, "location", 2, [(0, -3), (1, -3)])
+
+        self.assertKeyframes(fcurves, "rotation_euler", 0, [(0, radians(0)), (1, radians(0))] )
+        self.assertKeyframes(fcurves, "rotation_euler", 1, [(0, radians(45)), (1, radians(45))])
+        self.assertKeyframes(fcurves, "rotation_euler", 2, [(0, radians(-90)), (1, radians(-135))] if coordinate_system == "0" else [(0, radians(0)), (1, radians(-45))])
 
   def test_import_animated_linked_file(self):
-    self.ls3_import("animated_linked_file.ls3", {"loadLinkedMode" : "2"})
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
 
-    ob = bpy.data.objects["animated_linked_file.ls3_animated_linked_file_1.ls3.001"]
-    self.assertEqual('EMPTY', ob.type)
+        self.ls3_import("animated_linked_file.ls3", {"loadLinkedMode" : "2"})
 
-    subset = bpy.data.objects["animated_linked_file_1.ls3.0"]
-    self.assertEqual('MESH', subset.type)
-    self.assertEqual(ob, subset.parent)
-    self.assertEqual(None, subset.animation_data)
+        ob = bpy.data.objects["animated_linked_file.ls3_animated_linked_file_1.ls3.001"]
+        self.assertEqual('EMPTY', ob.type)
 
-    if bpy.app.version >= (4, 4, 0):
-        fcurves = anim_utils.action_get_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
-    else:
-        fcurves = ob.animation_data.action.fcurves
-    self.assertEqual(6, len(fcurves))
+        subset = bpy.data.objects["animated_linked_file_1.ls3.0"]
+        self.assertEqual('MESH', subset.type)
+        self.assertEqual(ob, subset.parent)
+        self.assertEqual(None, subset.animation_data)
 
-    self.assertKeyframes(fcurves, "location", 0, [(0, 0), (1, 0)])
-    self.assertKeyframes(fcurves, "location", 1, [(0, 3), (1, -3)])
-    self.assertKeyframes(fcurves, "location", 2, [(0, -3), (1, -3)])
+        if bpy.app.version >= (4, 4, 0):
+            fcurves = anim_utils.action_get_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
+        else:
+            fcurves = ob.animation_data.action.fcurves
+        self.assertEqual(6, len(fcurves))
 
-    self.assertKeyframes(fcurves, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
-    self.assertKeyframes(fcurves, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
-    self.assertKeyframes(fcurves, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
+        self.assertKeyframes(fcurves, "location", 0, [(0, 0), (1, 0)] if coordinate_system == "0" else [(0, -3), (1, 3)])
+        self.assertKeyframes(fcurves, "location", 1, [(0, 3), (1, -3)] if coordinate_system == "0" else [(0, 0), (1, 0)])
+        self.assertKeyframes(fcurves, "location", 2, [(0, -3), (1, -3)])
+
+        self.assertKeyframes(fcurves, "rotation_euler", 0, [(0, radians(0)), (1, radians(0))])
+        self.assertKeyframes(fcurves, "rotation_euler", 1, [(0, radians(45)), (1, radians(45))])
+        self.assertKeyframes(fcurves, "rotation_euler", 2, [(0, radians(-90)), (1, radians(-135))] if coordinate_system == "0" else [(0, radians(0)), (1, radians(-45))])
 
   def test_import_linked_file_as_empty(self):
-    self.ls3_import("linked_file.ls3")
+    for coordinate_system in ("0", "1"):
+      with self.subTest(coordinate_system=coordinate_system):
+        self.clearScene()
+        bpy.data.scenes['Scene'].zusi_coordinate_system = coordinate_system
 
-    ob = bpy.data.objects["linked_file.ls3_Blindlok.ls3.001"]
-    self.assertEqual('EMPTY', ob.type)
-    self.assertTrue(ob.zusi_is_linked_file)
-    self.assertEqual(r'zusi3:RollingStock\Diverse\Blindlok\Blindlok.ls3', ob.zusi_link_file_name)
-    self.assertEqual("TestGroup", ob.zusi_link_group)
-    self.assertEqual(1.5, ob.zusi_link_visible_from)
-    self.assertEqual(5.5, ob.zusi_link_visible_to)
-    self.assertEqual(13.5, ob.zusi_link_preload_factor)
-    self.assertEqual(15, ob.zusi_link_radius)
-    self.assertEqual(0.5, ob.zusi_link_forced_brightness)
-    self.assertEqual(10, ob.zusi_link_lod)
-    self.assertTrue(ob.zusi_link_is_tile)
-    self.assertFalse(ob.zusi_link_is_detail_tile)
-    self.assertTrue(ob.zusi_link_is_billboard)
-    self.assertFalse(ob.zusi_link_is_readonly)
+        self.ls3_import("linked_file.ls3")
 
-    ob = bpy.data.objects["linked_file.ls3_101_vr.lod.ls3.002"]
-    self.assertEqual('EMPTY', ob.type)
-    self.assertTrue(ob.zusi_is_linked_file)
-    self.assertEqual(r'zusi3:RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3', ob.zusi_link_file_name)
-    self.assertEqual("", ob.zusi_link_group)
-    self.assertEqual(0, ob.zusi_link_visible_from)
-    self.assertEqual(0, ob.zusi_link_visible_to)
-    self.assertEqual(0, ob.zusi_link_preload_factor)
-    self.assertEqual(0, ob.zusi_link_radius)
-    self.assertEqual(0, ob.zusi_link_forced_brightness)
-    self.assertEqual(5, ob.zusi_link_lod)
-    self.assertFalse(ob.zusi_link_is_tile)
-    self.assertTrue(ob.zusi_link_is_detail_tile)
-    self.assertFalse(ob.zusi_link_is_billboard)
-    self.assertTrue(ob.zusi_link_is_readonly)
+        ob = bpy.data.objects["linked_file.ls3_Blindlok.ls3.001"]
+        self.assertEqual('EMPTY', ob.type)
+        self.assertTrue(ob.zusi_is_linked_file)
+        self.assertEqual(r'zusi3:RollingStock\Diverse\Blindlok\Blindlok.ls3', ob.zusi_link_file_name)
+        self.assertEqual("TestGroup", ob.zusi_link_group)
+        self.assertEqual(1.5, ob.zusi_link_visible_from)
+        self.assertEqual(5.5, ob.zusi_link_visible_to)
+        self.assertEqual(13.5, ob.zusi_link_preload_factor)
+        self.assertEqual(15, ob.zusi_link_radius)
+        self.assertEqual(0.5, ob.zusi_link_forced_brightness)
+        self.assertEqual(10, ob.zusi_link_lod)
+        self.assertTrue(ob.zusi_link_is_tile)
+        self.assertFalse(ob.zusi_link_is_detail_tile)
+        self.assertTrue(ob.zusi_link_is_billboard)
+        self.assertFalse(ob.zusi_link_is_readonly)
 
-    self.assertVectorEqual(Vector((2, 1, -3)), ob.location)
-    self.assertVectorEqual(Vector((radians(10), radians(20), radians(-30))), ob.rotation_euler)
-    self.assertEqual('YXZ', ob.rotation_mode)
-    self.assertVectorEqual(Vector((2.5, 1.5, 3.5)), ob.scale)
+        ob = bpy.data.objects["linked_file.ls3_101_vr.lod.ls3.002"]
+        self.assertEqual('EMPTY', ob.type)
+        self.assertTrue(ob.zusi_is_linked_file)
+        self.assertEqual(r'zusi3:RollingStock\Deutschland\Epoche5\Elektroloks\101\3D-Daten\101_vr.lod.ls3', ob.zusi_link_file_name)
+        self.assertEqual("", ob.zusi_link_group)
+        self.assertEqual(0, ob.zusi_link_visible_from)
+        self.assertEqual(0, ob.zusi_link_visible_to)
+        self.assertEqual(0, ob.zusi_link_preload_factor)
+        self.assertEqual(0, ob.zusi_link_radius)
+        self.assertEqual(0, ob.zusi_link_forced_brightness)
+        self.assertEqual(5, ob.zusi_link_lod)
+        self.assertFalse(ob.zusi_link_is_tile)
+        self.assertTrue(ob.zusi_link_is_detail_tile)
+        self.assertFalse(ob.zusi_link_is_billboard)
+        self.assertTrue(ob.zusi_link_is_readonly)
+
+        self.assertVectorEqual(Vector((2, 1, -3) if coordinate_system == "0" else (-1, 2, -3)), ob.location)
+        self.assertVectorEqual(Vector((radians(-20), radians(10), radians(-120 if coordinate_system == "0" else -30))), ob.rotation_euler)
+        self.assertVectorEqual(Vector((1.5, 2.5, 3.5)), ob.scale)
 
   def test_import_zusi2_linked_file(self):
     self.ls3_import("linked_file_zusi2.ls3")

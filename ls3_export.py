@@ -79,6 +79,7 @@ class Color:
 
 # Returns the length of the projection of the specified vector projected onto the XY plane.
 vector_xy_length = lambda vec : sqrt(vec.x * vec.x + vec.y * vec.y)
+translation_xy_length = lambda transform : sqrt(transform[0][3] * transform[0][3] + transform[1][3] * transform[1][3])
 
 # The default settings for the exporter
 default_export_settings = {
@@ -171,13 +172,9 @@ def lod_convert(lod):
     return result
 
 def zusi_rotation_from_quaternion(quat, euler_compat=None):
-    # Blender uses extrinsic Euler rotation (the order can be specified).
-    # Zusi uses intrinsic ZYX Euler rotation, which corresponds to extrinsic XYZ Euler rotation,
-    # and because the X and Y axes are swapped compared to Blender, this corresponds to YXZ rotation
-    # in Blender.
-    # euler_compat is given in Zusi coordinates as well (i.e. axis swapped)
-    rot = quat.to_euler('YXZ', mathutils.Euler((euler_compat.y, -euler_compat.x, euler_compat.z))) if euler_compat is not None else quat.to_euler('YXZ')
-    return mathutils.Euler((-rot.y, rot.x, rot.z))
+    # Blender Eulers use extrinsic rotation (the order can be specified).
+    # Zusi uses intrinsic ZYX Euler rotation, which corresponds to extrinsic XYZ Euler rotation.
+    return quat.to_euler('XYZ', euler_compat) if euler_compat else quat.to_euler('XYZ')
 
 def get_used_materials_for_object(ob):
     """Returns a set of pairs (material index, material) for all materials used (i.e. assigned to any face) in the given object."""
@@ -231,12 +228,23 @@ def is_lt_name(a, b):
     else:
         return a.name < b.name
 
+if bpy.app.version >= (3, 0, 0):
+    matrix_from_loc_rot_scale = mathutils.Matrix.LocRotScale
+else:
+    def matrix_from_loc_rot_scale(loc, rot, scale):
+        loc_matrix = mathutils.Matrix.Translation(loc) if loc is not None else mathutils.Matrix.Identity(4)
+        loc_matrix.resize_4x4()
+        rot_matrix = rot.to_matrix() if (isinstance(rot, mathutils.Quaternion) or isinstance(rot, mathutils.Euler)) else (rot.copy() if rot is not None else mathutils.Matrix.Identity(4))
+        rot_matrix.resize_4x4()
+        scale_matrix = mathutils.Matrix.Diagonal(scale) if scale is not None else mathutils.Matrix.Identity(4)
+        scale_matrix.resize_4x4()
+        return loc_matrix @ rot_matrix @ scale_matrix
+
 class Keyframe:
     """A keyframe of a Zusi animation (corresponding to an <AniPunkt> node)."""
-    def __init__(self, time, loc, rotation_quaternion):
+    def __init__(self, time, transform):
         self.time = time
-        self.loc = loc
-        self.rotation_quaternion = rotation_quaternion
+        self.transform = transform
 
 class Ls3File:
     """Stores all the things that later go into one LS3 file, as well as the relation to its parent file."""
@@ -285,14 +293,8 @@ class Ls3File:
         """The bounding radius of this file as included in the parent file --
             i.e. with applied scale and taking into account translation animations."""
 
-        self.location = None
-        """The location of this file within the parent file, without animation"""
-
-        self.rotation_euler = None
-        """The rotation of this file within the parent file, without animation"""
-
-        self.scale = None
-        """The scale of this file within the parent file."""
+        """The transformation of this file within the parent file, without animation"""
+        self.matrix_world = mathutils.Matrix.Identity(4)
 
 # Stores information about one subset of a LS3 file.
 #     identifier: The internal identifier of the subset. 
@@ -473,6 +475,43 @@ class Ls3Exporter:
         self.get_animations()
         self.exported_subsets = self.get_exported_subsets()
 
+    def maybe_axis_swap(self, transform):
+        if self.config.context.scene.zusi_coordinate_system == "0":
+            # Corresponds to a left multiplication with
+            # mathutils.Matrix((
+            #     (0.0, -1.0, 0.0, 0.0),
+            #     (1.0,  0.0, 0.0, 0.0),
+            #     (0.0,  0.0, 1.0, 0.0),
+            #     (0.0,  0.0, 0.0, 1.0)
+            # ))
+            # which is the same as
+            # mathutils.Matrix.Rotation(
+            #     radians(90), # angle
+            #     4, # size
+            #     'Z' # axis
+            # )
+            return mathutils.Matrix((
+                    -transform[1],
+                    transform[0].copy(),
+                    transform[2].copy(),
+                    transform[3].copy(),
+            ))
+        else:
+            return transform
+
+    def maybe_axis_swap_ani(self, transform):
+        if self.config.context.scene.zusi_coordinate_system == "0":
+            # Corresponds to A @ transform @ A^-1,
+            # where A is a rotation by 90 degrees around the Z axis, see above.
+            return mathutils.Matrix((
+                    ( transform[1][1], -transform[1][0], -transform[1][2], -transform[1][3]),
+                    (-transform[0][1],  transform[0][0],  transform[0][2],  transform[0][3]),
+                    (-transform[2][1],  transform[2][0],  transform[2][2],  transform[2][3]),
+                    (-transform[3][1],  transform[3][0],  transform[3][2],  transform[3][3]),
+            ))
+        else:
+            return transform
+
     def create_element(self, tag_name):
         e = OrderedAttrElement(tag_name)
         e.ownerDocument = self.xmldoc
@@ -553,7 +592,7 @@ class Ls3Exporter:
         is not animated."""
 
         # In Blender, the transformation of an object O with parents P_0, ..., P_n is calclulated using:
-        #     P_0.matrix_local * ... * P_n.matrix_local * O.matrix_local
+        #     P_0.matrix_local @ ... @ P_n.matrix_local @ O.matrix_local
         # where all transformation matrices are animatable.
         #
         # In Zusi, only one layer of animated transformations can be specified per file, and it is relative
@@ -568,7 +607,7 @@ class Ls3Exporter:
             found_root = found_root or ob == root
             if found_root:
                 # TODO: Warn if scaling is animated (Zusi does not support this and the export result
-                # will depend on the current frame.
+                # will depend on the current frame in Blender.
                 loc, rot, scale = ob.matrix_local.decompose()
                 scale1 = mathutils.Matrix.Scale(scale.x, 4, mathutils.Vector((1.0, 0.0, 0.0)))
                 scale2 = mathutils.Matrix.Scale(scale.y, 4, mathutils.Vector((0.0, 1.0, 0.0)))
@@ -611,12 +650,10 @@ class Ls3Exporter:
                 if ob.zusi_anchor_point_description != "":
                     ankerpunktNode.setAttribute("Beschreibung", ob.zusi_anchor_point_description)
 
-                translation, rotation_quaternion, scale = ob.matrix_world.decompose()
-
-                fill_node_xyz(self.create_child_element(ankerpunktNode, "p"), -translation[1], translation[0], translation[2])
-
-                rotation = zusi_rotation_from_quaternion(rotation_quaternion)
-                fill_node_xyz(self.create_child_element(ankerpunktNode, "phi"), rotation.x, rotation.y, rotation.z)
+                matrix_world = self.maybe_axis_swap(ob.matrix_world)
+                translation, rotation_quaternion, scale = matrix_world.decompose()
+                fill_node_xyz(self.create_child_element(ankerpunktNode, "p"), *translation)
+                fill_node_xyz(self.create_child_element(ankerpunktNode, "phi"), *zusi_rotation_from_quaternion(rotation_quaternion))
 
                 for entry in ob.zusi_anchor_point_files:
                     dateiNode = self.create_child_element(ankerpunktNode, "Datei")
@@ -672,6 +709,8 @@ class Ls3Exporter:
         vgroup_xy = -1 if "Normal constraint XY" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XY"].index
         vgroup_yz = -1 if "Normal constraint YZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint YZ"].index
         vgroup_xz = -1 if "Normal constraint XZ" not in ob.vertex_groups else ob.vertex_groups["Normal constraint XZ"].index
+        if self.config.context.scene.zusi_coordinate_system == "0":
+            vgroup_yz, vgroup_xz = vgroup_xz, vgroup_yz
 
         use_rail_normals = ob.type == 'MESH' and ob.data and ob.data.zusi_is_rail
 
@@ -681,8 +720,12 @@ class Ls3Exporter:
         # TODO: use render settings
         mesh = ob.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph) # , settings="PREVIEW")
 
+        if bpy.app.version < (2, 91, 0):
+            # T79965: mesh.transform() modifies referenced layers
+            mesh = mesh.copy()
+
         transform_matrix = self.transformation_relative(ob_original, self.get_animated_ob(ob_original), ls3file.root_obj)
-        mesh.transform(transform_matrix)
+        mesh.transform(self.maybe_axis_swap(transform_matrix))
 
         # transform() documentation: "Warning: inverts normals if matrix is negative"
         must_flip_normals = transform_matrix.determinant() < 0.0
@@ -795,8 +838,8 @@ class Ls3Exporter:
                 # The coordinates are transformed into the Zusi coordinate system.
                 # The vertex index is appended for reordering vertices
                 subset.vertexdata.append((
-                    -v.co[1], v.co[0], v.co[2],
-                    -normal[1], normal[0], normal[2],
+                    *v.co,
+                    *normal,
                     uvdata1[0], 1 - uvdata1[1],
                     uvdata2[0], 1 - uvdata2[1],
                     maxvertexindex + i,
@@ -905,11 +948,15 @@ class Ls3Exporter:
 
     def write_ani_keyframes(self, keyframes, animation_node):
         """Writes a list of keyframes into an animation node (<MeshAnimation> or <VerknAnimation>)"""
+        rotation_euler = None
         for keyframe in keyframes:
             aniPunktNode = self.create_child_element(animation_node, "AniPunkt")
             aniPunktNode.setAttribute("AniZeit", str(keyframe.time))
-            fill_node_xyz(self.create_child_element(aniPunktNode, "p"), -keyframe.loc.y, keyframe.loc.x, keyframe.loc.z)
-            fill_node_wxyz(self.create_child_element(aniPunktNode, "q"), *keyframe.rotation_quaternion)
+            loc, rot, scale = keyframe.transform.decompose()
+            # Make rotation Euler compatible with previous keyframe to prevent axis flipping.
+            rotation_euler = zusi_rotation_from_quaternion(rot, euler_compat=rotation_euler)
+            fill_node_xyz(self.create_child_element(aniPunktNode, "p"), *loc)
+            fill_node_wxyz(self.create_child_element(aniPunktNode, "q"), *rotation_euler.to_quaternion())
 
     def minimize_translation_length(self, keyframes):
         """Changes the translation vectors in a list of keyframes (which are relative to (0,0,0))
@@ -918,27 +965,30 @@ class Ls3Exporter:
         if not len(keyframes):
             return mathutils.Vector((0, 0, 0))
 
-        min_translation = keyframes[0].loc.copy()
-        max_translation = keyframes[0].loc.copy()
+        loc = keyframes[0].transform.decompose()[0]
+        min_translation = loc.copy()
+        max_translation = loc.copy()
 
         for keyframe in keyframes[1:]:
-            min_translation.x = min(min_translation.x, keyframe.loc.x)
-            min_translation.y = min(min_translation.y, keyframe.loc.y)
-            min_translation.z = min(min_translation.z, keyframe.loc.z)
-            max_translation.x = max(max_translation.x, keyframe.loc.x)
-            max_translation.y = max(max_translation.y, keyframe.loc.y)
-            max_translation.z = max(max_translation.z, keyframe.loc.z)
+            loc = keyframe.transform.decompose()[0]
+            min_translation.x = min(min_translation.x, loc.x)
+            min_translation.y = min(min_translation.y, loc.y)
+            min_translation.z = min(min_translation.z, loc.z)
+            max_translation.x = max(max_translation.x, loc.x)
+            max_translation.y = max(max_translation.y, loc.y)
+            max_translation.z = max(max_translation.z, loc.z)
 
         new_origin = (max_translation + min_translation) / 2
 
+        new_origin_transform = mathutils.Matrix.Translation(-new_origin)
         for keyframe in keyframes:
-            keyframe.loc -= new_origin
+            keyframe.transform = new_origin_transform @ keyframe.transform
 
         return new_origin
 
     def get_max_xy_translation_length(self, keyframes):
         """Returns the length of the longest translation vector (projected onto the xy plane) in a keyframe list."""
-        return max(vector_xy_length(keyframe.loc) for keyframe in keyframes) if len(keyframes) else 0
+        return max(translation_xy_length(keyframe.transform) for keyframe in keyframes) if len(keyframes) else 0
 
     def get_ani_keyframes(self, ob, root, animation_action, animation_action_slot):
         """Returns a sorted list of keyframes (translation and rotation relative to `root`) for `ob`
@@ -965,18 +1015,12 @@ class Ls3Exporter:
 
         # Compute keyframes.
         original_current_frame = self.config.context.scene.frame_current
-        rotation_euler = None
         result = []
         for keyframe_no in sorted(keyframe_nos):
             time = float(keyframe_no - frame0) / (frame1 - frame0) if frame0 != frame1 else 0
             self.config.context.scene.frame_set(keyframe_no)
-            loc, rot, scale = self.transformation_relative(ob, root, root).decompose()
-
-            # Make rotation Euler compatible with the previous frame to prevent axis flipping.
-            rotation_euler = zusi_rotation_from_quaternion(rot, rotation_euler)
-            rotation_quaternion = rotation_euler.to_quaternion()
-
-            result.append(Keyframe(time, loc, rotation_quaternion))
+            transform = self.transformation_relative(ob, root, root)
+            result.append(Keyframe(time, self.maybe_axis_swap_ani(transform).copy()))
 
         self.config.context.scene.frame_set(original_current_frame)
         return result
@@ -1322,11 +1366,10 @@ class Ls3Exporter:
         for idx, linked_file in enumerate(ls3file.linked_files):
             ls3file.animation_keys.update(linked_file.animation_keys)
 
-            linked_file.location, rotation_quaternion, linked_file.scale = \
-                    self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj).decompose()
-            linked_file.rotation_euler = zusi_rotation_from_quaternion(rotation_quaternion)
+            transform = self.transformation_relative(linked_file.root_obj, ls3file.root_obj, ls3file.root_obj)
             # TODO: Warn if scaling is animated
-            max_scale_factor = max(linked_file.scale.x, linked_file.scale.y, linked_file.scale.z)
+            loc, rot, scale = transform.decompose()
+            max_scale_factor = max(scale.x, scale.y, scale.z)
 
             if self.is_animated(linked_file.root_obj):
                 animation_action, animation_action_slot = self.animations[linked_file.root_obj]
@@ -1336,9 +1379,12 @@ class Ls3Exporter:
                 verknAnimationNode.setAttribute("AniGeschw", str(animation_action.zusi_animation_speed))
                 animation_nodes.append(verknAnimationNode)
 
+                # maybe_axis_swap is executed as part of get_ani_keyframes.
                 keyframes = self.get_ani_keyframes(linked_file.root_obj, ls3file.root_obj, animation_action, animation_action_slot)
-                linked_file.location = self.minimize_translation_length(keyframes)
-                linked_file.rotation_euler = mathutils.Vector((0, 0, 0))
+                loc = self.minimize_translation_length(keyframes)
+                # Rotation will be entirely handled by the keyframes.
+                rot = mathutils.Euler((0, 0, radians(90))) if not linked_file.must_export and self.config.context.scene.zusi_coordinate_system == "0" else None
+                linked_file.matrix_world = matrix_from_loc_rot_scale(loc, rot, scale)
                 linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor + self.get_max_xy_translation_length(keyframes)
                 self.write_ani_keyframes(keyframes, verknAnimationNode)
 
@@ -1347,9 +1393,10 @@ class Ls3Exporter:
                     ani_nrs_by_key[key].append(ani_nr)
                 ani_nr += 1
             else:
+                linked_file.matrix_world = self.maybe_axis_swap(transform)
                 linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor
 
-            ls3file.boundingr = max(ls3file.boundingr, linked_file.boundingr_in_parent + vector_xy_length(linked_file.location))
+            ls3file.boundingr = max(ls3file.boundingr, linked_file.boundingr_in_parent + vector_xy_length(loc))
 
         # Write animation declarations for this file and any linked file.
         for ani_key in sorted(ls3file.animation_keys):
@@ -1391,9 +1438,11 @@ class Ls3Exporter:
             if flags != 0:
                 verknuepfteNode.setAttribute("Flags", str(flags))
 
-            fill_node_xyz(self.create_child_element(verknuepfteNode, "p"), -linked_file.location.y, linked_file.location.x, linked_file.location.z)
-            fill_node_xyz(self.create_child_element(verknuepfteNode, "phi"), linked_file.rotation_euler.x, linked_file.rotation_euler.y, linked_file.rotation_euler.z)
-            fill_node_xyz(self.create_child_element(verknuepfteNode, "sk"), linked_file.scale.y, linked_file.scale.x, linked_file.scale.z, default = 1)
+            matrix_world = linked_file.matrix_world
+            translation, rotation_quaternion, scale = matrix_world.decompose()
+            fill_node_xyz(self.create_child_element(verknuepfteNode, "p"), *translation)
+            fill_node_xyz(self.create_child_element(verknuepfteNode, "phi"), *zusi_rotation_from_quaternion(rotation_quaternion))
+            fill_node_xyz(self.create_child_element(verknuepfteNode, "sk"), *scale, default = 1)
 
         # Get path names
         filepath = os.path.join(
