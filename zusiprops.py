@@ -1034,6 +1034,16 @@ bpy.types.Scene.zusi_description = bpy.props.StringProperty(
 
 bpy.types.Scene.zusi_animations_index= bpy.props.IntProperty()
 
+bpy.types.Scene.zusi_coordinate_system = bpy.props.EnumProperty(
+    name = _("Coordinate system"),
+    description = _("Coordinate system to use when exporting"),
+    items = [
+        ("0", _("Vehicle (Blender front/back/left/right views work as expected)"), ""),
+        ("1", _("Scenery (Blender XYZ axes correspond to Zusi XYZ axes)"), ""),
+    ],
+    default = "0"
+)
+
 #
 # Action
 #
@@ -1498,6 +1508,7 @@ class SCENE_PT_zusi_properties(bpy.types.Panel):
 
         layout.prop(sce, "zusi_object_id")
         layout.prop(sce, "zusi_description")
+        layout.prop(sce, "zusi_coordinate_system")
 
 # ---
 # Scene variant info UI
