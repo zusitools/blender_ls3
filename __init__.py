@@ -29,27 +29,27 @@ bl_info = {
 # To support reload properly, try to access a package var, 
 # if it's there, reload everything
 if "bpy" in locals():
-    import imp
+    import importlib
     if 'lsb' in locals():
-        imp.reload(lsb)
+        importlib.reload(lsb)
     if 'ls_import' in locals():
-        imp.reload(ls_import)
+        importlib.reload(ls_import)
     if 'ls3_import' in locals():
-        imp.reload(ls3_import)
+        importlib.reload(ls3_import)
     if 'ls3_export' in locals():
-        imp.reload(ls3_export)
+        importlib.reload(ls3_export)
     if 'zusiprops' in locals():
-        imp.reload(zusiprops)
+        importlib.reload(zusiprops)
     if 'zusicommon' in locals():
-        imp.reload(zusicommon)
+        importlib.reload(zusicommon)
     if 'zusiconfig' in locals():
-        imp.reload(zusiconfig)
+        importlib.reload(zusiconfig)
     if 'zusi_material_wrapper' in locals():
-        imp.reload(zusi_material_wrapper)
+        importlib.reload(zusi_material_wrapper)
     if 'batchexport_settings' in locals():
-        imp.reload(batchexport_settings)
+        importlib.reload(batchexport_settings)
     if 'i18n' in locals():
-        imp.reload(i18n)
+        importlib.reload(i18n)
  
 import bpy
 import os

@@ -24,6 +24,7 @@ import copy
 import struct
 import xml.dom.minidom as dom
 import logging
+import sys
 from . import zusiprops
 from .zusicommon import zusicommon
 from .zusi_material_wrapper import PrincipledBSDFWrapper
@@ -324,6 +325,14 @@ class SubsetIdentifier:
                 return is_lt_name(self.animated_obj, other.animated_obj)
         return False
 
+# https://github.com/python/cpython/commit/154477be722ae5c4e18d22d0860e284006b09c4f
+if sys.version_info >= (3, 13):
+    def _dom_write_data_helper(writer, text):
+        dom._write_data(writer, text, True)
+else:
+    def _dom_write_data_helper(writer, text):
+        dom._write_data(writer, text)
+
 class OrderedAttrElement(dom.Element):
     """An XML element that writes its attributes in a defined order per tag name"""
 
@@ -356,12 +365,12 @@ class OrderedAttrElement(dom.Element):
             for attr_name in self.orders[self.tagName]:
                 if attr_name in attrs:
                     writer.write(" %s=\"" % attr_name)
-                    dom._write_data(writer, attrs[attr_name].value)
+                    _dom_write_data_helper(writer, attrs[attr_name].value)
                     writer.write("\"")
         except KeyError:
             for a_name in sorted(attrs.keys()):
                 writer.write(" %s=\"" % a_name)
-                dom._write_data(writer, attrs[a_name].value)
+                _dom_write_data_helper(writer, attrs[a_name].value)
                 writer.write("\"")
         if self.childNodes:
             writer.write(">")
