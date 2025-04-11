@@ -589,7 +589,7 @@ class TestLs3Export(unittest.TestCase):
     # Subset 2 has a night color of black and a day color of white.
     # It will be black at night and white by day.
     self.assertEqual("FFFFFFFF", subsets[1].attrib["Cd"])
-    self.assertEqual("00000000", subsets[1].attrib["Ce"])
+    self.assertNotIn("Ce", subsets[0].attrib)
 
     # Subset 3 has a night color of white and a day color of gray.
     # This does not work in Zusi's lighting model (night color must be darker),
@@ -648,19 +648,19 @@ class TestLs3Export(unittest.TestCase):
     self.assertNotIn("E", subsets[0].attrib)
 
     # Subset 2 has a diffuse color of white and an ambient/night color of gray.
-    self.assertEqual("FF808080", subsets[1].attrib["Cd"])
+    self.assertEqual("FF7F7F7F", subsets[1].attrib["Cd"])
     self.assertEqual("FF000000", subsets[1].attrib["Ca"])
     self.assertEqual("00808080", subsets[1].attrib["Ce"])
 
     # Subset 3 has a night color that is lighter than the ambient color.
     # It will be reduced to be darker than both diffuse and ambient color.
-    self.assertEqual("FF808080", subsets[2].attrib["Cd"])
+    self.assertEqual("FF7F7F7F", subsets[2].attrib["Cd"])
     self.assertEqual("FF000000", subsets[2].attrib["Ca"])
     self.assertEqual("00808080", subsets[2].attrib["Ce"])
 
     # Subset 4 has a night color of gray, an ambient color of white
     # and a gray ambient overexposure.
-    self.assertEqual("FF808080", subsets[3].attrib["Cd"])
+    self.assertEqual("FF7F7F7F", subsets[3].attrib["Cd"])
     self.assertEqual("FFFFFFFF", subsets[3].attrib["Ca"])
     self.assertEqual("00808080", subsets[3].attrib["Ce"])
 
