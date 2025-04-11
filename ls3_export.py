@@ -33,15 +33,47 @@ try:
 except:
     pass
 from math import floor, ceil, sqrt, radians
-from mathutils import *
+import mathutils
 from bpy_extras import node_shader_utils
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
-# Converts a color value (of type Color) and an alpha value (value in [0..1])
-# to a hex string "AARRGGBB"
-rgba_to_rgb_hex_string = lambda color, alpha : "{:02X}{:02X}{:02X}{:02X}".format(*[round(x * 255) for x in [alpha, color.r, color.g, color.b]])
+class Color:
+    def __init__(self, r: int, g: int, b: int, a: int):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    @classmethod
+    def fromBlender(cls, c: mathutils.Color, a: int):
+        return cls(int(round(c.r * 255.0)), int(round(c.g * 255.0)), int(round(c.b * 255.0)), a)
+
+    def is_all_zeroes(self):
+        return (self.r, self.g, self.b, self.a) == (0, 0, 0, 0)
+
+    def to_hex_string(self):
+        return f"{self.a:02X}{self.r:02X}{self.g:02X}{self.b:02X}"
+
+    def __repr__(self):
+        return f"Color(r={self.r}, g={self.g}, b={self.b}, a={self.a})"
+
+    def __add__(self, other):
+        return Color(
+            min(255, self.r + other.r),
+            min(255, self.g + other.g),
+            min(255, self.b + other.b),
+            min(255, self.a + other.a),
+        )
+
+    def __sub__(self, other):
+        return Color(
+            max(0, self.r - other.r),
+            max(0, self.g - other.g),
+            max(0, self.b - other.b),
+            max(0, self.a - other.a),
+        )
 
 # Returns the length of the projection of the specified vector projected onto the XY plane.
 vector_xy_length = lambda vec : sqrt(vec.x * vec.x + vec.y * vec.y)
@@ -124,14 +156,6 @@ def fill_node_wxyz(node, w, x, y, z, default = 0):
     if abs(w - default) > EPSILON:
         node.setAttribute("W", str(w))
 
-def clamp_color(color):
-    """Returns a clamped version (RGB components between 0.0 and 1.0) of a color."""
-    return Color((
-        min(1.0, max(0.0, color.r)),
-        min(1.0, max(0.0, color.g)),
-        min(1.0, max(0.0, color.b))
-    ))
-
 def lod_convert(lod):
     result = 0
     if (lod & 1) != 0:
@@ -150,8 +174,8 @@ def zusi_rotation_from_quaternion(quat, euler_compat=None):
     # and because the X and Y axes are swapped compared to Blender, this corresponds to YXZ rotation
     # in Blender.
     # euler_compat is given in Zusi coordinates as well (i.e. axis swapped)
-    rot = quat.to_euler('YXZ', Euler((euler_compat.y, -euler_compat.x, euler_compat.z))) if euler_compat is not None else quat.to_euler('YXZ')
-    return Euler((-rot.y, rot.x, rot.z))
+    rot = quat.to_euler('YXZ', mathutils.Euler((euler_compat.y, -euler_compat.x, euler_compat.z))) if euler_compat is not None else quat.to_euler('YXZ')
+    return mathutils.Euler((-rot.y, rot.x, rot.z))
 
 def get_used_materials_for_object(ob):
     """Returns a set of pairs (material index, material) for all materials used (i.e. assigned to any face) in the given object."""
@@ -536,7 +560,7 @@ class Ls3Exporter:
         if root is None: # => then scale_root must also be None
             return ob.matrix_world
 
-        result = Matrix()
+        result = mathutils.Matrix()
         found_root = False
         while ob != scale_root:
             found_root = found_root or ob == root
@@ -544,9 +568,9 @@ class Ls3Exporter:
                 # TODO: Warn if scaling is animated (Zusi does not support this and the export result
                 # will depend on the current frame.
                 loc, rot, scale = ob.matrix_local.decompose()
-                scale1 = Matrix.Scale(scale.x, 4, Vector((1.0, 0.0, 0.0)))
-                scale2 = Matrix.Scale(scale.y, 4, Vector((0.0, 1.0, 0.0)))
-                scale3 = Matrix.Scale(scale.z, 4, Vector((0.0, 0.0, 1.0)))
+                scale1 = mathutils.Matrix.Scale(scale.x, 4, mathutils.Vector((1.0, 0.0, 0.0)))
+                scale2 = mathutils.Matrix.Scale(scale.y, 4, mathutils.Vector((0.0, 1.0, 0.0)))
+                scale3 = mathutils.Matrix.Scale(scale.z, 4, mathutils.Vector((0.0, 0.0, 1.0)))
                 result = scale1 @ scale2 @ scale3 @ result
             else:
                 result = ob.matrix_local @ result
@@ -754,11 +778,11 @@ class Ls3Exporter:
                         if g.weight == 0.0:
                             continue
                         if g.group == vgroup_yz:
-                            normal = Vector((0, normal[1], normal[2])).normalized()
+                            normal = mathutils.Vector((0, normal[1], normal[2])).normalized()
                         elif g.group == vgroup_xz:
-                            normal = Vector((normal[0], 0, normal[2])).normalized()
+                            normal = mathutils.Vector((normal[0], 0, normal[2])).normalized()
                         elif g.group == vgroup_xy:
-                            normal = Vector((normal[0], normal[1], 0)).normalized()
+                            normal = mathutils.Vector((normal[0], normal[1], 0)).normalized()
 
                 # Calculate square of vertex length (projected onto the XY plane)
                 # for the bounding radius.
@@ -793,40 +817,47 @@ class Ls3Exporter:
 
         wrapper = PrincipledBSDFWrapper(material)
 
-        # Set ambient, diffuse, and emit color.
-        # Zusi's lighting model works as follows:
-        # An object will always have its night color (day and night).
+        diffuse_color = Color.fromBlender(
+            wrapper.base_color,
+            255  # TODO material.alpha
+        )
+        ambient_color = Color.fromBlender(
+            material.zusi_ambient_color if material.zusi_use_ambient else mathutils.Color((1, 1, 1)),
+            int(round(material.zusi_ambient_alpha * 255.0))
+        )
+
+        emit_color = Color.fromBlender(
+            material.zusi_emit_color if material.zusi_use_emit else mathutils.Color((0, 0, 0)),
+            # Emit alpha is ignored in Zusi.
+            0
+        )
+        debug("Base values: Diffuse {}, Ambient {}, Emit {}", diffuse_color, ambient_color, emit_color)
+
+        # Convert to Zusi's lighting model:
+        # In Zusi, an object will always have its night color (day and night).
         # By day the diffuse and ambient color are added to the night color.
         # It follows from this that an object can only get darker at night, not lighter.
 
-        diffuse_color = wrapper.base_color
-        ambient_color = material.zusi_ambient_color if material.zusi_use_ambient else Color((1, 1, 1))
-
         # Adjust emit color to be always darker than the diffuse and ambient color.
-        emit_color = material.zusi_emit_color if material.zusi_use_emit else Color((0, 0, 0))
-        debug("Base values: Diffuse {}, Ambient {}, Emit {}", diffuse_color, ambient_color, emit_color)
-        emit_color = Color((
-            min(emit_color[0], diffuse_color[0], ambient_color[0]),
-            min(emit_color[1], diffuse_color[1], ambient_color[1]),
-            min(emit_color[2], diffuse_color[2], ambient_color[2]),
-        ))
+        emit_color.r = min(emit_color.r, diffuse_color.r, ambient_color.r)
+        emit_color.g = min(emit_color.g, diffuse_color.g, ambient_color.g)
+        emit_color.b = min(emit_color.b, diffuse_color.b, ambient_color.b)
 
-        # Subtract emit color from the diffuse and ambient color.
         diffuse_color -= emit_color
         ambient_color -= emit_color
+        debug("Corrected values: Diffuse {}, Ambient {}, Emit {}", diffuse_color, ambient_color, emit_color)
 
         # Add overexposure to the diffuse color.
         if material.zusi_allow_overexposure:
-            diffuse_color = clamp_color(diffuse_color + material.zusi_overexposure_addition)
-            ambient_color = clamp_color(ambient_color + material.zusi_overexposure_addition_ambient)
+            diffuse_color += Color.fromBlender(material.zusi_overexposure_addition, 0)
+            ambient_color += Color.fromBlender(material.zusi_overexposure_addition_ambient, 0)
+            debug("Overexposed values: Diffuse {}, Ambient {}, Emit {}", diffuse_color, ambient_color, emit_color)
 
-        subsetNode.setAttribute("Cd", rgba_to_rgb_hex_string(diffuse_color, 1)) #material.alpha)) # XXX
+        subsetNode.setAttribute("Cd", diffuse_color.to_hex_string())
         if material.zusi_use_ambient:
-            subsetNode.setAttribute("Ca", rgba_to_rgb_hex_string(ambient_color,
-                material.zusi_ambient_alpha))
-        if emit_color != Color((0, 0, 0)):
-            # Emit alpha is ignored in Zusi.
-            subsetNode.setAttribute("Ce", rgba_to_rgb_hex_string(emit_color, 0))
+            subsetNode.setAttribute("Ca", ambient_color.to_hex_string())
+        if not emit_color.is_all_zeroes():
+            subsetNode.setAttribute("Ce", emit_color.to_hex_string())
         if material.zusi_texture_preset in ['5', '10'] and material.zusi_night_switch_threshold != 0.0:
             subsetNode.setAttribute("Nachtumschaltung", str(material.zusi_night_switch_threshold))
         if material.zusi_texture_preset == '5' and material.zusi_day_mode_preset != '0':
@@ -883,7 +914,7 @@ class Ls3Exporter:
         so that the maximum translation length is minimized. Returns a vector to which the new
         translation vectors are relative."""
         if not len(keyframes):
-            return Vector((0, 0, 0))
+            return mathutils.Vector((0, 0, 0))
 
         min_translation = keyframes[0].loc.copy()
         max_translation = keyframes[0].loc.copy()
@@ -1293,7 +1324,7 @@ class Ls3Exporter:
 
                 keyframes = self.get_ani_keyframes(linked_file.root_obj, ls3file.root_obj, animation)
                 linked_file.location = self.minimize_translation_length(keyframes)
-                linked_file.rotation_euler = Vector((0, 0, 0))
+                linked_file.rotation_euler = mathutils.Vector((0, 0, 0))
                 linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor + self.get_max_xy_translation_length(keyframes)
                 self.write_ani_keyframes(keyframes, verknAnimationNode)
 
