@@ -589,7 +589,10 @@ class Ls3Importer:
         if node.getAttribute("AnkerKat"):
             empty.zusi_anchor_point_category = node.getAttribute("AnkerKat")
         if node.getAttribute("AnkerTyp"):
-            empty.zusi_anchor_point_type = node.getAttribute("AnkerTyp")
+            try:
+                empty.zusi_anchor_point_type = node.getAttribute("AnkerTyp")
+            except TypeError:
+                pass
         if node.getAttribute("Beschreibung"):
             empty.zusi_anchor_point_description = node.getAttribute("Beschreibung")
 
