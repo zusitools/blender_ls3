@@ -429,6 +429,8 @@ class Ls3Importer:
                 author.id = int(node.getAttribute("AutorID"))
             if node.getAttribute("AutorAufwand") != "":
                 author.effort += float(node.getAttribute("AutorAufwand"))
+            if node.getAttribute("AutorAufwandStunden") != "":
+                author.effort_hours += float(node.getAttribute("AutorAufwandStunden"))
             if node.getAttribute("AutorName") != "":
                 author.name = node.getAttribute("AutorName")
             if node.getAttribute("AutorEmail") != "":

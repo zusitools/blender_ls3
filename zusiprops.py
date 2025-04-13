@@ -186,8 +186,15 @@ class ZusiAuthor(bpy.types.PropertyGroup):
     )
 
     effort = bpy.props.FloatProperty(
-        name = _("Effort"),
-        description = _("The effort of the author (unit: one house)"),
+        name = _("Effort (legacy)"),
+        description = _("The author's construction effort in units of one house. Use the \"Effort (h)\" property instead."),
+        min = 0,
+        default = 0.0
+    )
+
+    effort_hours = bpy.props.FloatProperty(
+        name = _("Effort (h)"),
+        description = _("The author's construction effort in hours"),
         min = 0,
         default = 0.0
     )
@@ -1736,6 +1743,8 @@ class SCENE_PT_zusi_authors(bpy.types.Panel):
                 row.prop(entry, "name")
             row.prop(entry, "id")
             layout.prop(entry, "email")
-            layout.prop(entry, "effort")
+            if entry.effort > 0:
+                layout.prop(entry, "effort")
+            layout.prop(entry, "effort_hours")
             layout.prop(entry, "license")
             layout.prop(entry, "remarks")

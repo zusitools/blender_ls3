@@ -354,7 +354,7 @@ class OrderedAttrElement(dom.Element):
     orders = {
         "Info": ["DateiTyp", "Version", "MinVersion", "ObjektID", "Beschreibung", "EinsatzAb", "EinsatzBis", "DateiKategorie"],
         "SubSet": ["Cd", "Ca", "Ce", "TypLs3", "TypGF", "GruppenName", "BeleuchtungTyp", "Zwangshelligkeit", "Blink", "MeterProTex", "MeterProTex2", "zBias", "zZoom", "DoppeltRendern", "Nachtumschaltung", "NachtEinstellung", "MeshV", "MeshI"],
-        "AutorEintrag": ["AutorID", "AutorName", "AutorEmail", "AutorAufwand", "AutorLizenz", "AutorBeschreibung"],
+        "AutorEintrag": ["AutorID", "AutorName", "AutorEmail", "AutorAufwand", "AutorAufwandStunden", "AutorLizenz", "AutorBeschreibung"],
         "Verknuepfte": ["Flags", "GruppenName", "BoundingR", "SichtbarAb", "SichtbarBis", "Vorlade", "LODbit", "Helligkeit"],
         "RenderFlags": ["TexVoreinstellung", "SHADEMODE", "DESTBLEND", "SRCBLEND", "ALPHABLENDENABLE", "ALPHATESTENABLE", "ALPHAREF"],
         "SubSetTexFlags": ["MINFILTER", "MAGFILTER", "COLOROP", "COLORARG1", "COLORARG2", "COLORARG0", "ALPHAOP", "ALPHAARG1", "ALPHAARG2", "ALPHAARG0", "RESULTARG"],
@@ -1251,6 +1251,8 @@ class Ls3Exporter:
                     autorEintragNode.setAttribute("AutorEmail", author.email)
                 if write_effort and author.effort != zusiprops.ZusiAuthor.effort[1]["default"]:
                     autorEintragNode.setAttribute("AutorAufwand", str(round(author.effort, 5)))
+                if author.effort_hours != 0:
+                    autorEintragNode.setAttribute("AutorAufwandStunden", str(round(author.effort_hours, 5)))
                 if author.remarks != zusiprops.ZusiAuthor.remarks[1]["default"]:
                     autorEintragNode.setAttribute("AutorBeschreibung", author.remarks)
                 if author.license != zusiprops.ZusiAuthor.license[1]["default"]:

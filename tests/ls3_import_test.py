@@ -100,16 +100,36 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("author_info_2.ls3", {"importFileMetadata": True})
 
     expected = set([
-        # name, id, aufwand, lizenz, email, beschreibung
-        ("Otto OhneID", 0, 6.0, "0", "", ""),
-        ("Otto OhneID", 0, 0.0, "1", "", ""),
-        ("Zacharias Zweiundvierzig", 42, 0.0, "0", "zach@example.com", ""),
-        ("Zacharias Zweiundvierzig", 42, 0.0, "0", "", "Kommentar"),
-        ("Zacharias Zweiundvierzig", 42, 0.0, "2", "zach@example.com", "Kommentar 2"),
+        # name, id, aufwand, aufwand_stunden, lizenz, email, beschreibung
+        ("Otto OhneID", 0, 6.0, 0.0, "0", "", ""),
+        ("Otto OhneID", 0, 0.0, 0.0, "1", "", ""),
+        ("Zacharias Zweiundvierzig", 42, 0.0, 0.0, "0", "zach@example.com", ""),
+        ("Zacharias Zweiundvierzig", 42, 0.0, 0.0, "0", "", "Kommentar"),
+        ("Zacharias Zweiundvierzig", 42, 0.0, 0.0, "2", "zach@example.com", "Kommentar 2"),
     ])
 
     actual = set([
-        (a.name, a.id, a.effort, a.license, a.email, a.remarks)
+        (a.name, a.id, a.effort, a.effort_hours, a.license, a.email, a.remarks)
+        for a in bpy.data.scenes[0].zusi_authors
+    ])
+
+    self.assertEqual(expected, actual)
+
+  def test_import_author_info_effort_hours(self):
+    self.ls3_import("author_info_effort_hours_1.ls3", {"importFileMetadata": True})
+    self.ls3_import("author_info_effort_hours_2.ls3", {"importFileMetadata": True})
+
+    expected = set([
+        # name, id, aufwand, aufwand_stunden, lizenz, email, beschreibung
+        ("Otto OhneID", 0, 0.0, 6.0, "0", "", ""),
+        ("Otto OhneID", 0, 0.0, 0.0, "1", "", ""),
+        ("Zacharias Zweiundvierzig", 42, 0.0, 0.0, "0", "zach@example.com", ""),
+        ("Zacharias Zweiundvierzig", 42, 0.0, 0.0, "0", "", "Kommentar"),
+        ("Zacharias Zweiundvierzig", 42, 0.0, 0.0, "2", "zach@example.com", "Kommentar 2"),
+    ])
+
+    actual = set([
+        (a.name, a.id, a.effort, a.effort_hours, a.license, a.email, a.remarks)
         for a in bpy.data.scenes[0].zusi_authors
     ])
 
@@ -119,15 +139,15 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("author_info_expense_xml.ls3", {"importFileMetadata": True})
 
     expected = set([
-        # name, id, aufwand, lizenz, email, beschreibung
-        ("Author 1", 42, 8, "0", "", "Test 1"),
-        ("Author 2", 0, 4, "0", "", "Test 2"),
-        ("", 9000, 5, "0", "", "Test 3"),
-        ("", 9001, 6, "0", "", "Test only in .ls3"),
+        # name, id, aufwand, aufwand_stunden, lizenz, email, beschreibung
+        ("Author 1", 42, 8, 0.0, "0", "", "Test 1"),
+        ("Author 2", 0, 4, 0.0, "0", "", "Test 2"),
+        ("", 9000, 5, 0.0, "0", "", "Test 3"),
+        ("", 9001, 6, 0.0, "0", "", "Test only in .ls3"),
     ])
 
     actual = set([
-        (a.name, a.id, a.effort, a.license, a.email, a.remarks)
+        (a.name, a.id, a.effort, a.effort_hours, a.license, a.email, a.remarks)
         for a in bpy.data.scenes[0].zusi_authors
     ])
 
