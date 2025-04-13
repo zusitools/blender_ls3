@@ -1206,7 +1206,11 @@ class Ls3Exporter:
 
             # Split into multiple subsets where each vertex index is <= 65535.
             # But not particularly elegantly, since this is such a rare case.
+
+            # Make the indices in subset.facedata correspond to indices in subset.vertexdata
+            # (as opposed to "indices in subset.vertexdata if 'None' entries don't count").
             subset.vertexdata = [v for v in subset.vertexdata if v is not None]
+
             debug("Splitting subset with %1 vertices", len(subset.vertexdata))
             split_subsets_facedata = []
             for j in range(0, len(subset.facedata) // 3):
