@@ -648,6 +648,7 @@ anchor_point_types = [
     ("21", _("Registration tube dropper attachment point"), ""),
     ("22", _("Position of load"), ""),
     ("23", _("View point position"), ""),
+    ("24", _("Auxiliary catenary wire"), ""),
 ]
 
 #
