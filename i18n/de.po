@@ -445,22 +445,23 @@ msgstr "Die E-Mail-Adresse des Autors"
 
 #: zusiprops.py:189
 msgid "Effort (legacy)"
-msgstr ""
+msgstr "Aufwand (veraltet)"
 
 #: zusiprops.py:190
 msgid ""
 "The author's construction effort in units of one house. Use the \"Effort "
 "(h)\" property instead."
 msgstr ""
+"Bauaufwand des Autors in Haus-Einheiten. Stattdessen die Angabe \"Aufwand "
+"(h)\" nutzen."
 
 #: zusiprops.py:196
-#, fuzzy
 msgid "Effort (h)"
-msgstr "Aufwand"
+msgstr "Aufwand (h)"
 
 #: zusiprops.py:197
 msgid "The author's construction effort in hours"
-msgstr ""
+msgstr "Bauaufwand des Autors in Stunden"
 
 #: zusiprops.py:203
 msgid "Remarks"
@@ -839,9 +840,8 @@ msgid "View point position"
 msgstr "Position Blickpunkt"
 
 #: zusiprops.py:651
-#, fuzzy
 msgid "Auxiliary catenary wire"
-msgstr "Tragseil"
+msgstr "Hilfstragseil"
 
 #: zusiprops.py:659
 msgid "Calculate normals for rail"
@@ -1218,8 +1218,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1066
 msgid "Animation duration"
@@ -1239,8 +1239,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1077
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
