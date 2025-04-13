@@ -331,6 +331,34 @@ class TestLs3Export(unittest.TestCase):
     self.export_and_parse()
     self.assertFalse(os.path.exists(expensepath))
 
+  def test_author_info_effort_hours(self):
+    self.open("author_info_effort_hours")
+    root = self.export_and_parse()
+
+    expensepath = os.path.join(ZUSI3_EXPORTPATH, "export.ls3.expense.xml")
+    self.assertFalse(os.path.exists(expensepath))
+
+    eintraege = root.findall("./Info/AutorEintrag")
+    self.assertEqual(3, len(eintraege))
+
+    self.assertEqual("Author 1", eintraege[0].attrib["AutorName"])
+    self.assertEqual(42, int(eintraege[0].attrib["AutorID"]))
+    self.assertEqual("Test 1", eintraege[0].attrib["AutorBeschreibung"])
+    self.assertNotIn("AutorAufwand", eintraege[0].attrib)
+    self.assertNotIn("AutorAufwandStunden", eintraege[0].attrib)
+
+    self.assertEqual("Author 2", eintraege[1].attrib["AutorName"])
+    self.assertNotIn("AutorID", eintraege[1].attrib)
+    self.assertEqual("Test 2", eintraege[1].attrib["AutorBeschreibung"])
+    self.assertNotIn("AutorAufwand", eintraege[1].attrib)
+    self.assertEqual(3, float(eintraege[1].attrib["AutorAufwandStunden"]))
+
+    self.assertEqual("Author 3", eintraege[2].attrib["AutorName"])
+    self.assertEqual(9000, int(eintraege[2].attrib["AutorID"]))
+    self.assertEqual("Test 3", eintraege[2].attrib["AutorBeschreibung"])
+    self.assertEqual(6, float(eintraege[2].attrib["AutorAufwandStunden"]))
+    self.assertNotIn("AutorAufwand", eintraege[2].attrib)
+
   def test_lsb_node_pos(self):
     root = self.export_and_parse({ "writeLsb": True })
 
