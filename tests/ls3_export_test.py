@@ -1508,7 +1508,7 @@ class TestLs3Export(unittest.TestCase):
 
     self.assertNotIn("AniLoopen", animation_nodes[0].attrib)
     self.assertEqual("1", animation_nodes[1].attrib["AniLoopen"])
-    self.assertNotIn("AniLoopen", animation_nodes[2].attrib)
+    self.assertEqual("1", animation_nodes[2].attrib["AniLoopen"])
 
   def test_animation_with_and_without_loop(self):
     self.open("animation_with_and_without_loop")

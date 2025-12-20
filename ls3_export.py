@@ -1175,15 +1175,15 @@ class Ls3Exporter:
 
     def get_animation_keys(self, animation):
         """Returns the keys (AniID, AniBeschreibung, AniLoopen) of the <Animation> nodes this animation has to be entered in."""
-        loop = animation.zusi_animation_loop if animation.zusi_animation_type in ["0", "1"] else False
+        loop = animation.zusi_animation_loop if animation.zusi_animation_type in ["0", "1"] else animation.zusi_animation_type in ["2", "3", "4", "5"]
         if animation.zusi_animation_type == "0":
             if len(animation.zusi_animation_names) == 0:
-                return [(0, get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop else ""), loop)]
+                return [(0, get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop and animation.zusi_animation_type not in ["2", "3", "4", "5"] else ""), loop)]
             else:
                 return [(0, name_wrapper.name, loop) for name_wrapper in animation.zusi_animation_names]
         else:
             return [(int(animation.zusi_animation_type),
-                    get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop else ""),
+                    get_ani_description(animation.zusi_animation_type) + (" (loop)" if loop and animation.zusi_animation_type not in ["2", "3", "4", "5"] else ""),
                     loop)]
 
     def optimize_mesh(self, ls3file):
