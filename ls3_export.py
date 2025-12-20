@@ -35,6 +35,8 @@ except:
 from math import floor, ceil, sqrt, radians
 import mathutils
 from bpy_extras import node_shader_utils
+if bpy.app.version >= (4, 4, 0):
+    from bpy_extras import anim_utils
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -938,9 +940,9 @@ class Ls3Exporter:
         """Returns the length of the longest translation vector (projected onto the xy plane) in a keyframe list."""
         return max(vector_xy_length(keyframe.loc) for keyframe in keyframes) if len(keyframes) else 0
 
-    def get_ani_keyframes(self, ob, root, animation):
+    def get_ani_keyframes(self, ob, root, animation_action, animation_action_slot):
         """Returns a sorted list of keyframes (translation and rotation relative to `root`) for `ob`
-        where the keyframe times are taken from `animation`."""
+        where the keyframe times are taken from `animation_action`/'animation_action_slot'."""
         translation_length = 0
 
         # Get frame numbers of the 0.0 and 1.0 frames.
@@ -949,7 +951,12 @@ class Ls3Exporter:
 
         # Get frame numbers of keyframes. Make sure that the start and end keyframes are at an integer
         # (because Zusi does not have a continuation mode setting like Blender).
-        keyframe_nos = set([round(keyframe.co.x) for fcurve in animation.fcurves for keyframe in fcurve.keyframe_points])
+        if bpy.app.version >= (4, 4, 0):
+            channelbag = anim_utils.action_get_channelbag_for_slot(animation_action, animation_action_slot)
+            fcurves = channelbag.fcurves
+        else:
+            fcurves = animation_action.fcurves
+        keyframe_nos = set([round(keyframe.co.x) for fcurve in fcurves for keyframe in fcurve.keyframe_points])
         if len(keyframe_nos) and frame0 != frame1:
             min_keyframe = frame0 + floor(float(min(keyframe_nos) - frame0) / (frame1 - frame0)) * (frame1 - frame0)
             max_keyframe = frame0 + ceil(float(max(keyframe_nos) - frame0) / (frame1 - frame0)) * (frame1 - frame0)
@@ -989,7 +996,8 @@ class Ls3Exporter:
 
         # Get animation from the object or its parent.
         if ob.animation_data is not None and ob.animation_data.action is not None:
-            self.animations[ob] = ob.animation_data.action
+            self.animations[ob] = (ob.animation_data.action,
+                ob.animation_data.action_slot if bpy.app.version >= (4, 4, 0) else None)
         elif ob.parent is not None:
             self.animations[ob] = self.get_animation_recursive(ob.parent)
 
@@ -1292,16 +1300,16 @@ class Ls3Exporter:
             # The root subset of a file is not animated via subset animation, but rather through a
             # linked animation in the parent file.
             if subset.identifier.animated_obj is not None and subset.identifier.animated_obj != ls3file.root_obj:
-                animation = self.animations[subset.identifier.animated_obj]
+                animation_action, animation_action_slot = self.animations[subset.identifier.animated_obj]
                 meshAnimationNode = self.create_element("MeshAnimation")
                 meshAnimationNode.setAttribute("AniNr", str(ani_nr))
                 meshAnimationNode.setAttribute("AniIndex", str(idx))
-                meshAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
+                meshAnimationNode.setAttribute("AniGeschw", str(animation_action.zusi_animation_speed))
                 animation_nodes.append(meshAnimationNode)
-                keyframes = self.get_ani_keyframes(subset.identifier.animated_obj, ls3file.root_obj, animation)
+                keyframes = self.get_ani_keyframes(subset.identifier.animated_obj, ls3file.root_obj, animation_action, animation_action_slot)
                 self.write_ani_keyframes(keyframes, meshAnimationNode)
 
-                for key in self.get_animation_keys(animation):
+                for key in self.get_animation_keys(animation_action):
                     ls3file.animation_keys.add(key)
                     ani_nrs_by_key[key].append(ani_nr)
                 ani_nr += 1
@@ -1321,20 +1329,20 @@ class Ls3Exporter:
             max_scale_factor = max(linked_file.scale.x, linked_file.scale.y, linked_file.scale.z)
 
             if self.is_animated(linked_file.root_obj):
-                animation = self.animations[linked_file.root_obj]
+                animation_action, animation_action_slot = self.animations[linked_file.root_obj]
                 verknAnimationNode = self.create_element("VerknAnimation")
                 verknAnimationNode.setAttribute("AniNr", str(ani_nr))
                 verknAnimationNode.setAttribute("AniIndex", str(idx))
-                verknAnimationNode.setAttribute("AniGeschw", str(animation.zusi_animation_speed))
+                verknAnimationNode.setAttribute("AniGeschw", str(animation_action.zusi_animation_speed))
                 animation_nodes.append(verknAnimationNode)
 
-                keyframes = self.get_ani_keyframes(linked_file.root_obj, ls3file.root_obj, animation)
+                keyframes = self.get_ani_keyframes(linked_file.root_obj, ls3file.root_obj, animation_action, animation_action_slot)
                 linked_file.location = self.minimize_translation_length(keyframes)
                 linked_file.rotation_euler = mathutils.Vector((0, 0, 0))
                 linked_file.boundingr_in_parent = linked_file.boundingr * max_scale_factor + self.get_max_xy_translation_length(keyframes)
                 self.write_ani_keyframes(keyframes, verknAnimationNode)
 
-                for key in self.get_animation_keys(animation):
+                for key in self.get_animation_keys(animation_action):
                     ls3file.animation_keys.add(key)
                     ani_nrs_by_key[key].append(ani_nr)
                 ani_nr += 1

@@ -1662,7 +1662,12 @@ class ACTION_OT_set_interpolation_linear(bpy.types.Operator):
     action_name: bpy.props.StringProperty(options = {'HIDDEN'})
 
     def execute(self, context):
-        for fcurve in bpy.data.actions[self.action_name].fcurves:
+        action = bpy.data.actions[self.action_name]
+        if bpy.app.version >= (4, 4, 0):
+            fcurves = action.layers[0].strips[0].channelbag(action.slots[0]).fcurves
+        else:
+            fcurves = action.fcurves
+        for fcurve in fcurves:
             for keyframe in fcurve.keyframe_points:
                 keyframe.interpolation = 'LINEAR'
         return{'FINISHED'}

@@ -8,6 +8,9 @@ import unittest
 from math import radians
 from mathutils import *
 
+if bpy.app.version >= (4, 4, 0):
+    from bpy_extras import anim_utils
+
 sys.path.append(os.getcwd())
 from mocks import MockFS
 
@@ -74,8 +77,8 @@ class TestLs3Import(unittest.TestCase):
     self.assertAlmostEqual(expected[1], actual[1], places)
     self.assertAlmostEqual(expected[2], actual[2], places)
 
-  def assertKeyframes(self, action, curve_data_path, curve_array_index, keyframes):
-    fcurves = [c for c in action.fcurves if c.data_path == curve_data_path and c.array_index == curve_array_index]
+  def assertKeyframes(self, fcurves, curve_data_path, curve_array_index, keyframes):
+    fcurves = [c for c in fcurves if c.data_path == curve_data_path and c.array_index == curve_array_index]
     self.assertEqual(1, len(fcurves), "No unique FCurve with datapath %s, index %d exists" % (curve_data_path, curve_array_index))
     fcurve = fcurves[0]
 
@@ -370,19 +373,19 @@ class TestLs3Import(unittest.TestCase):
     self.ls3_import("animated_subset.ls3")
 
     ob = bpy.data.objects["animated_subset.ls3.0"]
-    anim_data = ob.animation_data
-    action = ob.animation_data.action
-
-    fcurves = action.fcurves
+    if bpy.app.version >= (4, 4, 0):
+        fcurves = anim_utils.action_get_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
+    else:
+        fcurves = ob.animation_data.action.fcurves
     self.assertEqual(6, len(fcurves))
 
-    self.assertKeyframes(action, "location", 0, [(0, 0), (1, 0)])
-    self.assertKeyframes(action, "location", 1, [(0, 3), (1, -3)])
-    self.assertKeyframes(action, "location", 2, [(0, -3), (1, -3)])
+    self.assertKeyframes(fcurves, "location", 0, [(0, 0), (1, 0)])
+    self.assertKeyframes(fcurves, "location", 1, [(0, 3), (1, -3)])
+    self.assertKeyframes(fcurves, "location", 2, [(0, -3), (1, -3)])
 
-    self.assertKeyframes(action, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
-    self.assertKeyframes(action, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
-    self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
+    self.assertKeyframes(fcurves, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
+    self.assertKeyframes(fcurves, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
+    self.assertKeyframes(fcurves, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
 
   def test_import_animated_linked_file(self):
     self.ls3_import("animated_linked_file.ls3", {"loadLinkedMode" : "2"})
@@ -395,19 +398,19 @@ class TestLs3Import(unittest.TestCase):
     self.assertEqual(ob, subset.parent)
     self.assertEqual(None, subset.animation_data)
 
-    anim_data = ob.animation_data
-    action = ob.animation_data.action
-
-    fcurves = action.fcurves
+    if bpy.app.version >= (4, 4, 0):
+        fcurves = anim_utils.action_get_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
+    else:
+        fcurves = ob.animation_data.action.fcurves
     self.assertEqual(6, len(fcurves))
 
-    self.assertKeyframes(action, "location", 0, [(0, 0), (1, 0)])
-    self.assertKeyframes(action, "location", 1, [(0, 3), (1, -3)])
-    self.assertKeyframes(action, "location", 2, [(0, -3), (1, -3)])
+    self.assertKeyframes(fcurves, "location", 0, [(0, 0), (1, 0)])
+    self.assertKeyframes(fcurves, "location", 1, [(0, 3), (1, -3)])
+    self.assertKeyframes(fcurves, "location", 2, [(0, -3), (1, -3)])
 
-    self.assertKeyframes(action, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
-    self.assertKeyframes(action, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
-    self.assertKeyframes(action, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
+    self.assertKeyframes(fcurves, "rotation_euler", 0, [(0, radians(45)), (1, radians(45))])
+    self.assertKeyframes(fcurves, "rotation_euler", 1, [(0, radians(0)), (1, radians(0))])
+    self.assertKeyframes(fcurves, "rotation_euler", 2, [(0, radians(0)), (1, radians(-45))])
 
   def test_import_linked_file_as_empty(self):
     self.ls3_import("linked_file.ls3")

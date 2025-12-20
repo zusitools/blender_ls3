@@ -31,6 +31,9 @@ from math import pi
 from mathutils import *
 from bpy_extras.io_utils import unpack_list
 
+if bpy.app.version >= (5, 0, 0):
+    from bpy_extras import anim_utils
+
 _ = i18n.language.gettext
 
 logger = logging.getLogger(__name__)
@@ -672,15 +675,20 @@ class Ls3Importer:
         if ob.animation_data.action is None:
             ob.animation_data.action = bpy.data.actions.new(
                 ob.name + "Action")
+            if bpy.app.version >= (4, 4, 0):
+                ob.animation_data.action_slot = ob.animation_data.action.slots.new(id_type='OBJECT', name=ob.name)
+        if bpy.app.version >= (5, 0, 0):
+            fcurves = anim_utils.action_ensure_channelbag_for_slot(ob.animation_data.action, ob.animation_data.action_slot).fcurves
+        else:
+            fcurves = ob.animation_data.action.fcurves
 
         # Make sure all FCurves are present on the Action.
         fcurves_by_datapath = dict([((curve.data_path, curve.array_index), curve)
-            for curve in ob.animation_data.action.fcurves])
+            for curve in fcurves])
         for datapath in ["location", "rotation_euler"]:
             for idx in range(0, 3):
                 if (datapath, idx) not in fcurves_by_datapath:
-                    fcurves_by_datapath[(datapath, idx)] = \
-                        ob.animation_data.action.fcurves.new(datapath, index=idx)
+                    fcurves_by_datapath[(datapath, idx)] = fcurves.new(datapath, index=idx)
 
         # Get X coordinate of control point.
         ani_zeit = node.getAttribute("AniZeit")

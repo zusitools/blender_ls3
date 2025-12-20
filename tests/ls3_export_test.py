@@ -1524,12 +1524,19 @@ class TestLs3Export(unittest.TestCase):
 
   def test_set_interpolation_linear(self):
     self.open("animation_set_interpolation_linear")
-    for fcurve in bpy.data.actions["CubeAction"].fcurves:
+
+    action = bpy.data.actions["CubeAction"]
+    if bpy.app.version >= (4, 4, 0):
+        fcurves = action.layers[0].strips[0].channelbag(action.slots[0]).fcurves
+    else:
+        fcurves = action.fcurves
+
+    for fcurve in fcurves:
         for keyframe in fcurve.keyframe_points:
             self.assertEqual('BEZIER', keyframe.interpolation)
 
     self.assertEqual({'FINISHED'}, bpy.ops.action.set_interpolation_linear(action_name = "CubeAction"))
-    for fcurve in bpy.data.actions["CubeAction"].fcurves:
+    for fcurve in fcurves:
         for keyframe in fcurve.keyframe_points:
             self.assertEqual('LINEAR', keyframe.interpolation)
 
