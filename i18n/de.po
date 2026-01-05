@@ -445,11 +445,11 @@ msgstr "Aufwand (veraltet)"
 
 #: zusiprops.py:187
 msgid ""
-"The author's construction effort in units of one house. Use the \"Effort (h)"
-"\" property instead."
+"The author's construction effort in units of one house. Use the \"Effort "
+"(h)\" property instead."
 msgstr ""
-"Bauaufwand des Autors in Haus-Einheiten. Stattdessen die Angabe \"Aufwand (h)"
-"\" nutzen."
+"Bauaufwand des Autors in Haus-Einheiten. Stattdessen die Angabe \"Aufwand "
+"(h)\" nutzen."
 
 #: zusiprops.py:193
 msgid "Effort (h)"
@@ -1212,19 +1212,21 @@ msgstr "Kurze Beschreibung dieses Objekts"
 
 #: zusiprops.py:1033
 msgid "Coordinate system"
-msgstr ""
+msgstr "Koordinatensystem"
 
 #: zusiprops.py:1034
 msgid "Coordinate system to use when exporting"
-msgstr ""
+msgstr "Beim Export zu verwendendes Koordinatensystem"
 
 #: zusiprops.py:1036
 msgid "Vehicle (Blender front/back/left/right views work as expected)"
 msgstr ""
+"Fahrzeug (Vorder-/Rück-/Seitenansichten in Blender funktionieren wie "
+"erwartet)"
 
 #: zusiprops.py:1037
 msgid "Scenery (Blender XYZ axes correspond to Zusi XYZ axes)"
-msgstr ""
+msgstr "Landschaft (X-/Y-/Z-Achse in Blender entspricht X-/Y-/Z-Achse in Zusi)"
 
 #: zusiprops.py:1054
 msgid "Animation speed"
@@ -1242,8 +1244,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
-"Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
+"Rad-Animationen "
 
 #: zusiprops.py:1071
 msgid "Animation duration"
@@ -1263,8 +1265,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1082
 msgid ""
-"Animation names this action belongs to, if animation type is 'Undefined/"
-"signal controlled'"
+"Animation names this action belongs to, if animation type is "
+"'Undefined/signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
