@@ -733,6 +733,12 @@ class Ls3Exporter:
                 warn("Auto smooth setting will not be honored in Blender < 2.71")
                 use_auto_smooth = False
 
+        # If the object is mirrored/negatively scaled, the normals will come out the wrong way
+        # when applying the transformation. Workaround from:
+        # https://projects.blender.org/blender/blender/issues/18834
+        ma = ob.matrix_world.to_3x3() # gets the rotation part
+        must_flip_normals = mathutils.Vector.dot(ma[2], mathutils.Vector.cross(ma[0], ma[1])) <= -0.00001
+
         # List vertex indices of edges that are marked as "sharp edges",
         # which means we won't merge them later during mesh optimization.
         # The order of the vertices in face.edge_keys does not seem to be consistent,
@@ -780,12 +786,19 @@ class Ls3Exporter:
             subset = subsets[face.material_index]
             maxvertexindex = len(subset.vertexdata)
 
-            # Write the first triangle of the face
-            subset.facedata.extend((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
+            # Write the first triangle of the face, fixing the winding order.
+            # Optionally reverse order of faces to flip normals
+            if must_flip_normals:
+                subset.facedata.extend((maxvertexindex, maxvertexindex + 1, maxvertexindex + 2))
+            else:
+                subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 1, maxvertexindex))
 
             # If the face is a quad, write the second triangle too.
             if len(face.vertices) == 4:
-                subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
+                if must_flip_normals:
+                    subset.facedata.extend((maxvertexindex + 2, maxvertexindex + 3, maxvertexindex))
+                else:
+                    subset.facedata.extend((maxvertexindex, maxvertexindex + 3, maxvertexindex + 2))
 
             # Compile a list of all vertices to mark as "don't merge".
             # Those are the vertices that form a sharp edge in the current face.
@@ -832,6 +845,9 @@ class Ls3Exporter:
                             normal = mathutils.Vector((normal[0], 0, normal[2])).normalized()
                         elif g.group == vgroup_xy:
                             normal = mathutils.Vector((normal[0], normal[1], 0)).normalized()
+
+                if must_flip_normals:
+                     normal = mathutils.Vector((-normal[0], -normal[1], -normal[2]))
 
                 # Calculate square of vertex length (projected onto the XY plane)
                 # for the bounding radius.
