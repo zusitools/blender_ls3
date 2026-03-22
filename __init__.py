@@ -640,11 +640,7 @@ class VIEW_OT_show_variants(bpy.types.Operator):
     def execute(self, context):
         variantIDs = [setting.variant_id for setting in self.properties.variant_visibility_setting if setting.visible == True]
         for ob in context.scene.objects:
-            ob.hide = not zusicommon.is_object_visible(ob, variantIDs)
-        for mat in bpy.data.materials:
-            for slot in mat.texture_slots:
-                if slot and slot.texture:
-                    slot.use = zusicommon.is_object_visible(slot.texture, variantIDs)
+            ob.hide_set(not zusicommon.is_object_visible(ob, variantIDs))
         return {'FINISHED'}
 
     def invoke(self, context, event):
