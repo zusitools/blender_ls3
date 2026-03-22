@@ -3,8 +3,10 @@
 branch=`git rev-parse --abbrev-ref HEAD`
 if [ "$branch" != "blender-2.8" ]; then
   echo "Not on blender-2.8 branch, exiting"
-  exit
+  exit 1
 fi
+
+git diff-index --quiet HEAD -- || (echo "There are uncommitted changes, exiting"; exit 1)
 
 rm release/blender_ls3.zip
 mkdir io_scene_ls3
@@ -16,12 +18,12 @@ rm -rf io_scene_ls3
 
 if [ "$1" != "upload" ]; then
   echo "Not uploading, call with 'upload' parameter to upload"
-  exit
+  exit 0
 fi
 
 if [ `git rev-parse blender-2.8` != `git rev-parse origin/blender-2.8` ]; then
   echo "Branch blender-2.8 is behind origin/blender-2.8, please push first. Exiting"
-  exit
+  exit 1
 fi
 
 echo -n "Tag name (v140423): "
