@@ -752,20 +752,22 @@ class Ls3Exporter:
 
         # For each subset, and i in {0, 1}, get the UV layer from which the UV coordinates
         # for texture i in the subset shall be taken. Can be None.
-        uvlayers = {}
+        uvlayers = {material_index: [None, None] for material_index in subsets.keys()}
         for material_index in subsets.keys():
-            if material_index < len(ob.material_slots):
-                mat = ob.material_slots[material_index].material
-                wrapper = PrincipledBSDFWrapper(mat)
-                uvlayers[material_index] = [
-                    None if wrapper.base_texture_image is None
-                        else mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None and wrapper.base_uv_map in mesh.uv_layers
-                        else mesh.uv_layers.active,
-                    None if wrapper.secondary_texture_image is None
-                        else mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None and wrapper.secondary_uv_map in mesh.uv_layers
-                        else mesh.uv_layers.active]
-            else:
-                uvlayers[material_index] = [None, None]
+            if material_index >= len(ob.material_slots):
+                continue
+            mat = ob.material_slots[material_index].material
+            if not mat:
+                # Blender 5.0's geometry nodes based array modifier may create an empty material slot.
+                continue
+            wrapper = PrincipledBSDFWrapper(mat)
+            uvlayers[material_index] = [
+                None if wrapper.base_texture_image is None
+                    else mesh.uv_layers[wrapper.base_uv_map] if wrapper.base_uv_map is not None and wrapper.base_uv_map in mesh.uv_layers
+                    else mesh.uv_layers.active,
+                None if wrapper.secondary_texture_image is None
+                    else mesh.uv_layers[wrapper.secondary_uv_map] if wrapper.secondary_uv_map is not None and wrapper.secondary_uv_map in mesh.uv_layers
+                    else mesh.uv_layers.active]
 
         # Write vertices, faces and UV coordinates.
         # Access faces via the loop_triangles API which automatically triangulates the mesh.

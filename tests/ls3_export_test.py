@@ -844,6 +844,11 @@ class TestLs3Export(unittest.TestCase):
           self.assertEqual(r"Loks\Elektroloks\102\102.fzg", datei_nodes[2].attrib["Dateiname"])
           self.assertEqual(r"..\..\nichtzusi\KeineDaten\Irgendwas.fzg", datei_nodes[3].attrib["Dateiname"])
 
+  @unittest.skipUnless(bpy.app.version >= (5, 0, 0), "Depends on new array modifier")
+  def test_new_array_modifier_no_material_slot(self):
+    self.open("new_array_modifier_no_material_slot")
+    self.export_and_parse()  # should not crash
+
   # ---
   # Variants tests
   # ---
