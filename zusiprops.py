@@ -1520,6 +1520,9 @@ class ZUSI_VARIANTS_OT_add(bpy.types.Operator):
     bl_description = _("Add a variant to the scene")
     bl_options = {'INTERNAL'}
 
+    def execute(self, context):
+        return self.invoke(context, None)
+
     def invoke(self, context, event):
         max_id = -1
         if len(context.scene.zusi_variants) > 0:
@@ -1528,6 +1531,13 @@ class ZUSI_VARIANTS_OT_add(bpy.types.Operator):
         new_variant = context.scene.zusi_variants.add()
         new_variant.name = _("Variant")
         new_variant.id = max_id + 1
+
+        for ob in context.scene.objects:
+            if ob.zusi_variants_visibility_mode == "False" and ob.library is None:
+                # Visible in all except the selected variants -> add the new variant to the list
+                new_vis = ob.zusi_variants_visibility.add()
+                new_vis.variant_id = new_variant.id
+
         return{'FINISHED'}
 
 class ZUSI_VARIANTS_OT_del(bpy.types.Operator):
