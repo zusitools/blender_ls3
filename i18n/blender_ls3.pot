@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 18:39+0100\n"
+"POT-Creation-Date: 2026-08-18 20:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,211 +90,215 @@ msgstr ""
 msgid "Import files that are linked in the LS3 file"
 msgstr ""
 
-#: __init__.py:232
+#: __init__.py:232 __init__.py:375
+msgid "Optimize mesh"
+msgstr ""
+
+#: __init__.py:233
+msgid "Optimize meshes during import (merge duplicate vertices)"
+msgstr ""
+
+#: __init__.py:238
 msgid "LODs to import"
 msgstr ""
 
-#: __init__.py:245
+#: __init__.py:252
 msgid "Import LODs (only embedded linked files)"
 msgstr ""
 
-#: __init__.py:273
+#: __init__.py:281
 #, python-format
 msgid "LOD %d"
 msgstr ""
 
-#: __init__.py:280
+#: __init__.py:288
 msgid "Embed linked file"
 msgstr ""
 
-#: __init__.py:281
+#: __init__.py:289
 msgid ""
 "Load the contents of the linked file specified at this object and insert "
 "them as children of this object"
 msgstr ""
 
-#: __init__.py:291
+#: __init__.py:299
 #, python-format
 msgid "File %s not found"
 msgstr ""
 
-#: __init__.py:332
+#: __init__.py:340
 msgid "Export to Zusi Scenery file format (.ls3)"
 msgstr ""
 
-#: __init__.py:333
+#: __init__.py:341
 msgid "Export LS3"
 msgstr ""
 
-#: __init__.py:349
+#: __init__.py:357
 msgid "Export mode"
 msgstr ""
 
-#: __init__.py:350
+#: __init__.py:358
 msgid "Choose which objects to export"
 msgstr ""
 
-#: __init__.py:352
+#: __init__.py:360
 msgid "All objects"
 msgstr ""
 
-#: __init__.py:353
+#: __init__.py:361
 msgid "Selected objects"
 msgstr ""
 
-#: __init__.py:354
+#: __init__.py:362
 msgid "Subsets containing selected objects"
 msgstr ""
 
-#: __init__.py:355
+#: __init__.py:363
 msgid "Visible objects"
 msgstr ""
 
-#: __init__.py:361
+#: __init__.py:369
 msgid "Export animations"
 msgstr ""
 
-#: __init__.py:362
+#: __init__.py:370
 msgid ""
 "Export animations from keyframes (this might create/overwrite additional "
 "files)"
 msgstr ""
 
-#: __init__.py:367
-msgid "Optimize mesh"
-msgstr ""
-
-#: __init__.py:368
+#: __init__.py:376
 msgid ""
 "Optimize meshes in the exported file (this will not modify any meshes in the "
 "Blender file)"
 msgstr ""
 
-#: __init__.py:373
+#: __init__.py:381
 msgid "Max. distance"
 msgstr ""
 
-#: __init__.py:374
+#: __init__.py:382
 msgid "Maximum distance between two vertices to be merged"
 msgstr ""
 
-#: __init__.py:380
+#: __init__.py:388
 msgid "Max. UV distance"
 msgstr ""
 
-#: __init__.py:381
+#: __init__.py:389
 msgid "Maximum UV coordinate distance between two vertices to be merged"
 msgstr ""
 
-#: __init__.py:388
+#: __init__.py:396
 msgid "Max. normal angle"
 msgstr ""
 
-#: __init__.py:390
+#: __init__.py:398
 msgid "Maximum angle between the normal vectors of two vertices to be merged"
 msgstr ""
 
-#: __init__.py:397
+#: __init__.py:405
 msgid "Write mesh data to LSB file"
 msgstr ""
 
-#: __init__.py:398
+#: __init__.py:406
 msgid ""
 "Write vertex and face data to a separate file for better loading performance "
 "in Zusi"
 msgstr ""
 
-#: __init__.py:403
+#: __init__.py:411
 msgid "Variants to export"
 msgstr ""
 
-#: __init__.py:404
+#: __init__.py:412
 msgid "Choose which variants to export"
 msgstr ""
 
-#: __init__.py:417
+#: __init__.py:425
 msgid "No author information entered"
 msgstr ""
 
-#: __init__.py:420
+#: __init__.py:428
 msgid "Author information added"
 msgstr ""
 
-#: __init__.py:422
+#: __init__.py:430
 #, python-format
 msgid "Name: %s"
 msgstr ""
 
-#: __init__.py:423
+#: __init__.py:431
 #, python-format
 msgid "E-mail: %s"
 msgstr ""
 
-#: __init__.py:425
+#: __init__.py:433
 msgid "Variants (leave empty to export all)"
 msgstr ""
 
-#: __init__.py:432 __init__.py:638 zusiprops.py:1120
+#: __init__.py:440 __init__.py:646 zusiprops.py:1120
 msgid "Variants can be defined in the Scene settings."
 msgstr ""
 
-#: __init__.py:438
+#: __init__.py:446
 msgid "The following files will be overwritten:"
 msgstr ""
 
-#: __init__.py:500
+#: __init__.py:508
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr ""
 
-#: __init__.py:501
+#: __init__.py:509
 msgid "Batch export LS3"
 msgstr ""
 
-#: __init__.py:548
+#: __init__.py:556
 msgid "Unsaved file, no file name available"
 msgstr ""
 
-#: __init__.py:551
+#: __init__.py:559
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr ""
 
-#: __init__.py:607
+#: __init__.py:615
 #, python-format
 msgid "Exported %d file"
 msgid_plural "Exported %d files"
 msgstr[0] ""
 msgstr[1] ""
 
-#: __init__.py:616
+#: __init__.py:624
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 
-#: __init__.py:617
+#: __init__.py:625
 msgid "Show Variants"
 msgstr ""
 
-#: __init__.py:621
+#: __init__.py:629
 msgid "Variants to show"
 msgstr ""
 
-#: __init__.py:622
+#: __init__.py:630
 msgid "Choose which variants to show"
 msgstr ""
 
-#: __init__.py:632
+#: __init__.py:640
 msgid "Variants (leave empty to show all)"
 msgstr ""
 
-#: __init__.py:669
+#: __init__.py:673
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr ""
 
-#: __init__.py:672 __init__.py:675
+#: __init__.py:676 __init__.py:679
 msgid "Zusi Scenery (.ls3) ..."
 msgstr ""
 
-#: __init__.py:678
+#: __init__.py:682
 msgid "Show variants ..."
 msgstr ""
 
@@ -1146,7 +1150,7 @@ msgstr ""
 msgid "Animations contained in the linked file"
 msgstr ""
 
-#: zusiprops.py:994 zusiprops.py:1101 zusiprops.py:1620
+#: zusiprops.py:994 zusiprops.py:1101 zusiprops.py:1630
 msgid "Variants"
 msgstr ""
 
@@ -1391,83 +1395,83 @@ msgstr ""
 msgid "Add a variant to the scene"
 msgstr ""
 
-#: zusiprops.py:1586
+#: zusiprops.py:1589
 msgid "Variant"
 msgstr ""
 
-#: zusiprops.py:1592
+#: zusiprops.py:1602
 msgid "Remove variant"
 msgstr ""
 
-#: zusiprops.py:1593
+#: zusiprops.py:1603
 msgid "Remove the selected variant from the scene"
 msgstr ""
 
-#: zusiprops.py:1640
+#: zusiprops.py:1650
 msgid "Add animation name"
 msgstr ""
 
-#: zusiprops.py:1641
+#: zusiprops.py:1651
 msgid "Add the name of an animation this action belongs to"
 msgstr ""
 
-#: zusiprops.py:1650
+#: zusiprops.py:1660
 msgid "Remove animation name"
 msgstr ""
 
-#: zusiprops.py:1651
+#: zusiprops.py:1661
 msgid ""
 "Remove the selected animation name from the list of animations this action "
 "belongs to"
 msgstr ""
 
-#: zusiprops.py:1669
+#: zusiprops.py:1679
 msgid "Set interpolation to linear"
 msgstr ""
 
-#: zusiprops.py:1670
+#: zusiprops.py:1680
 msgid ""
 "Set the interpolation mode of all animation curves of this action to 'Linear'"
 msgstr ""
 
-#: zusiprops.py:1687
+#: zusiprops.py:1697
 msgid "Zusi animations"
 msgstr ""
 
-#: zusiprops.py:1715
+#: zusiprops.py:1725
 msgid "Part of the following animations:"
 msgstr ""
 
-#: zusiprops.py:1730
+#: zusiprops.py:1740
 msgid "Add author"
 msgstr ""
 
-#: zusiprops.py:1731
+#: zusiprops.py:1741
 msgid "Add an author to the scene"
 msgstr ""
 
-#: zusiprops.py:1735
+#: zusiprops.py:1745
 msgid "Author"
 msgstr ""
 
-#: zusiprops.py:1740
+#: zusiprops.py:1750
 msgid "Remove author"
 msgstr ""
 
-#: zusiprops.py:1741
+#: zusiprops.py:1751
 msgid "Remove the selected author from the scene"
 msgstr ""
 
-#: zusiprops.py:1760
+#: zusiprops.py:1770
 msgid "Add default author information"
 msgstr ""
 
-#: zusiprops.py:1761
+#: zusiprops.py:1771
 msgid ""
 "Add author information entered in the Zusi File Management application "
 "(Windows) or the configuration file (other operating systems)"
 msgstr ""
 
-#: zusiprops.py:1773
+#: zusiprops.py:1783
 msgid "Author information"
 msgstr ""
