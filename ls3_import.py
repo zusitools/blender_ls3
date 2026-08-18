@@ -117,6 +117,7 @@ class Ls3ImporterSettings:
                 importFileMetadata = True,
                 loadLinkedMode = IMPORT_LINKED_AS_EMPTYS,
                 lod_bit = 15,
+                optimizeMesh = True,
                 parent = None,
                 ):
         self.context = context
@@ -126,6 +127,7 @@ class Ls3ImporterSettings:
         self.importFileMetadata = importFileMetadata
         self.loadLinkedMode = loadLinkedMode
         self.lod_bit = lod_bit
+        self.optimizeMesh = optimizeMesh
         self.parent = parent
 
 class Ls3Importer:
@@ -395,12 +397,13 @@ class Ls3Importer:
         self.currentmesh.update(calc_edges = True)
 
         # Merge vertices that have the same coordinates
-        import bmesh
-        bm = bmesh.new()
-        bm.from_mesh(self.currentmesh)
-        bmesh.ops.remove_doubles(bm, verts = bm.verts[:], dist = 0.0001)
-        bm.to_mesh(self.currentmesh)
-        bm.free()
+        if self.config.optimizeMesh:
+            import bmesh
+            bm = bmesh.new()
+            bm.from_mesh(self.currentmesh)
+            bmesh.ops.remove_doubles(bm, verts = bm.verts[:], dist = 0.0001)
+            bm.to_mesh(self.currentmesh)
+            bm.free()
 
         self.subsetno += 1
 
@@ -541,10 +544,11 @@ class Ls3Importer:
                         dateiname,
                         filename,
                         directory,
-                        self.config.importFileMetadata,
-                        self.config.loadLinkedMode,
-                        self.config.lod_bit,
-                        empty,
+                        importFileMetadata = self.config.importFileMetadata,
+                        loadLinkedMode = self.config.loadLinkedMode,
+                        lod_bit = self.config.lod_bit,
+                        optimizeMesh = self.config.optimizeMesh,
+                        parent = empty,
                     )
                     ls3importer = Ls3Importer(settings)
                     ls3importer.import_ls3()

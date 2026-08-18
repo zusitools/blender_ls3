@@ -208,11 +208,13 @@ class TestLs3Import(unittest.TestCase):
         for normal in tuple(zip(*(iter(vertex_normals),) * 3)):
           self.assertVectorEqual((0, 1, 0), normal, places = 3) # normals are less accurate
 
-  @unittest.skip("Does not work at the moment")
   def test_import_double_sided(self):
-    self.ls3_import("doublesided.ls3")
-    ob = bpy.data.objects["doublesided.ls3.0"]
-    self.assertEqual(4, len(ob.data.polygons))
+    for optimize_mesh in (True, False):
+      with self.subTest(optimize_mesh=optimize_mesh):
+        self.clearScene()
+        self.ls3_import("doublesided.ls3", {"optimizeMesh": optimize_mesh})
+        ob = bpy.data.objects["doublesided.ls3.0"]
+        self.assertEqual(2 if optimize_mesh else 4, len(ob.data.polygons))
 
   def test_multitexture_import(self):
     self.ls3_import("multitexture.ls3")

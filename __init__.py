@@ -225,6 +225,12 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
         default = "1"
     )
 
+    optimizeMesh = bpy.props.BoolProperty(
+        name = _("Optimize mesh"),
+        description = _("Optimize meshes during import (merge duplicate vertices)"),
+        default = True
+    )
+
     lod_import_setting = bpy.props.CollectionProperty(
         name = _("LODs to import"),
         type = ZusiLodImportSetting
@@ -237,6 +243,7 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
 
         layout.prop(self, "importFileMetadata")
         layout.prop(self, "loadLinkedMode")
+        layout.prop(self, "optimizeMesh")
 
         layout.label(_("Import LODs (only embedded linked files)"))
         row = layout.row()
@@ -251,9 +258,10 @@ class IMPORT_OT_ls3(bpy.types.Operator, ImportHelper):
                 os.path.join(self.properties.directory, f.name),
                 f.name,
                 self.properties.directory,
-                self.properties.importFileMetadata,
-                self.properties.loadLinkedMode,
-                lod_bit = sum([s.lod_bit for s in self.properties.lod_import_setting if s.imp])
+                importFileMetadata = self.properties.importFileMetadata,
+                loadLinkedMode = self.properties.loadLinkedMode,
+                lod_bit = sum([s.lod_bit for s in self.properties.lod_import_setting if s.imp]),
+                optimizeMesh = self.properties.optimizeMesh,
             )
 
             importer = ls3_import.Ls3Importer(settings)
@@ -309,8 +317,8 @@ class OBJECT_OT_embed_linked(bpy.types.Operator):
                 path,
                 filename,
                 directory,
-                False,
-                ls3_import.IMPORT_LINKED_AS_EMPTYS,
+                importFileMetadata = False,
+                loadLinkedMode = ls3_import.IMPORT_LINKED_AS_EMPTYS,
                 parent = ob,
             )
             importer = ls3_import.Ls3Importer(settings)
