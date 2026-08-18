@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: blender_ls 3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 19:36+0100\n"
+"POT-Creation-Date: 2026-08-18 20:33+0200\n"
 "PO-Revision-Date: 2014-10-21 18:23+0200\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -85,24 +85,32 @@ msgstr ""
 msgid "Import files that are linked in the LS3 file"
 msgstr "Dateien laden, die in dieser LS3-Datei verknüpft sind"
 
-#: __init__.py:229
+#: __init__.py:229 __init__.py:371
+msgid "Optimize mesh"
+msgstr "Mesh optimieren"
+
+#: __init__.py:230
+msgid "Optimize meshes during import (merge duplicate vertices)"
+msgstr ""
+
+#: __init__.py:235
 msgid "LODs to import"
 msgstr "Zu importierende LODs"
 
-#: __init__.py:241
+#: __init__.py:248
 msgid "Import LODs (only embedded linked files)"
 msgstr "LODs importieren (eingebettete Verknüpfungen)"
 
-#: __init__.py:269
+#: __init__.py:277
 #, python-format
 msgid "LOD %d"
 msgstr "LOD %d"
 
-#: __init__.py:276
+#: __init__.py:284
 msgid "Embed linked file"
 msgstr "Verknüpfte Datei einbetten"
 
-#: __init__.py:277
+#: __init__.py:285
 msgid ""
 "Load the contents of the linked file specified at this object and insert "
 "them as children of this object"
@@ -110,48 +118,48 @@ msgstr ""
 "Den Inhalt der in diesem Objekt angegebenen verknüpften Datei laden und als "
 "Kindobjekte dieses Objekts einfügen"
 
-#: __init__.py:287
+#: __init__.py:295
 #, python-format
 msgid "File %s not found"
 msgstr "Datei %s nicht gefunden"
 
-#: __init__.py:328
+#: __init__.py:336
 msgid "Export to Zusi Scenery file format (.ls3)"
 msgstr "Zusi-Landschaftsdatei (.ls3) exportieren"
 
-#: __init__.py:329
+#: __init__.py:337
 msgid "Export LS3"
 msgstr "LS3 exportieren"
 
-#: __init__.py:345
+#: __init__.py:353
 msgid "Export mode"
 msgstr "Exportmodus"
 
-#: __init__.py:346
+#: __init__.py:354
 msgid "Choose which objects to export"
 msgstr "Festlegen, welche Objekte exportiert werden sollen "
 
-#: __init__.py:348
+#: __init__.py:356
 msgid "All objects"
 msgstr "Alle Objekte"
 
-#: __init__.py:349
+#: __init__.py:357
 msgid "Selected objects"
 msgstr "Ausgewählte Objekte"
 
-#: __init__.py:350
+#: __init__.py:358
 msgid "Subsets containing selected objects"
 msgstr "Subsets der ausgewählten Objekte"
 
-#: __init__.py:351
+#: __init__.py:359
 msgid "Objects on visible layers"
 msgstr "Objekte auf sichtbaren Ebenen"
 
-#: __init__.py:357
+#: __init__.py:365
 msgid "Export animations"
 msgstr "Animationen exportieren"
 
-#: __init__.py:358
+#: __init__.py:366
 msgid ""
 "Export animations from keyframes (this might create/overwrite additional "
 "files)"
@@ -159,11 +167,7 @@ msgstr ""
 "Keyframes als Animationen exportieren (hierdurch werden evtl. zusätzliche "
 "Dateien erzeugt/überschrieben) "
 
-#: __init__.py:363
-msgid "Optimize mesh"
-msgstr "Mesh optimieren"
-
-#: __init__.py:364
+#: __init__.py:372
 msgid ""
 "Optimize meshes in the exported file (this will not modify any meshes in the "
 "Blender file)"
@@ -171,39 +175,39 @@ msgstr ""
 "Meshes in der exportierten Datei optimieren (Meshes in der Blender-Datei "
 "werden hierbei nicht verändert)"
 
-#: __init__.py:369
+#: __init__.py:377
 msgid "Max. distance"
 msgstr "Max. Abstand"
 
-#: __init__.py:370
+#: __init__.py:378
 msgid "Maximum distance between two vertices to be merged"
 msgstr "Maximaler Abstand zweier zusammenzuführender Punkte"
 
-#: __init__.py:376
+#: __init__.py:384
 msgid "Max. UV distance"
 msgstr "Max. UV-Abstand"
 
-#: __init__.py:377
+#: __init__.py:385
 msgid "Maximum UV coordinate distance between two vertices to be merged"
 msgstr ""
 "Maximaler Abstand zwischen den UV-Koordinaten zweier zusammenzuführender "
 "Punkte"
 
-#: __init__.py:384
+#: __init__.py:392
 msgid "Max. normal angle"
 msgstr "Max. Winkel Normalen"
 
-#: __init__.py:386
+#: __init__.py:394
 msgid "Maximum angle between the normal vectors of two vertices to be merged"
 msgstr ""
 "Maximaler Winkel zwischen den Normalenvektoren zweier zusammenzuführender "
 "Punkte"
 
-#: __init__.py:393
+#: __init__.py:401
 msgid "Write mesh data to LSB file"
 msgstr "Meshdaten in LSB-Datei schreiben"
 
-#: __init__.py:394
+#: __init__.py:402
 msgid ""
 "Write vertex and face data to a separate file for better loading performance "
 "in Zusi"
@@ -211,103 +215,103 @@ msgstr ""
 "Vertex- und Face-Daten in eine separate Datei schreiben, um die Ladezeit in "
 "Zusi zu verbessern"
 
-#: __init__.py:399
+#: __init__.py:407
 msgid "Variants to export"
 msgstr "Zu exportierende Varianten"
 
-#: __init__.py:400
+#: __init__.py:408
 msgid "Choose which variants to export"
 msgstr "Festlegen, welche Varianten exportiert werden sollen "
 
-#: __init__.py:412
+#: __init__.py:420
 msgid "No author information entered"
 msgstr "Keine Autorenangabe"
 
-#: __init__.py:415
+#: __init__.py:423
 msgid "Author information added"
 msgstr "Autorenangabe hinzugefügt"
 
-#: __init__.py:417
+#: __init__.py:425
 #, python-format
 msgid "Name: %s"
 msgstr "Name: %s"
 
-#: __init__.py:418
+#: __init__.py:426
 #, python-format
 msgid "E-mail: %s"
 msgstr "E-Mail: %s"
 
-#: __init__.py:423
+#: __init__.py:431
 msgid "Materials with diffuse intensity < 1"
 msgstr "Materials mit Diffuse-Intensität < 1"
 
-#: __init__.py:428
+#: __init__.py:436
 msgid "Variants (leave empty to export all)"
 msgstr "Varianten (leer lassen, um alle zu exportieren)"
 
-#: __init__.py:435 __init__.py:648 zusiprops.py:1125
+#: __init__.py:443 __init__.py:656 zusiprops.py:1125
 msgid "Variants can be defined in the Scene settings."
 msgstr "Varianten können in den Szeneneinstellungen definiert werden."
 
-#: __init__.py:441
+#: __init__.py:449
 msgid "The following files will be overwritten:"
 msgstr "Folgende Dateien werden überschrieben:"
 
-#: __init__.py:511
+#: __init__.py:519
 msgid "Batch export to Zusi Scenery file format (.ls3)"
 msgstr "Stapelexport in Zusi-Landschaftsdateien (.ls3)"
 
-#: __init__.py:512
+#: __init__.py:520
 msgid "Batch export LS3"
 msgstr "Stapelexport LS3"
 
-#: __init__.py:559
+#: __init__.py:567
 msgid "Unsaved file, no file name available"
 msgstr "Ungespeicherte Datei, kein Dateiname vorhanden"
 
-#: __init__.py:562
+#: __init__.py:570
 #, python-format
 msgid "No batch export settings found for file %s"
 msgstr "Für Datei %s wurden keine Stapelexport-Einstellungen gefunden"
 
-#: __init__.py:618
+#: __init__.py:626
 #, python-format
 msgid "Exported %d file"
 msgid_plural "Exported %d files"
 msgstr[0] "%d Datei exportiert"
 msgstr[1] "%d Dateien exportiert"
 
-#: __init__.py:627
+#: __init__.py:635
 msgid "Show only objects that are visible in a given set of variants"
 msgstr ""
 "Nur Objekte anzeigen, die in einer bestimmten Kombination von Varianten "
 "sichtbar sind"
 
-#: __init__.py:628
+#: __init__.py:636
 msgid "Show Variants"
 msgstr "Varianten anzeigen"
 
-#: __init__.py:632
+#: __init__.py:640
 msgid "Variants to show"
 msgstr "Anzuzeigende Varianten"
 
-#: __init__.py:633
+#: __init__.py:641
 msgid "Choose which variants to show"
 msgstr "Festlegen, welche Varianten angezeigt werden sollen "
 
-#: __init__.py:642
+#: __init__.py:650
 msgid "Variants (leave empty to show all)"
 msgstr "Varianten (leer lassen, um alle anzuzeigen)"
 
-#: __init__.py:679
+#: __init__.py:687
 msgid "Zusi 2 Scenery (.ls) ..."
 msgstr "Zusi-2-Landschaft (.ls) ..."
 
-#: __init__.py:682 __init__.py:685
+#: __init__.py:690 __init__.py:693
 msgid "Zusi Scenery (.ls3) ..."
 msgstr "Zusi-Landschaft (.ls3) ..."
 
-#: __init__.py:688
+#: __init__.py:696
 msgid "Show variants ..."
 msgstr "Varianten anzeigen ..."
 
@@ -449,11 +453,11 @@ msgstr "Aufwand (veraltet)"
 
 #: zusiprops.py:190
 msgid ""
-"The author's construction effort in units of one house. Use the \"Effort "
-"(h)\" property instead."
+"The author's construction effort in units of one house. Use the \"Effort (h)"
+"\" property instead."
 msgstr ""
-"Bauaufwand des Autors in Haus-Einheiten. Stattdessen die Angabe \"Aufwand "
-"(h)\" nutzen."
+"Bauaufwand des Autors in Haus-Einheiten. Stattdessen die Angabe \"Aufwand (h)"
+"\" nutzen."
 
 #: zusiprops.py:196
 msgid "Effort (h)"
@@ -1170,7 +1174,7 @@ msgstr "Animationen"
 msgid "Animations contained in the linked file"
 msgstr "In der verknüpften Datei enthaltene Animationen"
 
-#: zusiprops.py:999 zusiprops.py:1106 zusiprops.py:1583
+#: zusiprops.py:999 zusiprops.py:1106 zusiprops.py:1593
 msgid "Variants"
 msgstr "Varianten"
 
@@ -1236,8 +1240,8 @@ msgstr "Raddurchmesser"
 msgid ""
 "The animation speed converted into a wheel diameter for wheel animations"
 msgstr ""
-"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für "
-"Rad-Animationen "
+"Die Animationsgeschwindigkeit umgerechnet als Raddurchmesser für Rad-"
+"Animationen "
 
 #: zusiprops.py:1076
 msgid "Animation duration"
@@ -1257,8 +1261,8 @@ msgstr "Animationsnamen"
 
 #: zusiprops.py:1087
 msgid ""
-"Animation names this action belongs to, if animation type is "
-"'Undefined/signal controlled'"
+"Animation names this action belongs to, if animation type is 'Undefined/"
+"signal controlled'"
 msgstr ""
 "Animationsnamen, die dieser Action zugeordnet sind, wenn der Animationstyp "
 "\"Undefiniert/signalgesteuert\" ist"
@@ -1405,39 +1409,39 @@ msgstr "Variante hinzufügen"
 msgid "Add a variant to the scene"
 msgstr "Der Szene eine Variante hinzufügen"
 
-#: zusiprops.py:1529
+#: zusiprops.py:1532
 msgid "Variant"
 msgstr "Variante"
 
-#: zusiprops.py:1535
+#: zusiprops.py:1545
 msgid "Remove variant"
 msgstr "Variante löschen"
 
-#: zusiprops.py:1536
+#: zusiprops.py:1546
 msgid "Remove the selected variant from the scene"
 msgstr "Die ausgewählte Variante aus der Szene löschen"
 
-#: zusiprops.py:1564
+#: zusiprops.py:1574
 msgid "Move variant"
 msgstr "Variante verschieben"
 
-#: zusiprops.py:1565
+#: zusiprops.py:1575
 msgid "Move a variant"
 msgstr "Eine Variante verschieben"
 
-#: zusiprops.py:1607
+#: zusiprops.py:1617
 msgid "Add animation name"
 msgstr "Animationsname hinzufügen"
 
-#: zusiprops.py:1608
+#: zusiprops.py:1618
 msgid "Add the name of an animation this action belongs to"
 msgstr "Einen Namen einer dieser Action zugeordneten Animation hinzufügen "
 
-#: zusiprops.py:1617
+#: zusiprops.py:1627
 msgid "Remove animation name"
 msgstr "Animationsname löschen"
 
-#: zusiprops.py:1618
+#: zusiprops.py:1628
 msgid ""
 "Remove the selected animation name from the list of animations this action "
 "belongs to"
@@ -1445,50 +1449,50 @@ msgstr ""
 "Den ausgewählten Animationsnamen aus der Liste der dieser Action "
 "zugeordneten Animationen löschen"
 
-#: zusiprops.py:1636
+#: zusiprops.py:1646
 msgid "Set interpolation to linear"
 msgstr "Interpolation auf Linear setzen"
 
-#: zusiprops.py:1637
+#: zusiprops.py:1647
 msgid ""
 "Set the interpolation mode of all animation curves of this action to 'Linear'"
 msgstr ""
 "Den Interpolationsmodus aller Animationskurven dieser Action auf \"Linear\" "
 "setzen"
 
-#: zusiprops.py:1649
+#: zusiprops.py:1659
 msgid "Zusi animations"
 msgstr "Zusi-Animationen"
 
-#: zusiprops.py:1676
+#: zusiprops.py:1686
 msgid "Part of the following animations:"
 msgstr "Teil folgender Animationen:"
 
-#: zusiprops.py:1691
+#: zusiprops.py:1701
 msgid "Add author"
 msgstr "Autor hinzufügen"
 
-#: zusiprops.py:1692
+#: zusiprops.py:1702
 msgid "Add an author to the scene"
 msgstr "Der Szene einen Autoren hinzufügen"
 
-#: zusiprops.py:1696
+#: zusiprops.py:1706
 msgid "Author"
 msgstr "Autor"
 
-#: zusiprops.py:1701
+#: zusiprops.py:1711
 msgid "Remove author"
 msgstr "Autor löschen"
 
-#: zusiprops.py:1702
+#: zusiprops.py:1712
 msgid "Remove the selected author from the scene"
 msgstr "Den ausgewählten Autor aus der Szene löschen"
 
-#: zusiprops.py:1721
+#: zusiprops.py:1731
 msgid "Add default author information"
 msgstr "Standard-Autorenangabe hinzufügen"
 
-#: zusiprops.py:1722
+#: zusiprops.py:1732
 msgid ""
 "Add author information entered in the Zusi File Management application "
 "(Windows) or the configuration file (other operating systems)"
@@ -1496,7 +1500,7 @@ msgstr ""
 "Die \"Autorenangabe für neu erstellte Dateien\" aus der Zusi-Dateiverwaltung "
 "(Windows) oder der Konfigurationsdatei (andere Betriebssysteme) hinzufügen"
 
-#: zusiprops.py:1734
+#: zusiprops.py:1744
 msgid "Author information"
 msgstr "Autor-Information"
 
